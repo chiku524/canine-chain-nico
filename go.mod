@@ -6,7 +6,7 @@ toolchain go1.23.1
 
 require (
 	github.com/CosmWasm/wasmd v0.32.0
-	github.com/CosmWasm/wasmvm v1.2.6
+	github.com/CosmWasm/wasmvm v1.5.9
 	github.com/cosmos/cosmos-sdk v0.45.17
 	github.com/cosmos/ibc-go/v4 v4.6.0
 	github.com/ecies/go/v2 v2.0.11
