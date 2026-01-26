@@ -12,7 +12,7 @@ require (
 	github.com/ecies/go/v2 v2.0.11
 	github.com/gogo/protobuf v1.3.3
 	github.com/golang/protobuf v1.5.4
-	github.com/gorilla/mux v1.8.0
+	github.com/gorilla/mux v1.8.1
 	github.com/grpc-ecosystem/grpc-gateway v1.16.0
 	github.com/prometheus/client_golang v1.23.2
 	github.com/rakyll/statik v0.1.7
