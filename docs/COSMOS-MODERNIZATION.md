@@ -4,8 +4,8 @@ Living roadmap and checklist for bringing **canine-chain** in line with the supp
 
 | Field | Value |
 |-------|-------|
-| **Last updated** | 2026-06-10 |
-| **Active branch** | `feat/cosmos-modernization-phase1` |
+| **Last updated** | 2026-06-11 |
+| **Active branch** | `master` (post Phase 1 merge) |
 | **Current phase** | Phase 1 — SDK 0.47 (`v600`) |
 | **North-star target** | [2026.1 release family](https://docs.cosmos.network/sdk/latest/release-family) (SDK **0.54.x**, not 0.55) |
 
@@ -79,6 +79,7 @@ Chronological notes; append new entries at the top.
 
 | Date | Phase | Notes |
 |------|-------|-------|
+| 2026-06-11 | Phase 1 | CI green on fork (`test-unit`, golangci-lint, proto-gen, build); storage/jklmint integration test fixes; merged to `master`. |
 | 2026-06-10 | Phase 0–1 | `make proto-gen` via `ghcr.io/cosmos/proto-builder:0.13.1`; regenerated `.pb.go` with `cosmos/gogoproto`; Phase 0 inventory + v600 testnet/mainnet playbooks; `scripts/smoke-v600-testnet.sh`; proto-gen CI workflow; `v600` upgrade unit test. |
 | 2026-06-09 | Phase 1 | Pushed `feat/cosmos-modernization-phase1`; `go mod tidy`; sim tests migrated off `simapp` → `testutil/sims`; storage `mulStorageCharge` overflow guard; CI: CGO + wasmvm 1.5.9 on Linux; README install section updated. |
 | 2026-06-08 | Phase 1 | Branch `feat/cosmos-modernization-phase1`: `go.mod` → 0.47 stack; `app/app.go` wasmd 0.45 rewrite; `v600` handler; free post-proof ante in `app/ante_fee.go`; build green; filetree keeper tests fixed (keyring codec). |
@@ -128,7 +129,7 @@ Applies to all phases; check once and re-verify each phase.
 ## Phase 1 — SDK 0.47 / CometBFT 0.37 / ibc-go v7 / wasmd 0.45
 
 **On-chain upgrade name:** `v600`  
-**Branch:** `feat/cosmos-modernization-phase1`  
+**Branch:** merged to `master` (origin: `feat/cosmos-modernization-phase1`)  
 **Handler:** `app/upgrades/v600/`
 
 ### Dependency pins (target)
@@ -158,7 +159,7 @@ Applies to all phases; check once and re-verify each phase.
 - [x] Jackal free storage fee waiver: `app/ante_fee.go` + `NewJackalDeductFeeDecorator`
 - [x] `ExportAppStateAndValidators` 3-arg signature (`runtime.AppI`)
 - [x] `go build ./cmd/canined` succeeds
-- [ ] Full unit tests on **Linux CI with CGO**
+- [x] Full unit tests on **Linux CI with CGO**
 - [x] Simulation tests (`app/sim_test.go`, `//go:build simulation`) updated for 0.47 APIs (`testutil/sims`, `simulation/client/cli`)
 
 ### `cmd/canined`
@@ -185,7 +186,7 @@ Applies to all phases; check once and re-verify each phase.
 - [x] `x/rns/keeper`, `x/oracle/keeper`, `x/notifications/keeper` pass
 - [x] `app` ante fee unit tests pass
 - [x] `x/storage/keeper` — `mulStorageCharge` rejects int64 wrap; `TestOverflow_Finding3` documents semantics
-- [ ] Integration tests requiring CGO (storage/grpc suites) on Linux CI
+- [x] Integration tests requiring CGO (storage/grpc suites) on Linux CI
 
 ### Docs & ops
 - [x] This roadmap document created
