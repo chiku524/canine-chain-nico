@@ -22,7 +22,7 @@ import (
 var emptyWasmOpts []wasmkeeper.Option
 
 func TestWasmdExport(t *testing.T) {
-	setBech32ForTest()
+	SetBech32ForTest()
 
 	gapp := SetupTestingAppWithGenesis(t)
 
@@ -43,7 +43,7 @@ func TestWasmdExport(t *testing.T) {
 
 // ensure that blocked addresses are properly set in bank keeper
 func TestBlockedAddrs(t *testing.T) {
-	setBech32ForTest()
+	SetBech32ForTest()
 
 	gapp := SetupTestingAppWithGenesis(t)
 

@@ -61,7 +61,7 @@ func setupStorageKeeper(t *testing.T) (
 	oracleKeeper.EXPECT().GetFeed(gomock.Any(), gomock.Any()).Return(oracletypes.Feed{
 		Data:  `{"price":"0.24","24h_change":"0"}`,
 		Name:  "jklprice",
-		Owner: "cosmos1arsaayyj5tash86mwqudmcs2fd5jt5zgp07gl8",
+		Owner: "jkl1arsaayyj5tash86mwqudmcs2fd5jt5zgc3sexc",
 	}, true).AnyTimes()
 
 	paramsSubspace := typesparams.NewSubspace(encCfg.Codec,

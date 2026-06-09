@@ -244,7 +244,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 
 func setupSimulationApp(t testing.TB, skipMsg string) (simtypes.Config, dbm.DB, simtestutil.AppOptionsMap, *JackalApp) {
 	t.Helper()
-	setBech32ForTest()
+	SetBech32ForTest()
 
 	config := simcli.NewConfigFromFlags()
 	config.ChainID = SimAppChainID

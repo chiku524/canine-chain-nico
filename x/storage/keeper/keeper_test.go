@@ -5,6 +5,7 @@ import (
 	"testing"
 	"time"
 
+	jklapp "github.com/jackalLabs/canine-chain/v5/app"
 	"github.com/jackalLabs/canine-chain/v5/testutil"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
@@ -38,6 +39,7 @@ func (suite *KeeperTestSuite) SetupSuite() {
 }
 
 func (suite *KeeperTestSuite) reset() {
+	jklapp.SetBech32ForTest()
 	storageKeeper, bankKeeper, accountKeeper, encCfg, ctx := setupStorageKeeper(suite.T())
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, encCfg.InterfaceRegistry)
@@ -66,7 +68,7 @@ func setupMsgServer(suite *KeeperTestSuite) (types.MsgServer, keeper.Keeper, goc
 	storage.InitGenesis(suite.ctx, *k, *types.DefaultGenesis())
 	ctx := sdk.WrapSDKContext(suite.ctx)
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 3)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 3)
 	suite.Require().NoError(err)
 
 	depoAccount := testAddresses[0]

@@ -42,7 +42,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 func (suite *KeeperTestSuite) TestAllFiles() {
 	suite.SetupSuite()
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 2)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 2)
 	suite.Require().NoError(err)
 
 	testAccount := testAddresses[0]
@@ -107,7 +107,7 @@ func (suite *KeeperTestSuite) TestAllFiles() {
 func (suite *KeeperTestSuite) TestOpenFiles() {
 	suite.SetupSuite()
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 2)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 2)
 	suite.Require().NoError(err)
 
 	testAccount := testAddresses[0]
@@ -180,7 +180,7 @@ func (suite *KeeperTestSuite) TestOpenFiles() {
 func (suite *KeeperTestSuite) TestFileNotes() {
 	suite.SetupSuite()
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 2)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 2)
 	suite.Require().NoError(err)
 
 	testAccount := testAddresses[0]
@@ -298,7 +298,7 @@ func (suite *KeeperTestSuite) TestFileNotes() {
 func (suite *KeeperTestSuite) TestProofsByAddress() {
 	suite.SetupSuite()
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 3)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 3)
 	suite.Require().NoError(err)
 
 	testAccount := testAddresses[0]

@@ -13,7 +13,7 @@ func (suite *KeeperTestSuite) TestMsgInitProvider() {
 
 	msgSrvr, _, context := setupMsgServer(suite)
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 1)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 1)
 	suite.Require().NoError(err)
 	user := testAddresses[0]
 
@@ -65,7 +65,7 @@ func (suite *KeeperTestSuite) TestMsgSetProviderIP() {
 
 	msgSrvr, _, context := setupMsgServer(suite)
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 1)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 1)
 	suite.Require().NoError(err)
 
 	user := testAddresses[0]
@@ -131,7 +131,7 @@ func (suite *KeeperTestSuite) TestMsgSetProviderTotalSpace() {
 
 	msgSrvr, _, context := setupMsgServer(suite)
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 1)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 1)
 	suite.Require().NoError(err)
 
 	user := testAddresses[0]
@@ -197,7 +197,7 @@ func (suite *KeeperTestSuite) TestMsgSetProviderKeybase() {
 
 	msgSrvr, _, context := setupMsgServer(suite)
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 1)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 1)
 	suite.Require().NoError(err)
 
 	user := testAddresses[0]

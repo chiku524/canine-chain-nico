@@ -30,7 +30,7 @@ func TestManageProofs(t *testing.T) {
 	//nolint:dogsled
 	storageKeeper, _, _, _, ctx := setupStorageKeeper(t)
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 3)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 3)
 	require.NoError(t, err)
 
 	owner := testAddresses[0]
@@ -115,7 +115,7 @@ func TestManageProofsWithExpiredPlan(t *testing.T) {
 	//nolint:dogsled
 	storageKeeper, _, _, _, ctx := setupStorageKeeper(t)
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 2)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 2)
 	require.NoError(t, err)
 
 	owner := testAddresses[0]
@@ -175,7 +175,7 @@ func TestManageProofsWithExpiredFile(t *testing.T) {
 	//nolint:dogsled
 	storageKeeper, _, _, _, ctx := setupStorageKeeper(t)
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 2)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 2)
 	require.NoError(t, err)
 
 	owner := testAddresses[0]
@@ -227,7 +227,7 @@ func TestRunProofChecks(t *testing.T) {
 	//nolint:dogsled
 	storageKeeper, _, _, _, ctx := setupStorageKeeper(t)
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 1)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 1)
 	require.NoError(t, err)
 
 	// Set up parameters with proof window
@@ -246,7 +246,7 @@ func TestManageProof_ValidProofStays(t *testing.T) {
 	//nolint:dogsled
 	storageKeeper, _, _, _, ctx := setupStorageKeeper(t)
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 2)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 2)
 	require.NoError(t, err)
 
 	owner := testAddresses[0]
@@ -326,7 +326,7 @@ func TestManageProof_NoProofStays(t *testing.T) {
 	//nolint:dogsled
 	storageKeeper, _, _, _, ctx := setupStorageKeeper(t)
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 2)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 2)
 	require.NoError(t, err)
 
 	owner := testAddresses[0]
@@ -391,7 +391,7 @@ func TestManageProof_InvalidProofRemoved(t *testing.T) {
 	//nolint:dogsled
 	storageKeeper, _, _, _, ctx := setupStorageKeeper(t)
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 2)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 2)
 	require.NoError(t, err)
 
 	owner := testAddresses[0]
@@ -460,7 +460,7 @@ func TestManageProof_YoungFileSkipped(t *testing.T) {
 	//nolint:dogsled
 	storageKeeper, _, _, _, ctx := setupStorageKeeper(t)
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 2)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 2)
 	require.NoError(t, err)
 
 	owner := testAddresses[0]
@@ -521,7 +521,7 @@ func TestBurnContract(t *testing.T) {
 	//nolint:dogsled
 	storageKeeper, _, _, _, ctx := setupStorageKeeper(t)
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 2)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 2)
 	require.NoError(t, err)
 
 	owner := testAddresses[0]
@@ -586,7 +586,7 @@ func TestBurnContract_ProviderNotFound(t *testing.T) {
 	//nolint:dogsled
 	storageKeeper, _, _, _, ctx := setupStorageKeeper(t)
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 1)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 1)
 	require.NoError(t, err)
 
 	provider := testAddresses[0]
@@ -640,7 +640,7 @@ func TestManageProof_StepThroughBlockHeights(t *testing.T) {
 	//nolint:dogsled
 	storageKeeper, _, _, _, ctx := setupStorageKeeper(t)
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 2)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 2)
 	require.NoError(t, err)
 
 	owner := testAddresses[0]
@@ -788,7 +788,7 @@ func TestRunProofChecks_Scheduling(t *testing.T) {
 	//nolint:dogsled
 	storageKeeper, _, _, _, ctx := setupStorageKeeper(t)
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 2)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 2)
 	require.NoError(t, err)
 
 	owner := testAddresses[0]

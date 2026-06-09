@@ -170,7 +170,7 @@ func NewTestValidatorSet(t *testing.T) *tmtypes.ValidatorSet {
 // SetupTestingAppWithGenesis returns an initialized JackalApp with one bonded validator.
 func SetupTestingAppWithGenesis(t *testing.T) *JackalApp {
 	t.Helper()
-	setBech32ForTest()
+	SetBech32ForTest()
 	pubKeys := CreateTestPubKeys(1)
 	valSet := NewTestValidatorSet(t)
 	genAcc := authtypes.NewBaseAccount(sdk.AccAddress(pubKeys[0].Address()), pubKeys[0], 0, 0)
@@ -466,7 +466,8 @@ func NewPubKeyFromHex(pk string) (res cryptotypes.PubKey) {
 	return &ed25519.PubKey{Key: pkBytes}
 }
 
-func setBech32ForTest() {
+// SetBech32ForTest configures Jackal bech32 prefixes for tests.
+func SetBech32ForTest() {
 	cfg := sdk.GetConfig()
 	cfg.SetBech32PrefixForAccount(Bech32PrefixAccAddr, Bech32PrefixAccPub)
 	cfg.SetBech32PrefixForValidator(Bech32PrefixValAddr, Bech32PrefixValPub)

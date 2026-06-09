@@ -31,7 +31,7 @@ func (suite *KeeperTestSuite) TestDecimals() {
 func (suite *KeeperTestSuite) TestEmptyReward() {
 	suite.SetupSuite()
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 2)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 2)
 	suite.Require().NoError(err)
 
 	signer := testAddresses[0]
@@ -102,7 +102,7 @@ func (suite *KeeperTestSuite) TestEmptyReward() {
 func (suite *KeeperTestSuite) TestReward() {
 	suite.SetupSuite()
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 2)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 2)
 	suite.Require().NoError(err)
 
 	signer := testAddresses[0]
@@ -189,7 +189,7 @@ func (suite *KeeperTestSuite) TestLongTermReward() {
 	for i := 1; i < 10; i++ {
 		suite.SetupSuite()
 
-		testAddresses, err := testutil.CreateTestAddresses("cosmos", 2)
+		testAddresses, err := testutil.CreateTestAddresses("jkl", 2)
 		suite.Require().NoError(err)
 
 		signer := testAddresses[0]
@@ -286,7 +286,7 @@ func (suite *KeeperTestSuite) TestLongTermRewardWithWindows() {
 	for j := int64(1); j < 10; j++ {
 		suite.SetupSuite()
 
-		testAddresses, err := testutil.CreateTestAddresses("cosmos", 2)
+		testAddresses, err := testutil.CreateTestAddresses("jkl", 2)
 		suite.Require().NoError(err)
 
 		signer := testAddresses[0]

@@ -8,7 +8,7 @@ import (
 func (suite *KeeperTestSuite) TestAddProviderClaimer() {
 	suite.SetupSuite()
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 2)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 2)
 	suite.Require().NoError(err)
 	msgSrvr, k, context := setupMsgServer(suite)
 
@@ -76,7 +76,7 @@ func (suite *KeeperTestSuite) TestAddProviderClaimer() {
 func (suite *KeeperTestSuite) TestRemoveProviderClaimer() {
 	suite.SetupSuite()
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 1)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 1)
 	suite.Require().NoError(err)
 	msgSrvr, k, context := setupMsgServer(suite)
 
