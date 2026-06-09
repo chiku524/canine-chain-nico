@@ -52,7 +52,7 @@ func GetAccount(name string) (sdk.AccAddress, error) {
 	s.Write([]byte(name))
 	m := s.Sum(nil)
 	mh := hex.EncodeToString(m)
-	adr, err := sdk.AccAddressFromHex(mh)
+	adr, err := sdk.AccAddressFromHexUnsafe(mh)
 	if err != nil {
 		return nil, sdkerrors.Wrapf(err, "cannot get account account")
 	}

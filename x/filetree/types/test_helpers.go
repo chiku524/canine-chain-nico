@@ -7,6 +7,9 @@ import (
 	"strings"
 
 	sdkClient "github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/codec"
+	codectypes "github.com/cosmos/cosmos-sdk/codec/types"
+	cryptocodec "github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/hd"
 	keyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
@@ -15,10 +18,18 @@ import (
 	"github.com/google/uuid"
 )
 
+// testKeyringCodec returns a codec with crypto types registered for in-memory keyring tests.
+func testKeyringCodec() codec.Codec {
+	registry := codectypes.NewInterfaceRegistry()
+	cryptocodec.RegisterInterfaces(registry)
+	return codec.NewProtoCodec(registry)
+}
+
 // generate a mock private key using mock keyring
 func MakePrivateKey(fromName string) (*eciesgo.PrivateKey, error) {
 	var ctx sdkClient.Context
-	ctx.Keyring = keyring.NewInMemory()
+	cdc := testKeyringCodec()
+	ctx.Keyring = keyring.NewInMemory(cdc)
 	ctx.FromName = fromName
 
 	algo := hd.Secp256k1

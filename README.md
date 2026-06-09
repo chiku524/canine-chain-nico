@@ -11,12 +11,14 @@
 1. [Modules](x/README.md)
 2. [Tokens](TOKENS.md)
 3. [Storage Providers](cmd/canined/README.md)
+4. [**Cosmos stack modernization**](docs/COSMOS-MODERNIZATION.md) — living roadmap & checklist (SDK 0.47 → 0.54)
 
 
 ## Installing the Canine CLI
 ### Prerequisites
-* Install GoLang 1.21 [here](https://go.dev/dl/)
+* Install Go — see [Cosmos modernization doc](docs/COSMOS-MODERNIZATION.md) for the version required by your branch (mainnet: 1.23+; migration branch: 1.23.8; target 0.54: 1.25+)
 * Install build essentials (GNU Make)
+* For wasm/CosmWasm builds: CGO enabled and the **wasmvm** shared library matching your `go.mod` pin (see modernization doc; do not use stale v1.2.6 URLs below on migration branches)
 
 ### Installing
 > if you want to use pebble follow this: https://github.com/JackalLabs/canine-chain/pull/511
@@ -30,10 +32,11 @@ make install
 ```
 
 ### Pre-built Binary
-[Releases](https://github.com/jackalLabs/canine-chain-chain/releases) and download the latest release. Move the executable to a folder in your `$PATH` and download [this](https://github.com/CosmWasm/wasmvm/raw/v1.2.6/internal/api/libwasmvm.x86_64.so) to `/lib/libwasmvm.x86_64.so` 
+[Releases](https://github.com/JackalLabs/canine-chain/releases) — download the latest release for your network. Install the **wasmvm** shared library version that matches the release (see `go.mod` and [docs/COSMOS-MODERNIZATION.md](docs/COSMOS-MODERNIZATION.md)). Example for wasmvm **1.5.x** (migration branch):
 
 ```sh
-sudo wget https://github.com/CosmWasm/wasmvm/raw/v1.2.6/internal/api/libwasmvm.x86_64.so -O /lib/libwasmvm.x86_64.so
+# Replace TAG with the wasmvm version from go.mod (e.g. v1.5.9)
+sudo wget "https://github.com/CosmWasm/wasmvm/raw/TAG/internal/api/libwasmvm.x86_64.so" -O /lib/libwasmvm.x86_64.so
 ```
 
 You may also need to run `sudo chmod +x canined` inside the executables directory to allow it to run.

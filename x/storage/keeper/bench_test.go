@@ -17,8 +17,8 @@ import (
 	"github.com/jackalLabs/canine-chain/v5/x/storage/keeper"
 	storagetestutil "github.com/jackalLabs/canine-chain/v5/x/storage/testutil"
 	"github.com/jackalLabs/canine-chain/v5/x/storage/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtime "github.com/tendermint/tendermint/types/time"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmtime "github.com/cometbft/cometbft/types/time"
 )
 
 // benchKeeper builds a storage keeper with a DB-backed KVStore so the benchmark

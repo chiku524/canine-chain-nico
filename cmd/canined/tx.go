@@ -41,8 +41,11 @@ func prepareFactory(clientCtx client.Context, txf txns.Factory) (txns.Factory, e
 }
 
 func SendTx(clientCtx client.Context, flagSet *pflag.FlagSet, msgs ...sdk.Msg) (*sdk.TxResponse, error) {
-	txf := txns.NewFactoryCLI(clientCtx, flagSet)
-	txf, err := prepareFactory(clientCtx, txf)
+	txf, err := txns.NewFactoryCLI(clientCtx, flagSet)
+	if err != nil {
+		return nil, err
+	}
+	txf, err = prepareFactory(clientCtx, txf)
 	if err != nil {
 		return nil, err
 	}
@@ -61,7 +64,7 @@ func SendTx(clientCtx client.Context, flagSet *pflag.FlagSet, msgs ...sdk.Msg) (
 		return nil, nil
 	}
 
-	tx, err := txns.BuildUnsignedTx(txf, msgs...)
+	tx, err := txf.BuildUnsignedTx(msgs...)
 	if err != nil {
 		return nil, err
 	}

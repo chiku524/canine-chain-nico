@@ -5,7 +5,7 @@ import (
 	"math/big"
 
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	"github.com/tendermint/tendermint/libs/log"
+	"github.com/cometbft/cometbft/libs/log"
 
 	"github.com/cosmos/cosmos-sdk/codec"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -89,7 +89,7 @@ func (k Keeper) GetInflation(ctx sdk.Context) (sdk.Dec, error) {
 	denom := params.MintDenom
 	coins := k.bankKeeper.GetSupply(ctx, denom)
 
-	amt := coins.Amount.ToDec()
+	amt := sdk.NewDecFromInt(coins.Amount)
 
 	if amt.IsZero() {
 		return sdk.NewDec(0), nil

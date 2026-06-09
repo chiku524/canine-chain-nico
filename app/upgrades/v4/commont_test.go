@@ -17,8 +17,8 @@ import (
 	typesparams "github.com/cosmos/cosmos-sdk/x/params/types"
 	canineglobaltestutil "github.com/jackalLabs/canine-chain/v5/testutil"
 	moduletestutil "github.com/jackalLabs/canine-chain/v5/types/module/testutil" // when importing from sdk,'go mod tidy' keeps trying to import from v0.46.
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtime "github.com/tendermint/tendermint/types/time"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmtime "github.com/cometbft/cometbft/types/time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/codec"
@@ -242,7 +242,7 @@ func trackMockBalances(bankKeeper *storagetestutil.MockBankKeeper) {
 	// We don't track module account balances.
 	bankKeeper.EXPECT().MintCoins(gomock.Any(), minttypes.ModuleName, gomock.Any()).AnyTimes()
 	bankKeeper.EXPECT().BurnCoins(gomock.Any(), types.ModuleName, gomock.Any()).DoAndReturn(func(_ sdk.Context, _ string, coins sdk.Coins) error {
-		newBalance, negative := balances[modAccount.String()].SafeSub(coins)
+		newBalance, negative := balances[modAccount.String()].SafeSub(coins...)
 		if negative {
 			return fmt.Errorf("not enough balance")
 		}
@@ -253,7 +253,7 @@ func trackMockBalances(bankKeeper *storagetestutil.MockBankKeeper) {
 
 	// But we do track normal account balances.
 	bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(_ sdk.Context, sender sdk.AccAddress, _ string, coins sdk.Coins) error {
-		newBalance, negative := balances[sender.String()].SafeSub(coins) // in v0.46, this method is variadic
+		newBalance, negative := balances[sender.String()].SafeSub(coins...) // in v0.46, this method is variadic
 		if negative {
 			return fmt.Errorf("not enough balance")
 		}

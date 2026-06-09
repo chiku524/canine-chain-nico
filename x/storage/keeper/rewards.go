@@ -81,7 +81,7 @@ func (k Keeper) rewardAllProviders(ctx sdk.Context, totalSize int64, trackers []
 		}
 
 		for _, coin := range coins {
-			tokensValueOwed := networkPercentage.Mul(coin.Amount.ToDec()).TruncateInt()
+			tokensValueOwed := networkPercentage.Mul(sdk.NewDecFromInt(coin.Amount)).TruncateInt()
 			c := sdk.NewCoin(coin.Denom, tokensValueOwed)
 
 			err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, pAddress, sdk.NewCoins(c))

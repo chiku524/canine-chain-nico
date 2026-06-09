@@ -7,9 +7,10 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/jackalLabs/canine-chain/v5/app"
+	"github.com/jackalLabs/canine-chain/v5/testutil"
 	"github.com/jackalLabs/canine-chain/v5/x/jklmint/types"
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 )
 
 type MintTestSuite struct {
@@ -21,6 +22,9 @@ type MintTestSuite struct {
 }
 
 func (suite *MintTestSuite) SetupTest() {
+	if !testutil.CgoEnabled() {
+		suite.T().Skip("integration tests require CGO for wasmvm")
+	}
 	app := setup(false)
 	ctx := app.NewContext(false, tmproto.Header{})
 

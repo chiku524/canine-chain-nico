@@ -3,17 +3,15 @@ package keeper_test
 import (
 	"encoding/json"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	abci "github.com/cometbft/cometbft/abci/types"
 
-	"github.com/tendermint/tendermint/libs/log"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
-	"github.com/cosmos/cosmos-sdk/simapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/jackalLabs/canine-chain/v5/x/jklmint/types"
-	dbm "github.com/tendermint/tm-db"
-
 	jklapp "github.com/jackalLabs/canine-chain/v5/app"
+	"github.com/jackalLabs/canine-chain/v5/x/jklmint/types"
+	dbm "github.com/cometbft/cometbft-db"
 )
 
 // returns context and an app with updated mint keeper
@@ -42,7 +40,7 @@ func setup(isCheckTx bool) *jklapp.JackalApp {
 		app.InitChain(
 			abci.RequestInitChain{
 				Validators:      []abci.ValidatorUpdate{},
-				ConsensusParams: simapp.DefaultConsensusParams,
+				ConsensusParams: jklapp.DefaultConsensusParams,
 				AppStateBytes:   stateBytes,
 			},
 		)
@@ -60,12 +58,12 @@ func genApp(withGenesis bool, invCheckPeriod uint) (*jklapp.JackalApp, jklapp.Ge
 		nil,
 		true,
 		map[int64]bool{},
-		simapp.DefaultNodeHome,
+		jklapp.DefaultNodeHome,
 		invCheckPeriod,
 		encCdc,
 		jklapp.GetEnabledProposals(),
-		simapp.EmptyAppOptions{},
-		jklapp.GetWasmOpts(simapp.EmptyAppOptions{}),
+		jklapp.EmptyBaseAppOptions{},
+		jklapp.GetWasmOpts(jklapp.EmptyBaseAppOptions{}),
 	)
 
 	if withGenesis {

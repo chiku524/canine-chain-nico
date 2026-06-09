@@ -11,13 +11,11 @@ import (
 	jklapp "github.com/jackalLabs/canine-chain/v5/app"
 	"github.com/jackalLabs/canine-chain/v5/testutil"
 	"github.com/jackalLabs/canine-chain/v5/x/storage/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	dbm "github.com/cometbft/cometbft-db"
 
-	abci "github.com/tendermint/tendermint/abci/types"
-
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/tendermint/tendermint/libs/log"
+	abci "github.com/cometbft/cometbft/abci/types"
+	"github.com/cometbft/cometbft/libs/log"
 )
 
 func genApp(withGenesis bool, invCheckPeriod uint) (*jklapp.JackalApp, jklapp.GenesisState) {
@@ -29,12 +27,12 @@ func genApp(withGenesis bool, invCheckPeriod uint) (*jklapp.JackalApp, jklapp.Ge
 		nil,
 		true,
 		map[int64]bool{},
-		simapp.DefaultNodeHome,
+		jklapp.DefaultNodeHome,
 		invCheckPeriod,
 		encCdc,
 		jklapp.GetEnabledProposals(),
-		simapp.EmptyAppOptions{},
-		jklapp.GetWasmOpts(simapp.EmptyAppOptions{}),
+		jklapp.EmptyBaseAppOptions{},
+		jklapp.GetWasmOpts(jklapp.EmptyBaseAppOptions{}),
 	)
 
 	if withGenesis {
@@ -57,7 +55,7 @@ func setup(isCheckTx bool) *jklapp.JackalApp {
 		app.InitChain(
 			abci.RequestInitChain{
 				Validators:      []abci.ValidatorUpdate{},
-				ConsensusParams: simapp.DefaultConsensusParams,
+				ConsensusParams: jklapp.DefaultConsensusParams,
 				AppStateBytes:   stateBytes,
 			},
 		)
@@ -67,6 +65,9 @@ func setup(isCheckTx bool) *jklapp.JackalApp {
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
+	if !testutil.CgoEnabled() {
+		suite.T().Skip("integration tests require CGO for wasmvm")
+	}
 	app := setup(false)
 	ctx := app.NewContext(false, tmproto.Header{})
 

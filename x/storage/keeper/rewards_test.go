@@ -7,7 +7,7 @@ import (
 	testutil "github.com/jackalLabs/canine-chain/v5/testutil"
 	jklminttypes "github.com/jackalLabs/canine-chain/v5/x/jklmint/types"
 	"github.com/jackalLabs/canine-chain/v5/x/storage/types"
-	"github.com/tendermint/tendermint/libs/rand"
+	"github.com/cometbft/cometbft/libs/rand"
 )
 
 func (suite *KeeperTestSuite) TestDecimals() {
@@ -23,7 +23,7 @@ func (suite *KeeperTestSuite) TestDecimals() {
 
 	coins := sdk.NewCoin("ujkl", sdk.NewInt(6000000))
 
-	res = res.Mul(coins.Amount.ToDec())
+	res = res.Mul(sdk.NewDecFromInt(coins.Amount))
 
 	suite.Require().Equal(int64(237655), res.TruncateInt64())
 }

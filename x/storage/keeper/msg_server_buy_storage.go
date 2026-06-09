@@ -106,7 +106,7 @@ func (k msgServer) BuyStorage(goCtx context.Context, msg *types.MsgBuyStorage) (
 	discount := sdk.NewDec(0)
 	if referred {
 
-		p := toPay.Amount.ToDec()
+		p := sdk.NewDecFromInt(toPay.Amount)
 
 		var hour int64 = 1000 * 60 * 60
 		if duration.Milliseconds() > 365*24*hour {
@@ -144,7 +144,7 @@ func (k msgServer) BuyStorage(goCtx context.Context, msg *types.MsgBuyStorage) (
 	refDec := sdk.NewDec(params.ReferralCommission).QuoInt64(100)
 	spr := sdk.NewDec(1).Sub(refDec).Sub(pol).Sub(discount) // whatever is left from pol and referrals
 
-	storageProviderCut := toPay.Amount.ToDec().Mul(spr)
+	storageProviderCut := sdk.NewDecFromInt(toPay.Amount).Mul(spr)
 	spcToken := sdk.NewCoin(toPay.Denom, storageProviderCut.TruncateInt())
 	spcTokens := sdk.NewCoins(spcToken)
 
@@ -163,7 +163,7 @@ func (k msgServer) BuyStorage(goCtx context.Context, msg *types.MsgBuyStorage) (
 	if err != nil {
 		return nil, sdkerrors.Wrapf(err, "cannot get pol account")
 	}
-	polCut := toPay.Amount.ToDec().Mul(pol) // 40,35,30% to pol
+	polCut := sdk.NewDecFromInt(toPay.Amount).Mul(pol) // 40,35,30% to pol
 	polToken := sdk.NewCoin(toPay.Denom, polCut.TruncateInt())
 	polTokens := sdk.NewCoins(polToken)
 
@@ -172,7 +172,7 @@ func (k msgServer) BuyStorage(goCtx context.Context, msg *types.MsgBuyStorage) (
 		return nil, sdkerrors.Wrapf(err, "cannot send tokens to pol account")
 	}
 
-	refCut := toPay.Amount.ToDec().Mul(refDec) // 25% to referrals
+	refCut := sdk.NewDecFromInt(toPay.Amount).Mul(refDec) // 25% to referrals
 	refToken := sdk.NewCoin(toPay.Denom, refCut.TruncateInt())
 	refTokens := sdk.NewCoins(refToken)
 
