@@ -1,0 +1,147 @@
+# Phase 0 — Baseline inventory
+
+Recorded **2026-06-09** for the Jackal (`canine-chain`) Cosmos modernization program.  
+See [COSMOS-MODERNIZATION.md](./COSMOS-MODERNIZATION.md) for the living roadmap.
+
+---
+
+## Mainnet baseline (pre-`v600`)
+
+| Item | Value |
+|------|-------|
+| Chain ID | `jackal-1` (mainnet) |
+| Bech32 prefix | `jkl` |
+| Latest mainnet line | **v5.1.x** (`app/upgrades/v510` — protocol label v5.1.0) |
+| On-chain upgrade before modernization | `v510` (last in `registerMainnetUpgradeHandlers` before `v600`) |
+
+### Dependency pins (mainnet `master` before migration)
+
+| Package | Version |
+|---------|---------|
+| Cosmos SDK | **0.45.17** via `replace` → `JackalLabs/cosmos-sdk-new` |
+| CometBFT | **0.34.27** via `replace` → `TheMarstonConnell/cometbft` |
+| ibc-go | **v4** |
+| wasmd | **v0.32** |
+| wasmvm | **v1.5.x** |
+| Go | **1.23** |
+
+### `replace` directives (mainnet — removed in Phase 1 except merkletree)
+
+| Replace | Purpose |
+|---------|---------|
+| `JackalLabs/cosmos-sdk-new` | Free post-proof fee waiver in SDK fork |
+| `TheMarstonConnell/cometbft` | Jackal-specific CometBFT patches |
+| `github.com/wealdtech/go-merkletree/v2` → `TheMarstonConnell/go-merkletree/v2` | Storage proof merkletree (**retained** on migration branch) |
+
+---
+
+## Migration branch (`feat/cosmos-modernization-phase1`)
+
+| Package | Version |
+|---------|---------|
+| Cosmos SDK | 0.47.17 |
+| CometBFT | 0.37.15 |
+| cometbft-db | 0.14.1 |
+| ibc-go | v7.10.0 |
+| wasmd | v0.45.0 |
+| wasmvm | v1.5.9 |
+| Go / toolchain | 1.23.1 / go1.23.8 |
+
+### Remaining `replace` directives
+
+| Replace | Status |
+|---------|--------|
+| `99designs/keyring` → `cosmos/keyring` | Standard Cosmos pin |
+| `gin-gonic/gin` | Security CVE pin |
+| `syndtr/goleveldb` | Store stability pin |
+| `go-merkletree/v2` → MarstonConnell fork | **Audit each phase** — storage proofs |
+
+---
+
+## Jackal-only patches
+
+| Patch | Legacy location | Modern location | Phase 1 status |
+|-------|-----------------|-----------------|----------------|
+| Free post-proof / attest / report / request-attestation fees | SDK fork `x/auth/ante/fee.go` | `app/ante_fee.go` | Ported |
+| Custom wasm gas register | `app/wasm_config.go` | `app/wasm_config.go` | Ported |
+| Storage int64 overflow on `FileSize * MaxProofs` | Unbounded multiply | `x/storage/keeper/mulStorageCharge` | Fixed |
+| CometBFT fork | `TheMarstonConnell/cometbft` | Upstream `cometbft` 0.37.15 | Removed |
+
+---
+
+## Custom modules (`x/`)
+
+| Module | Store key | Purpose |
+|--------|-----------|---------|
+| `storage` | `storage` | Deals, providers, proofs, payments, attestations |
+| `filetree` | `filetree` | File ACLs, viewers/editors, encrypted tree |
+| `rns` | `rns` | Name service, bids, marketplace |
+| `oracle` | `oracle` | Price / data feeds |
+| `jklmint` | `mint` (custom inflation) | Jackal inflation schedule |
+| `notifications` | `notifications` | RNS-linked notifications |
+
+All six modules: **gRPC `Msg` + `Query` only** (legacy `Route` / `Querier` removed in Phase 1).
+
+---
+
+## Standard + IBC modules (migration branch)
+
+| Category | Modules |
+|----------|---------|
+| Core SDK | auth, bank, staking, slashing, mint (jklmint replaces default mint), distr, gov, params, consensus, crisis, evidence, feegrant, authz, upgrade |
+| IBC v7 | core IBC, transfer, ICA (host + controller), **IBC fee middleware** |
+| Wasm | wasmd `x/wasm` + custom `wasmbinding` (storage, filetree, notifications) |
+
+---
+
+## Upgrade handler registry (mainnet)
+
+Handlers registered in `app/upgrades.go` → `registerMainnetUpgradeHandlers`:
+
+`bouncybulldog`, `v3`, `v4`, `v410`, `v420`, `v430`, `v440`, `v450`, `v460`, `v500`, `v510`, **`v600`** (Phase 1 target).
+
+**`v600` stores added:** `consensus`, `crisis`  
+**`v600` migrations:** `baseapp.MigrateParams` → `x/consensus` param store
+
+---
+
+## Wasm / CosmWasm
+
+| Item | Notes |
+|------|-------|
+| wasmvm (migration branch) | **v1.5.9** — lib path: `internal/api/libwasmvm.x86_64.so` |
+| wasmd | v0.45.0 — legacy gov wasm proposals still enabled (`EnableAllProposals`) |
+| Custom bindings | `wasmbinding/` — storage, filetree, notifications message plugins |
+| Mainnet code IDs | **TBD** — record per pinned contract before testnet regression (fill in after export) |
+
+> Action: export `canined query wasm list-code` from mainnet and attach code IDs + checksums before testnet wasm smoke tests.
+
+---
+
+## IBC
+
+| Item | Notes |
+|------|-------|
+| ibc-go major | v4 (mainnet) → **v7** (migration) |
+| Middleware | IBC fee module wired in `app/app.go` |
+| Connected chains | **TBD** — document counterparty chain IDs + channel IDs |
+| Relayer | **TBD** — pin Hermes / Go relayer version compatible with ibc-go v7 |
+
+---
+
+## Operations checklist (Phase 0 exit)
+
+- [x] Inventory documented (this file)
+- [ ] Tag mainnet release binary (`v5.1.x`) and archive `go.mod` + replaces
+- [ ] State export tested at current mainnet height (`canined export`)
+- [ ] Mainnet wasm code ID list captured
+- [ ] IBC channel + relayer inventory captured
+- [ ] Validator communication plan drafted (see [V600-MAINNET-GOVERNANCE.md](./V600-MAINNET-GOVERNANCE.md))
+
+---
+
+## References
+
+- [COSMOS-MODERNIZATION.md](./COSMOS-MODERNIZATION.md)
+- [V600-TESTNET-UPGRADE.md](./V600-TESTNET-UPGRADE.md)
+- [V600-MAINNET-GOVERNANCE.md](./V600-MAINNET-GOVERNANCE.md)

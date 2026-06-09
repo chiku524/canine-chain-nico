@@ -12,6 +12,9 @@
 2. [Tokens](TOKENS.md)
 3. [Storage Providers](cmd/canined/README.md)
 4. [**Cosmos stack modernization**](docs/COSMOS-MODERNIZATION.md) — living roadmap & checklist (SDK 0.47 → 0.54)
+5. [Phase 0 inventory](docs/PHASE0-INVENTORY.md)
+6. [v600 testnet upgrade playbook](docs/V600-TESTNET-UPGRADE.md)
+7. [v600 mainnet governance template](docs/V600-MAINNET-GOVERNANCE.md)
 
 
 ## Installing the Canine CLI

@@ -312,8 +312,8 @@ format: format-tools
 ###         Protobuf Tools           ###
 ########################################
 # thanks juno ;)
-protoVer = v0.7
-protoImageName = tendermintdev/sdk-proto-gen:$(protoVer)
+protoVer = 0.13.1
+protoImageName = ghcr.io/cosmos/proto-builder:$(protoVer)
 containerProtoGen = jackal-proto-gen-$(protoVer)
 containerProtoGenAny = jackal-proto-gen-any-$(protoVer)
 containerProtoGenSwagger = jackal-proto-gen-swagger-$(protoVer)

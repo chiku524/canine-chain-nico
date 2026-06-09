@@ -4,7 +4,7 @@ Living roadmap and checklist for bringing **canine-chain** in line with the supp
 
 | Field | Value |
 |-------|-------|
-| **Last updated** | 2026-06-09 |
+| **Last updated** | 2026-06-10 |
 | **Active branch** | `feat/cosmos-modernization-phase1` |
 | **Current phase** | Phase 1 — SDK 0.47 (`v600`) |
 | **North-star target** | [2026.1 release family](https://docs.cosmos.network/sdk/latest/release-family) (SDK **0.54.x**, not 0.55) |
@@ -79,6 +79,7 @@ Chronological notes; append new entries at the top.
 
 | Date | Phase | Notes |
 |------|-------|-------|
+| 2026-06-10 | Phase 0–1 | `make proto-gen` via `ghcr.io/cosmos/proto-builder:0.13.1`; regenerated `.pb.go` with `cosmos/gogoproto`; Phase 0 inventory + v600 testnet/mainnet playbooks; `scripts/smoke-v600-testnet.sh`; proto-gen CI workflow; `v600` upgrade unit test. |
 | 2026-06-09 | Phase 1 | Pushed `feat/cosmos-modernization-phase1`; `go mod tidy`; sim tests migrated off `simapp` → `testutil/sims`; storage `mulStorageCharge` overflow guard; CI: CGO + wasmvm 1.5.9 on Linux; README install section updated. |
 | 2026-06-08 | Phase 1 | Branch `feat/cosmos-modernization-phase1`: `go.mod` → 0.47 stack; `app/app.go` wasmd 0.45 rewrite; `v600` handler; free post-proof ante in `app/ante_fee.go`; build green; filetree keeper tests fixed (keyring codec). |
 | — | Phase 0 | Inventory started; mainnet at SDK 0.45 / ibc-go v4. |
@@ -93,13 +94,13 @@ Applies to all phases; check once and re-verify each phase.
 - [ ] Long-lived migration workflow: phase branches → testnet → mainnet governance
 - [x] **Linux CI with CGO** for wasmvm integration tests (`.github/workflows/test-unit.yml`)
 - [ ] Public testnet mirroring mainnet modules + representative wasm contracts
-- [ ] Upgrade playbook: halt height, binary checksum, rollback, validator comms
+- [x] Upgrade playbook: halt height, binary checksum, rollback, validator comms ([V600-TESTNET-UPGRADE.md](./V600-TESTNET-UPGRADE.md), [V600-MAINNET-GOVERNANCE.md](./V600-MAINNET-GOVERNANCE.md))
 - [ ] Remove unnecessary forks:
   - [x] Free post-proof ante → `app/ante_fee.go` (no SDK fork)
-  - [ ] CometBFT fork → upstream CometBFT
+  - [x] CometBFT fork → upstream CometBFT (Phase 1)
   - [ ] Audit `TheMarstonConnell/go-merkletree/v2` replace (storage proofs)
-- [ ] Proto pipeline: `make proto-gen` on Linux; generated code uses `cosmos/gogoproto`
-- [ ] Go version ladder documented per phase (1.23 → 1.24 → 1.25+)
+- [x] Proto pipeline: `make proto-gen` on Linux (`proto-builder:0.13.1`); generated code uses `cosmos/gogoproto`; CI in `.github/workflows/proto-gen.yml`
+- [x] Go version ladder documented per phase (see version matrix + [PHASE0-INVENTORY.md](./PHASE0-INVENTORY.md))
 
 ---
 
@@ -110,15 +111,15 @@ Applies to all phases; check once and re-verify each phase.
 
 ### Code & dependencies
 - [ ] Tag and record mainnet release binary (`v5.1.x`) `go.mod` + all `replace` directives
-- [ ] List Jackal-only patches (historical SDK fork, CometBFT fork, custom ante, wasm gas)
-- [ ] Inventory custom modules: `storage`, `filetree`, `rns`, `oracle`, `jklmint`, `notifications`
-- [ ] Inventory IBC: transfer, ICA, fee middleware, wasm IBC handler
-- [ ] List mainnet wasm code IDs / pinned contracts (per wasmvm hop)
-- [ ] Document connected IBC chains and relayer versions
+- [x] List Jackal-only patches (historical SDK fork, CometBFT fork, custom ante, wasm gas) — [PHASE0-INVENTORY.md](./PHASE0-INVENTORY.md)
+- [x] Inventory custom modules: `storage`, `filetree`, `rns`, `oracle`, `jklmint`, `notifications`
+- [x] Inventory IBC: transfer, ICA, fee middleware, wasm IBC handler
+- [ ] List mainnet wasm code IDs / pinned contracts (per wasmvm hop) — **fill TBD fields in inventory**
+- [ ] Document connected IBC chains and relayer versions — **fill TBD fields in inventory**
 
 ### Operations
 - [ ] Test state export at current mainnet height
-- [ ] Validator / provider communication plan for upgrade windows
+- [x] Validator / provider communication plan for upgrade windows — [V600-MAINNET-GOVERNANCE.md](./V600-MAINNET-GOVERNANCE.md)
 
 **Exit criteria:** Inventory complete; export tested; team agrees on phased plan.
 
@@ -172,7 +173,7 @@ Applies to all phases; check once and re-verify each phase.
 - [x] Bulk `AccAddressFromHex` → `AccAddressFromHexUnsafe` where needed
 - [x] `.pb.go` imports: `cosmos/gogoproto/proto` (not `gogo/protobuf`)
 - [x] Filetree `MakePrivateKey`: keyring codec with `cryptocodec.RegisterInterfaces`
-- [ ] Full `make proto-gen` and commit regenerated protos (replace manual patches)
+- [x] Full `make proto-gen` and commit regenerated protos (`ghcr.io/cosmos/proto-builder:0.13.1`)
 
 ### Wasmbinding & wasm
 - [x] Custom wasm plugins (`owasm`) wired in `app.go`
@@ -189,11 +190,11 @@ Applies to all phases; check once and re-verify each phase.
 ### Docs & ops
 - [x] This roadmap document created
 - [x] Update root `README.md` install section (Go version, wasmvm lib path)
-- [ ] Testnet deploy candidate `v600`
-- [ ] Testnet smoke: storage post-proof (zero fee), filetree, rns, oracle, wasm execute
+- [ ] Testnet deploy candidate `v600` — **playbook ready:** [V600-TESTNET-UPGRADE.md](./V600-TESTNET-UPGRADE.md)
+- [ ] Testnet smoke: storage post-proof (zero fee), filetree, rns, oracle, wasm execute — script: `scripts/smoke-v600-testnet.sh`
 - [ ] IBC transfer smoke on testnet
-- [ ] Mainnet governance: upgrade name `v600`, halt height, binary checksum
-- [ ] Post-upgrade monitoring (48–72h)
+- [ ] Mainnet governance: upgrade name `v600`, halt height, binary checksum — **template:** [V600-MAINNET-GOVERNANCE.md](./V600-MAINNET-GOVERNANCE.md)
+- [ ] Post-upgrade monitoring (48–72h) — checklist in governance doc
 
 **Exit criteria:** Testnet stable ≥2 weeks; mainnet `v600` executed without consensus halt.
 
