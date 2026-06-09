@@ -2,6 +2,7 @@ package keeper_test
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"testing"
 
