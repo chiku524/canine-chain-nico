@@ -15,8 +15,7 @@ func CreateTestAddresses(prefix string, n int) ([]string, error) {
 	var s []string
 
 	for i := 0; i < n; i++ {
-		b := randomAccounts[i].PubKey.Bytes()
-		address, err := sdkTypes.Bech32ifyAddressBytes(prefix, b)
+		address, err := sdkTypes.Bech32ifyAddressBytes(prefix, randomAccounts[i].Address)
 		if err != nil {
 			return nil, err
 		}
