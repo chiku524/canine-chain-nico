@@ -3,10 +3,10 @@ package testutil
 import (
 	"testing"
 
-	"github.com/stretchr/testify/assert"
 	"github.com/cometbft/cometbft/libs/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cometbft/cometbft-db"
+	"github.com/stretchr/testify/assert"
 
 	"github.com/cosmos/cosmos-sdk/store"
 	storetypes "github.com/cosmos/cosmos-sdk/store/types"

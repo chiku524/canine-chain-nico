@@ -6,11 +6,12 @@ import (
 	"strings"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	appparams "github.com/jackalLabs/canine-chain/v5/app/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	eciesgo "github.com/ecies/go/v2"
+
+	appparams "github.com/jackalLabs/canine-chain/v5/app/params"
 	"github.com/jackalLabs/canine-chain/v5/x/filetree/keeper"
 	"github.com/jackalLabs/canine-chain/v5/x/filetree/types"
 )

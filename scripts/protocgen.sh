@@ -1,18 +1,27 @@
-#!/usr/bin/env bash
+#!/usr/bin/env sh
 
-set -eo pipefail
+set -eu
 
 echo "Generating gogo proto code"
 cd proto
-proto_dirs=$(find . -name '*.proto' -print0 | xargs -0 -n1 dirname | sort -u)
-for dir in $proto_dirs; do
-  for file in "$dir"/*.proto; do
-    [ -f "$file" ] || continue
-    if grep -q go_package "$file"; then
-      buf generate --template buf.gen.gogo.yaml "$file"
-    fi
-  done
+
+# Resolve pinned protobuf deps (requires network on first run; uses buf.lock afterwards).
+buf mod update
+
+proto_count=0
+for file in $(find . -name '*.proto' | sort); do
+  if grep -q go_package "$file"; then
+    echo "  buf generate ${file#./}"
+    buf generate --template buf.gen.gogo.yaml "$file"
+    proto_count=$((proto_count + 1))
+  fi
 done
+
+echo "processed ${proto_count} proto files"
+if [ "$proto_count" -eq 0 ]; then
+  echo "no .proto files found under proto/"
+  exit 1
+fi
 
 cd ..
 
