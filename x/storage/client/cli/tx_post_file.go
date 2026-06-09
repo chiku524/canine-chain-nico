@@ -292,8 +292,8 @@ find:
 		}
 
 		for _, attr := range event.Attributes {
-			if string(attr.Key) == "start" {
-				startatStr = string(attr.Value)
+			if attr.Key == "start" {
+				startatStr = attr.Value
 				break find
 			}
 		}

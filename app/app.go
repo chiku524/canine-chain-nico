@@ -620,9 +620,9 @@ func NewJackalApp(
 	app.mm.SetOrderMigrations(
 		authtypes.ModuleName, authz.ModuleName, banktypes.ModuleName, capabilitytypes.ModuleName,
 		distrtypes.ModuleName, evidencetypes.ModuleName, feegrant.ModuleName, genutiltypes.ModuleName,
-		govtypes.ModuleName, ibcexported.ModuleName, minttypes.ModuleName, slashingtypes.ModuleName,
-		stakingtypes.ModuleName, ibctransfertypes.ModuleName, paramstypes.ModuleName, upgradetypes.ModuleName,
-		vestingtypes.ModuleName, consensusparamtypes.ModuleName, wasmtypes.ModuleName,
+		govtypes.ModuleName, ibcexported.ModuleName, ibcfeetypes.ModuleName, minttypes.ModuleName,
+		slashingtypes.ModuleName, stakingtypes.ModuleName, ibctransfertypes.ModuleName, paramstypes.ModuleName,
+		upgradetypes.ModuleName, vestingtypes.ModuleName, consensusparamtypes.ModuleName, wasmtypes.ModuleName,
 		rnsmoduletypes.ModuleName, oraclemoduletypes.ModuleName, storagemoduletypes.ModuleName,
 		filetreemoduletypes.ModuleName, notificationsmoduletypes.ModuleName, icatypes.ModuleName,
 		crisistypes.ModuleName,

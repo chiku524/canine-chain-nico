@@ -7,7 +7,6 @@ linters:
     - bodyclose
     - dogsled
     - errcheck
-    - goconst
     - gocritic
     - gosec
     - govet
@@ -23,6 +22,11 @@ linters:
       excludes:
         - G404
         - G115
+    staticcheck:
+      # SDK 0.47 migration still uses deprecated x/params, sdkerrors, and sim proposal APIs.
+      checks:
+        - all
+        - -SA1019
   exclusions:
     generated: lax
     presets:

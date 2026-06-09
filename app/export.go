@@ -105,7 +105,7 @@ func (app *JackalApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs
 		feePool.CommunityPool = feePool.CommunityPool.Add(scraps...)
 		app.distrKeeper.SetFeePool(ctx, feePool)
 
-		app.distrKeeper.Hooks().AfterValidatorCreated(ctx, val.GetOperator())
+		_ = app.distrKeeper.Hooks().AfterValidatorCreated(ctx, val.GetOperator())
 		return false
 	})
 
@@ -119,8 +119,8 @@ func (app *JackalApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs
 		if err != nil {
 			panic(err)
 		}
-		app.distrKeeper.Hooks().BeforeDelegationCreated(ctx, delAddr, valAddr)
-		app.distrKeeper.Hooks().AfterDelegationModified(ctx, delAddr, valAddr)
+		_ = app.distrKeeper.Hooks().BeforeDelegationCreated(ctx, delAddr, valAddr)
+		_ = app.distrKeeper.Hooks().AfterDelegationModified(ctx, delAddr, valAddr)
 	}
 
 	// reset context height
