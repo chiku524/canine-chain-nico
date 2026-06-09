@@ -2,6 +2,7 @@ package keeper
 
 import (
 	"encoding/json"
+	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
@@ -163,4 +164,19 @@ func (k Keeper) GetJklPrice(ctx sdk.Context) (price sdk.Dec) {
 	}
 
 	return price
+}
+
+// mulStorageCharge multiplies file size by max proofs, rejecting int64 overflow.
+func mulStorageCharge(fileSize, maxProofs int64) (int64, error) {
+	if fileSize == 0 || maxProofs == 0 {
+		return 0, nil
+	}
+	total := fileSize * maxProofs
+	if total/fileSize != maxProofs {
+		return 0, fmt.Errorf("storage charge overflows: file_size=%d max_proofs=%d", fileSize, maxProofs)
+	}
+	if total < 0 {
+		return 0, fmt.Errorf("storage charge is negative: file_size=%d max_proofs=%d", fileSize, maxProofs)
+	}
+	return total, nil
 }

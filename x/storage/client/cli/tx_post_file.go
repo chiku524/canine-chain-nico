@@ -22,7 +22,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/client/input"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/spf13/pflag"
-	"github.com/tendermint/tendermint/libs/rand"
+	"github.com/cometbft/cometbft/libs/rand"
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/client/tx"
@@ -84,7 +84,10 @@ func prepareFactory(clientCtx client.Context, txf tx.Factory) (tx.Factory, error
 // GenerateOrBroadcastTx is some dumb wrapper I had to make cause the sdk assumes I don't want to programmatically handle the
 // response but instead print it out like a doofus
 func GenerateOrBroadcastTx(clientCtx client.Context, flags *pflag.FlagSet, msgs ...sdk.Msg) (*sdk.TxResponse, error) {
-	txf := tx.NewFactoryCLI(clientCtx, flags)
+	txf, err := tx.NewFactoryCLI(clientCtx, flags)
+	if err != nil {
+		return nil, err
+	}
 
 	for _, msg := range msgs {
 		if err := msg.ValidateBasic(); err != nil {
@@ -92,7 +95,7 @@ func GenerateOrBroadcastTx(clientCtx client.Context, flags *pflag.FlagSet, msgs 
 		}
 	}
 
-	txf, err := prepareFactory(clientCtx, txf)
+	txf, err = prepareFactory(clientCtx, txf)
 	if err != nil {
 		return nil, err
 	}
@@ -111,7 +114,7 @@ func GenerateOrBroadcastTx(clientCtx client.Context, flags *pflag.FlagSet, msgs 
 		return nil, err
 	}
 
-	txn, err := tx.BuildUnsignedTx(txf, msgs...)
+	txn, err := txf.BuildUnsignedTx(msgs...)
 	if err != nil {
 		return nil, err
 	}
@@ -145,7 +148,7 @@ func GenerateOrBroadcastTx(clientCtx client.Context, flags *pflag.FlagSet, msgs 
 	}
 
 	// broadcast to a Tendermint node
-	return clientCtx.BroadcastTxCommit(txBytes)
+	return clientCtx.BroadcastTx(txBytes)
 }
 
 func uploadFile(ip string, r io.Reader, merkle []byte, start int64, address string) error {
@@ -289,8 +292,8 @@ find:
 		}
 
 		for _, attr := range event.Attributes {
-			if string(attr.Key) == "start" {
-				startatStr = string(attr.Value)
+			if attr.Key == "start" {
+				startatStr = attr.Value
 				break find
 			}
 		}

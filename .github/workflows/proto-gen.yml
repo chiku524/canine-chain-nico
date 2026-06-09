@@ -1,0 +1,32 @@
+name: Proto Gen
+
+on:
+  pull_request:
+    paths:
+      - "proto/**"
+      - "scripts/protocgen.sh"
+      - "proto/buf.gen.gogo.yaml"
+  push:
+    branches: ["master", "feat/**"]
+    paths:
+      - "proto/**"
+      - "scripts/protocgen.sh"
+      - "proto/buf.gen.gogo.yaml"
+
+jobs:
+  proto-gen:
+    name: Verify protobuf codegen
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.2.2
+      - name: Normalize shell script line endings
+        run: sed -i 's/\r$//' scripts/protocgen.sh
+      - name: Generate protobuf files
+        run: make proto-gen
+      - name: Check for uncommitted changes
+        run: |
+          if ! git diff --quiet; then
+            echo "::error::Generated protobuf files are out of date. Run 'make proto-gen' and commit."
+            git diff --stat
+            exit 1
+          fi

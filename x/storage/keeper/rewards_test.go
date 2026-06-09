@@ -7,7 +7,7 @@ import (
 	testutil "github.com/jackalLabs/canine-chain/v5/testutil"
 	jklminttypes "github.com/jackalLabs/canine-chain/v5/x/jklmint/types"
 	"github.com/jackalLabs/canine-chain/v5/x/storage/types"
-	"github.com/tendermint/tendermint/libs/rand"
+	"github.com/cometbft/cometbft/libs/rand"
 )
 
 func (suite *KeeperTestSuite) TestDecimals() {
@@ -23,7 +23,7 @@ func (suite *KeeperTestSuite) TestDecimals() {
 
 	coins := sdk.NewCoin("ujkl", sdk.NewInt(6000000))
 
-	res = res.Mul(coins.Amount.ToDec())
+	res = res.Mul(sdk.NewDecFromInt(coins.Amount))
 
 	suite.Require().Equal(int64(237655), res.TruncateInt64())
 }
@@ -31,7 +31,7 @@ func (suite *KeeperTestSuite) TestDecimals() {
 func (suite *KeeperTestSuite) TestEmptyReward() {
 	suite.SetupSuite()
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 2)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 2)
 	suite.Require().NoError(err)
 
 	signer := testAddresses[0]
@@ -102,7 +102,7 @@ func (suite *KeeperTestSuite) TestEmptyReward() {
 func (suite *KeeperTestSuite) TestReward() {
 	suite.SetupSuite()
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 2)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 2)
 	suite.Require().NoError(err)
 
 	signer := testAddresses[0]
@@ -189,7 +189,7 @@ func (suite *KeeperTestSuite) TestLongTermReward() {
 	for i := 1; i < 10; i++ {
 		suite.SetupSuite()
 
-		testAddresses, err := testutil.CreateTestAddresses("cosmos", 2)
+		testAddresses, err := testutil.CreateTestAddresses("jkl", 2)
 		suite.Require().NoError(err)
 
 		signer := testAddresses[0]
@@ -286,7 +286,7 @@ func (suite *KeeperTestSuite) TestLongTermRewardWithWindows() {
 	for j := int64(1); j < 10; j++ {
 		suite.SetupSuite()
 
-		testAddresses, err := testutil.CreateTestAddresses("cosmos", 2)
+		testAddresses, err := testutil.CreateTestAddresses("jkl", 2)
 		suite.Require().NoError(err)
 
 		signer := testAddresses[0]

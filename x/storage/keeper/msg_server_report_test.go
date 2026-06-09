@@ -9,10 +9,10 @@ func (suite *KeeperTestSuite) TestReport() {
 	suite.SetupSuite()
 	params := suite.storageKeeper.GetParams(suite.ctx)
 
-	addresses, err := testutil.CreateTestAddresses("cosmos", int(params.AttestFormSize)+2)
+	addresses, err := testutil.CreateTestAddresses("jkl", int(params.AttestFormSize)+2)
 	suite.Require().NoError(err)
 
-	badAddresses, err := testutil.CreateTestAddresses("cosmos", 10)
+	badAddresses, err := testutil.CreateTestAddresses("jkl", 10)
 
 	cases := map[string]struct {
 		owner   string
@@ -106,7 +106,7 @@ func (suite *KeeperTestSuite) TestRequestReportForm() {
 	suite.SetupSuite()
 	params := suite.storageKeeper.GetParams(suite.ctx)
 
-	addresses, err := testutil.CreateTestAddresses("cosmos", int(params.AttestFormSize)+10)
+	addresses, err := testutil.CreateTestAddresses("jkl", int(params.AttestFormSize)+10)
 	suite.Require().NoError(err)
 
 	cases := map[string]struct {

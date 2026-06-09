@@ -5,6 +5,7 @@ on:
       - v*
     branches:
       - master
+      - "feat/**"
   pull_request:
 permissions:
   contents: read

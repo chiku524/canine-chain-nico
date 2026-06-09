@@ -12,7 +12,7 @@ import (
 func (suite *KeeperTestSuite) TestSetProviders() {
 	suite.SetupSuite()
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 1)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 1)
 	suite.Require().NoError(err)
 
 	user := testAddresses[0]
@@ -46,7 +46,7 @@ func (suite *KeeperTestSuite) TestInitProviders() {
 	suite.SetupSuite()
 	msgSrvr, k, ctx := setupMsgServer(suite)
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 1)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 1)
 	suite.Require().NoError(err)
 
 	user := testAddresses[0]
@@ -99,7 +99,7 @@ func (suite *KeeperTestSuite) TestInitProviders() {
 func (suite *KeeperTestSuite) TestGetProviders() {
 	suite.SetupSuite()
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 1)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 1)
 	suite.Require().NoError(err)
 
 	user := testAddresses[0]
@@ -128,7 +128,7 @@ func (suite *KeeperTestSuite) TestGetProviders() {
 func (suite *KeeperTestSuite) TestGetAllProviders() {
 	suite.SetupSuite()
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 2)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 2)
 	suite.Require().NoError(err)
 
 	alice := testAddresses[0]
@@ -164,7 +164,7 @@ func (suite *KeeperTestSuite) TestGetAllProviders() {
 func (suite *KeeperTestSuite) TestRemoveProviders() {
 	suite.SetupSuite()
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 1)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 1)
 	suite.Require().NoError(err)
 
 	user := testAddresses[0]

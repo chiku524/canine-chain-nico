@@ -3,7 +3,6 @@ package keeper_test
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/bank/types"
 )
 
 func (suite *MintTestSuite) TestBlockMint() {
@@ -11,30 +10,16 @@ func (suite *MintTestSuite) TestBlockMint() {
 	app, ctx, k := suite.app, suite.ctx, suite.app.MintKeeper
 	denom := k.GetParams(ctx).MintDenom
 	feeAccount := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
-	feeBalanceBefore, err := app.BankKeeper.Balance(sdk.WrapSDKContext(ctx), &types.QueryBalanceRequest{
-		Address: feeAccount.GetAddress().String(),
-		Denom:   denom,
-	})
-	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.ZeroInt(), feeBalanceBefore.Balance.Amount)
-	supplyBefore, err := app.BankKeeper.TotalSupply(sdk.WrapSDKContext(ctx), &types.QueryTotalSupplyRequest{})
-	suite.Require().NoError(err)
-	suite.Require().True(supplyBefore.Supply.Empty())
-	// We have now proved we started with nothing
+	feeBalanceBefore := app.BankKeeper.GetBalance(ctx, feeAccount.GetAddress(), denom)
+	suite.Require().True(feeBalanceBefore.Amount.IsZero())
+	supplyBefore := app.BankKeeper.GetSupply(ctx, denom)
 
 	k.BlockMint(ctx)
 
-	feeBalanceAfter, err := app.BankKeeper.Balance(sdk.WrapSDKContext(ctx), &types.QueryBalanceRequest{
-		Address: feeAccount.GetAddress().String(),
-		Denom:   denom,
-	})
-
-	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewInt(3360000), feeBalanceAfter.Balance.Amount)
-	supplyAfter, err := app.BankKeeper.TotalSupply(sdk.WrapSDKContext(ctx), &types.QueryTotalSupplyRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Equal(1, len(supplyAfter.Supply))
-	suite.Require().Equal(sdk.NewInt(4_200_000), supplyAfter.Supply.AmountOf(denom))
+	feeBalanceAfter := app.BankKeeper.GetBalance(ctx, feeAccount.GetAddress(), denom)
+	suite.Require().Equal(sdk.NewInt(3360000), feeBalanceAfter.Amount.Sub(feeBalanceBefore.Amount))
+	supplyAfter := app.BankKeeper.GetSupply(ctx, denom)
+	suite.Require().Equal(sdk.NewInt(4_200_000), supplyAfter.Amount.Sub(supplyBefore.Amount))
 	// After BlockMint we now have exactly 3.6JKL in the fee collector account
 }
 
@@ -52,31 +37,18 @@ func (suite *MintTestSuite) TestNoProviderBlockMint() {
 	suite.Require().Equal(int64(0), pr)
 
 	feeAccount := app.AccountKeeper.GetModuleAccount(ctx, authtypes.FeeCollectorName)
-	feeBalanceBefore, err := app.BankKeeper.Balance(sdk.WrapSDKContext(ctx), &types.QueryBalanceRequest{
-		Address: feeAccount.GetAddress().String(),
-		Denom:   denom,
-	})
-	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.ZeroInt(), feeBalanceBefore.Balance.Amount)
-	supplyBefore, err := app.BankKeeper.TotalSupply(sdk.WrapSDKContext(ctx), &types.QueryTotalSupplyRequest{})
-	suite.Require().NoError(err)
-	suite.Require().True(supplyBefore.Supply.Empty())
-	// We have now proved we started with nothing
+	feeBalanceBefore := app.BankKeeper.GetBalance(ctx, feeAccount.GetAddress(), denom)
+	suite.Require().True(feeBalanceBefore.Amount.IsZero())
+	supplyBefore := app.BankKeeper.GetSupply(ctx, denom)
 
 	k.BlockMint(ctx)
 
-	feeBalanceAfter, err := app.BankKeeper.Balance(sdk.WrapSDKContext(ctx), &types.QueryBalanceRequest{
-		Address: feeAccount.GetAddress().String(),
-		Denom:   denom,
-	})
+	feeBalanceAfter := app.BankKeeper.GetBalance(ctx, feeAccount.GetAddress(), denom)
 
 	suite.T().Log(params.TokensPerBlock)
-	suite.Require().NoError(err)
-	suite.Require().Equal(sdk.NewInt(3360000), feeBalanceAfter.Balance.Amount)
-	supplyAfter, err := app.BankKeeper.TotalSupply(sdk.WrapSDKContext(ctx), &types.QueryTotalSupplyRequest{})
-	suite.Require().NoError(err)
-	suite.Require().Equal(1, len(supplyAfter.Supply))
-	suite.Require().Equal(sdk.NewInt(4_200_000), supplyAfter.Supply.AmountOf(denom))
+	suite.Require().Equal(sdk.NewInt(3360000), feeBalanceAfter.Amount.Sub(feeBalanceBefore.Amount))
+	supplyAfter := app.BankKeeper.GetSupply(ctx, denom)
+	suite.Require().Equal(sdk.NewInt(4_200_000), supplyAfter.Amount.Sub(supplyBefore.Amount))
 	// After BlockMint we now have exactly 3.6JKL in the fee collector account
 }
 

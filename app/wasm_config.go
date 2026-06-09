@@ -1,7 +1,7 @@
 package app
 
 import (
-	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
 const (
@@ -12,14 +12,14 @@ const (
 )
 
 // JackalGasRegisterConfig is defaults plus a custom compile amount
-func JackalGasRegisterConfig() wasmkeeper.WasmGasRegisterConfig {
-	gasConfig := wasmkeeper.DefaultGasRegisterConfig()
+func JackalGasRegisterConfig() wasmtypes.WasmGasRegisterConfig {
+	gasConfig := wasmtypes.DefaultGasRegisterConfig()
 	gasConfig.InstanceCost = DefaultJackalInstanceCost
 	gasConfig.CompileCost = DefaultJackalCompileCost
 
 	return gasConfig
 }
 
-func NewJackalWasmGasRegister() wasmkeeper.WasmGasRegister {
-	return wasmkeeper.NewWasmGasRegister(JackalGasRegisterConfig())
+func NewJackalWasmGasRegister() wasmtypes.GasRegister {
+	return wasmtypes.NewWasmGasRegister(JackalGasRegisterConfig())
 }

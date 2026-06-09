@@ -11,12 +11,27 @@
 1. [Modules](x/README.md)
 2. [Tokens](TOKENS.md)
 3. [Storage Providers](cmd/canined/README.md)
+4. [**Cosmos stack modernization**](docs/COSMOS-MODERNIZATION.md) — living roadmap & checklist (SDK 0.47 → 0.54)
+5. [Phase 0 inventory](docs/PHASE0-INVENTORY.md)
+6. [v600 testnet upgrade playbook](docs/V600-TESTNET-UPGRADE.md)
+7. [v600 mainnet governance template](docs/V600-MAINNET-GOVERNANCE.md)
 
 
 ## Installing the Canine CLI
 ### Prerequisites
-* Install GoLang 1.21 [here](https://go.dev/dl/)
-* Install build essentials (GNU Make)
+* **Go 1.23.8** on `feat/cosmos-modernization-phase1` (see `go.mod`; mainnet today: 1.23+; north-star 0.54 stack: Go 1.25+)
+* GNU Make and a C toolchain (`build-essential` on Debian/Ubuntu)
+* **CGO enabled** for `canined` and wasm tests (`CGO_ENABLED=1`)
+* **wasmvm shared library** matching `go.mod` (migration branch: **v1.5.9**):
+
+```sh
+# Linux amd64 — replace TAG with the wasmvm version from go.mod (e.g. v1.5.9)
+WASMVM_TAG=v1.5.9
+sudo wget -q "https://github.com/CosmWasm/wasmvm/raw/${WASMVM_TAG}/internal/api/libwasmvm.x86_64.so" \
+  -O /usr/lib/libwasmvm.x86_64.so
+```
+
+On macOS use `libwasmvm.dylib` from the same tag path under `internal/api/`.
 
 ### Installing
 > if you want to use pebble follow this: https://github.com/JackalLabs/canine-chain/pull/511
@@ -30,10 +45,11 @@ make install
 ```
 
 ### Pre-built Binary
-[Releases](https://github.com/jackalLabs/canine-chain-chain/releases) and download the latest release. Move the executable to a folder in your `$PATH` and download [this](https://github.com/CosmWasm/wasmvm/raw/v1.2.6/internal/api/libwasmvm.x86_64.so) to `/lib/libwasmvm.x86_64.so` 
+[Releases](https://github.com/JackalLabs/canine-chain/releases) — download the latest release for your network. Install the **wasmvm** shared library version that matches the release (see `go.mod` and [docs/COSMOS-MODERNIZATION.md](docs/COSMOS-MODERNIZATION.md)). Example for wasmvm **1.5.x** (migration branch):
 
 ```sh
-sudo wget https://github.com/CosmWasm/wasmvm/raw/v1.2.6/internal/api/libwasmvm.x86_64.so -O /lib/libwasmvm.x86_64.so
+# Replace TAG with the wasmvm version from go.mod (e.g. v1.5.9)
+sudo wget "https://github.com/CosmWasm/wasmvm/raw/TAG/internal/api/libwasmvm.x86_64.so" -O /lib/libwasmvm.x86_64.so
 ```
 
 You may also need to run `sudo chmod +x canined` inside the executables directory to allow it to run.

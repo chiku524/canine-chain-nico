@@ -12,5 +12,5 @@ const (
 
 func GetDevAndGrantAccount() (sdk.AccAddress, error) {
 	adr := hex.EncodeToString([]byte(DevelopmentAndGrants))
-	return sdk.AccAddressFromHex(adr)
+	return sdk.AccAddressFromHexUnsafe(adr)
 }

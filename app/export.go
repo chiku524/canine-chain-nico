@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"log"
 
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,7 +16,7 @@ import (
 // ExportAppStateAndValidators exports the state of the application for a genesis
 // file.
 func (app *JackalApp) ExportAppStateAndValidators(
-	forZeroHeight bool, jailAllowedAddrs []string,
+	forZeroHeight bool, jailAllowedAddrs []string, _ []string,
 ) (servertypes.ExportedApp, error) {
 	// as if they could withdraw from the start of the next block
 	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
@@ -105,7 +105,7 @@ func (app *JackalApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs
 		feePool.CommunityPool = feePool.CommunityPool.Add(scraps...)
 		app.distrKeeper.SetFeePool(ctx, feePool)
 
-		app.distrKeeper.Hooks().AfterValidatorCreated(ctx, val.GetOperator())
+		_ = app.distrKeeper.Hooks().AfterValidatorCreated(ctx, val.GetOperator())
 		return false
 	})
 
@@ -119,8 +119,8 @@ func (app *JackalApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs
 		if err != nil {
 			panic(err)
 		}
-		app.distrKeeper.Hooks().BeforeDelegationCreated(ctx, delAddr, valAddr)
-		app.distrKeeper.Hooks().AfterDelegationModified(ctx, delAddr, valAddr)
+		_ = app.distrKeeper.Hooks().BeforeDelegationCreated(ctx, delAddr, valAddr)
+		_ = app.distrKeeper.Hooks().AfterDelegationModified(ctx, delAddr, valAddr)
 	}
 
 	// reset context height

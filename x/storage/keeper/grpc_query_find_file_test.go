@@ -12,7 +12,7 @@ import (
 func (suite *KeeperTestSuite) TestFindFile() {
 	suite.SetupSuite()
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 4)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 4)
 	suite.Require().NoError(err)
 
 	testAccount := testAddresses[0]

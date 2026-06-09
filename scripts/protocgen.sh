@@ -1,25 +1,32 @@
-#!/usr/bin/env bash
-set -euox pipefail
+#!/usr/bin/env sh
 
-# Get protoc executions
-go get github.com/regen-network/cosmos-proto/protoc-gen-gocosmos #2>/dev/null
-
-# Get cosmos sdk from github
-go get github.com/cosmos/cosmos-sdk@v0.45.17 #2>/dev/null
+set -eu
 
 echo "Generating gogo proto code"
 cd proto
-proto_dirs=$(find ./ -path -prune -o -name '*.proto' -print0 | xargs -0 -n1 dirname | sort | uniq) # ./proto/canine_chain/jklmint
-for dir in $proto_dirs; do
-  for file in $(find "${dir}" -maxdepth 1 -name '*.proto'); do
-    if grep go_package $file &>/dev/null; then
-      buf generate --template buf.gen.gogo.yaml $file
-    fi
-  done
+
+proto_count=0
+for file in $(find . -name '*.proto' | sort); do
+  if grep -q go_package "$file"; then
+    echo "  buf generate ${file#./}"
+    buf generate --template buf.gen.gogo.yaml "$file"
+    proto_count=$((proto_count + 1))
+  fi
 done
+
+echo "processed ${proto_count} proto files"
+if [ "$proto_count" -eq 0 ]; then
+  echo "no .proto files found under proto/"
+  exit 1
+fi
 
 cd ..
 
-# move proto files to the right places
-cp -r github.com/jackalLabs/canine-chain/* ./
+if [ ! -d github.com/jackalLabs/canine-chain/x ]; then
+  echo "protobuf generation produced no output (expected github.com/jackalLabs/canine-chain/x)"
+  exit 1
+fi
+
+# Merge generated module tree into repo (proto go_package omits /v5 major version).
+cp -r github.com/jackalLabs/canine-chain/x/. x/
 rm -rf github.com

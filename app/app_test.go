@@ -1,68 +1,55 @@
+//go:build cgo
+
 package app
 
 import (
 	"encoding/json"
-	"os"
 	"testing"
 
+	"github.com/cometbft/cometbft/libs/log"
+	dbm "github.com/cometbft/cometbft-db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/tendermint/tendermint/libs/log"
-	db "github.com/tendermint/tm-db"
 
-	abci "github.com/tendermint/tendermint/abci/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
-	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+
+	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
+	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 )
 
-var emptyWasmOpts []wasm.Option
-
-func setBech32ForTest() {
-	// SDK config
-	cfg := sdk.GetConfig()
-	cfg.SetBech32PrefixForAccount(Bech32PrefixAccAddr, Bech32PrefixAccPub)
-	cfg.SetBech32PrefixForValidator(Bech32PrefixValAddr, Bech32PrefixValPub)
-	cfg.SetBech32PrefixForConsensusNode(Bech32PrefixConsAddr, Bech32PrefixConsPub)
-	cfg.SetAddressVerifier(wasmtypes.VerifyAddressLen())
-}
+var emptyWasmOpts []wasmkeeper.Option
 
 func TestWasmdExport(t *testing.T) {
-	setBech32ForTest()
+	SetBech32ForTest()
 
-	db := db.NewMemDB()
-	gapp := NewJackalApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, MakeEncodingConfig(), wasm.EnableAllProposals, EmptyBaseAppOptions{}, emptyWasmOpts)
+	gapp := SetupTestingAppWithGenesis(t)
 
-	genesisState := NewDefaultGenesisState()
-	stateBytes, err := json.MarshalIndent(genesisState, "", "  ")
+	exported, err := gapp.ExportAppStateAndValidators(false, []string{}, nil)
 	require.NoError(t, err)
 
-	// Initialize the chain
-	gapp.InitChain(
-		abci.RequestInitChain{
-			Validators:    []abci.ValidatorUpdate{},
-			AppStateBytes: stateBytes,
-		},
-	)
-	gapp.Commit()
+	db := dbm.NewMemDB()
+	newGapp := NewJackalApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5,
+		MakeEncodingConfig(), wasmtypes.EnableAllProposals, EmptyBaseAppOptions{}, emptyWasmOpts)
 
-	// Making a new app object with the db, so that initchain hasn't been called
-	newGapp := NewJackalApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, MakeEncodingConfig(), wasm.EnableAllProposals, EmptyBaseAppOptions{}, emptyWasmOpts)
-	_, err = newGapp.ExportAppStateAndValidators(false, []string{})
-	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
+	var genesisState GenesisState
+	require.NoError(t, json.Unmarshal(exported.AppState, &genesisState))
+
+	ctx := newGapp.NewContext(true, tmproto.Header{Height: 0})
+	newGapp.mm.InitGenesis(ctx, newGapp.AppCodec(), genesisState)
+	newGapp.StoreConsensusParams(ctx, exported.ConsensusParams)
 }
 
 // ensure that blocked addresses are properly set in bank keeper
 func TestBlockedAddrs(t *testing.T) {
-	setBech32ForTest()
+	SetBech32ForTest()
 
-	db := db.NewMemDB()
-	gapp := NewJackalApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, MakeEncodingConfig(), wasm.EnableAllProposals, EmptyBaseAppOptions{}, emptyWasmOpts)
+	gapp := SetupTestingAppWithGenesis(t)
 
-	for acc := range maccPerms {
-		t.Run(acc, func(t *testing.T) {
-			require.True(t, gapp.BankKeeper.BlockedAddr(gapp.AccountKeeper.GetModuleAddress(acc)),
+	for addr, blocked := range BlockedAddresses() {
+		t.Run(addr, func(t *testing.T) {
+			require.Equal(t, blocked, gapp.BankKeeper.BlockedAddr(sdk.MustAccAddressFromBech32(addr)),
 				"ensure that blocked addresses are properly set in bank keeper",
 			)
 		})
@@ -78,20 +65,20 @@ func TestGetEnabledProposals(t *testing.T) {
 	cases := map[string]struct {
 		proposalsEnabled string
 		specificEnabled  string
-		expected         []wasm.ProposalType
+		expected         []wasmtypes.ProposalType
 	}{
 		"all disabled": {
 			proposalsEnabled: "false",
-			expected:         wasm.DisableAllProposals,
+			expected:         wasmtypes.DisableAllProposals,
 		},
 		"all enabled": {
 			proposalsEnabled: "true",
-			expected:         wasm.EnableAllProposals,
+			expected:         wasmtypes.EnableAllProposals,
 		},
 		"some enabled": {
 			proposalsEnabled: "okay",
 			specificEnabled:  "StoreCode,InstantiateContract",
-			expected:         []wasm.ProposalType{wasm.ProposalTypeStoreCode, wasm.ProposalTypeInstantiateContract},
+			expected:         []wasmtypes.ProposalType{wasmtypes.ProposalTypeStoreCode, wasmtypes.ProposalTypeInstantiateContract},
 		},
 	}
 
@@ -103,23 +90,4 @@ func TestGetEnabledProposals(t *testing.T) {
 			assert.Equal(t, tc.expected, proposals)
 		})
 	}
-}
-
-func setGenesis(gapp *JackalApp) error { //nolint:unused
-	genesisState := NewDefaultGenesisState()
-	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
-	if err != nil {
-		return err
-	}
-
-	// Initialize the chain
-	gapp.InitChain(
-		abci.RequestInitChain{
-			Validators:    []abci.ValidatorUpdate{},
-			AppStateBytes: stateBytes,
-		},
-	)
-
-	gapp.Commit()
-	return nil
 }

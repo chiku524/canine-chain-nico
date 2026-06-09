@@ -11,7 +11,7 @@ func (suite *KeeperTestSuite) TestUpgradeStorage() {
 	msgSrvr, k, ctx := setupMsgServer(suite)
 
 	// Create test account
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 1)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 1)
 	suite.Require().NoError(err)
 
 	testAccount := testAddresses[0]

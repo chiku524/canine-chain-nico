@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"testing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -11,63 +12,22 @@ import (
 	jklapp "github.com/jackalLabs/canine-chain/v5/app"
 	"github.com/jackalLabs/canine-chain/v5/testutil"
 	"github.com/jackalLabs/canine-chain/v5/x/storage/types"
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	dbm "github.com/tendermint/tm-db"
-
-	abci "github.com/tendermint/tendermint/abci/types"
-
-	"github.com/cosmos/cosmos-sdk/simapp"
-	"github.com/tendermint/tendermint/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 )
 
-func genApp(withGenesis bool, invCheckPeriod uint) (*jklapp.JackalApp, jklapp.GenesisState) {
-	db := dbm.NewMemDB()
-	encCdc := jklapp.MakeEncodingConfig()
-	app := jklapp.NewJackalApp(
-		log.NewNopLogger(),
-		db,
-		nil,
-		true,
-		map[int64]bool{},
-		simapp.DefaultNodeHome,
-		invCheckPeriod,
-		encCdc,
-		jklapp.GetEnabledProposals(),
-		simapp.EmptyAppOptions{},
-		jklapp.GetWasmOpts(simapp.EmptyAppOptions{}),
-	)
-
-	if withGenesis {
-		return app, jklapp.NewDefaultGenesisState()
+func setup(t *testing.T) *jklapp.JackalApp {
+	t.Helper()
+	if !testutil.CgoEnabled() {
+		t.Skip("integration tests require CGO for wasmvm")
 	}
-
-	return app, jklapp.GenesisState{}
-}
-
-func setup(isCheckTx bool) *jklapp.JackalApp {
-	app, genesisState := genApp(!isCheckTx, 5)
-	if !isCheckTx {
-		// init chain must be called to stop deliverState from being nil
-		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
-		if err != nil {
-			panic(err)
-		}
-
-		// Initialize the chain
-		app.InitChain(
-			abci.RequestInitChain{
-				Validators:      []abci.ValidatorUpdate{},
-				ConsensusParams: simapp.DefaultConsensusParams,
-				AppStateBytes:   stateBytes,
-			},
-		)
-	}
-
-	return app
+	return jklapp.SetupTestingAppWithGenesis(t)
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
-	app := setup(false)
+	if !testutil.CgoEnabled() {
+		suite.T().Skip("integration tests require CGO for wasmvm")
+	}
+	app := setup(suite.T())
 	ctx := app.NewContext(false, tmproto.Header{})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry)
@@ -82,7 +42,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 func (suite *KeeperTestSuite) TestAllFiles() {
 	suite.SetupSuite()
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 2)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 2)
 	suite.Require().NoError(err)
 
 	testAccount := testAddresses[0]
@@ -147,7 +107,7 @@ func (suite *KeeperTestSuite) TestAllFiles() {
 func (suite *KeeperTestSuite) TestOpenFiles() {
 	suite.SetupSuite()
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 2)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 2)
 	suite.Require().NoError(err)
 
 	testAccount := testAddresses[0]
@@ -220,7 +180,7 @@ func (suite *KeeperTestSuite) TestOpenFiles() {
 func (suite *KeeperTestSuite) TestFileNotes() {
 	suite.SetupSuite()
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 2)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 2)
 	suite.Require().NoError(err)
 
 	testAccount := testAddresses[0]
@@ -338,7 +298,7 @@ func (suite *KeeperTestSuite) TestFileNotes() {
 func (suite *KeeperTestSuite) TestProofsByAddress() {
 	suite.SetupSuite()
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 3)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 3)
 	suite.Require().NoError(err)
 
 	testAccount := testAddresses[0]

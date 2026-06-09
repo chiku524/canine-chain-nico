@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"testing"
 
-	tmproto "github.com/tendermint/tendermint/proto/tendermint/types"
-	tmtime "github.com/tendermint/tendermint/types/time"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	tmtime "github.com/cometbft/cometbft/types/time"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 
@@ -80,7 +80,7 @@ func trackMockBalances(bankKeeper *oracletestutil.MockBankKeeper) {
 
 	// But we do track normal account balances.
 	bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), types.ModuleName, gomock.Any()).DoAndReturn(func(_ sdk.Context, sender sdk.AccAddress, _ string, coins sdk.Coins) error {
-		newBalance, negative := balances[sender.String()].SafeSub(coins) // in v0.46, this method is variadic
+		newBalance, negative := balances[sender.String()].SafeSub(coins...) // in v0.46, this method is variadic
 		if negative {
 			return fmt.Errorf("not enough balance")
 		}

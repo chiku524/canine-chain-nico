@@ -25,6 +25,7 @@ import (
 	v500 "github.com/jackalLabs/canine-chain/v5/app/upgrades/v500"
 	"github.com/jackalLabs/canine-chain/v5/app/upgrades/v500testnet"
 	v510 "github.com/jackalLabs/canine-chain/v5/app/upgrades/v510"
+	v600 "github.com/jackalLabs/canine-chain/v5/app/upgrades/v600"
 )
 
 func (app *JackalApp) registerTestnetUpgradeHandlers() {
@@ -54,6 +55,7 @@ func (app *JackalApp) registerMainnetUpgradeHandlers() {
 	app.registerUpgrade(v460.NewUpgrade(app.mm, app.configurator))
 	app.registerUpgrade(v500.NewUpgrade(app.mm, app.configurator))
 	app.registerUpgrade(v510.NewUpgrade(app.mm, app.configurator))
+	app.registerUpgrade(v600.NewUpgrade(app.mm, app.configurator, app.paramsKeeper, app.ConsensusParamsKeeper))
 }
 
 // registerUpgrade registers the given upgrade to be supported by the app

@@ -1,0 +1,27 @@
+---
+description: Keep docs/COSMOS-MODERNIZATION.md in sync when changing Cosmos deps, app wiring, or upgrades
+globs: go.mod,app/**,cmd/**,x/**,docs/COSMOS-MODERNIZATION.md
+alwaysApply: false
+---
+
+# Cosmos modernization checklist
+
+Jackal is migrating from SDK 0.45 to the **2026.1** stack (SDK **0.54.x**, CometBFT 0.39, ibc-go v11, wasmd 0.70). There is no SDK 0.55 release yet.
+
+## Required on every migration PR
+
+1. Read [docs/COSMOS-MODERNIZATION.md](docs/COSMOS-MODERNIZATION.md) for the active phase and unchecked items.
+2. After completing work, update that file:
+   - Check off finished checklist items (`[x]`).
+   - Bump **Last updated** date.
+   - Append a row to **Phase log** (date, phase, short note).
+   - Update version matrix if `go.mod` pins changed.
+3. Do not skip phases (0.47 → 0.50 → 0.53 → 0.54). Each hop needs an on-chain upgrade (`v600`, `v610`, …).
+4. Re-port Jackal-specific patches in-app (e.g. `app/ante_fee.go`), not via SDK forks.
+5. Diff `app/app.go` against the **wasmd template** for the target SDK version.
+
+## Phase 1 (`v600`) branch reminders
+
+- Upgrade handler: `app/upgrades/v600/`
+- Free storage fees: `app/ante_fee.go`
+- Proto codegen must use `cosmos/gogoproto`; run `make proto-gen` on Linux when touching `.proto` files.

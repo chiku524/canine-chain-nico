@@ -312,8 +312,8 @@ format: format-tools
 ###         Protobuf Tools           ###
 ########################################
 # thanks juno ;)
-protoVer = v0.7
-protoImageName = tendermintdev/sdk-proto-gen:$(protoVer)
+protoVer = 0.13.1
+protoImageName = ghcr.io/cosmos/proto-builder:$(protoVer)
 containerProtoGen = jackal-proto-gen-$(protoVer)
 containerProtoGenAny = jackal-proto-gen-any-$(protoVer)
 containerProtoGenSwagger = jackal-proto-gen-swagger-$(protoVer)
@@ -323,7 +323,7 @@ proto-all: proto-format proto-lint proto-gen
 
 proto-gen:
 	@echo "Generating Protobuf files"
-	@if docker ps -a --format '{{.Names}}' | grep -Eq "^$(containerProtoGen)$$"; then docker start -a $(containerProtoGen); else docker run --name $(containerProtoGen) -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) sh ./scripts/protocgen.sh; fi
+	@docker run --rm --user root -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) sh ./scripts/protocgen.sh
 
 # This generates the SDK's custom wrapper for google.protobuf.Any.
 proto-gen-any:

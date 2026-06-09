@@ -111,7 +111,7 @@ func (suite *KeeperTestSuite) TestPostProof() {
 
 	msgSrvr, keeper, context := setupMsgServer(suite)
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 4)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 4)
 	suite.Require().NoError(err)
 
 	depoAccount := testAddresses[0]

@@ -13,7 +13,7 @@ func (suite *KeeperTestSuite) TestBuyStorage() {
 	suite.SetupSuite()
 	msgSrvr, k, ctx := setupMsgServer(suite)
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 2)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 2)
 	suite.Require().NoError(err)
 
 	testAccount := testAddresses[0]
@@ -257,7 +257,7 @@ func (suite *KeeperTestSuite) TestBuyStorageReferralValues() {
 	suite.SetupSuite()
 	msgSrvr, k, ctx := setupMsgServer(suite)
 
-	testAddresses, err := testutil.CreateTestAddresses("cosmos", 3)
+	testAddresses, err := testutil.CreateTestAddresses("jkl", 3)
 	suite.Require().NoError(err)
 
 	testAccount := testAddresses[0]

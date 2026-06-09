@@ -20,7 +20,11 @@ func (k Keeper) NetworkSize(c context.Context, req *types.QueryNetworkSize) (*ty
 	var s uint64
 
 	k.IterateAndParseFilesByMerkle(ctx, false, func(_ []byte, val types.UnifiedFile) bool {
-		s += uint64(val.FileSize * val.MaxProofs)
+		charge, err := mulStorageCharge(val.FileSize, val.MaxProofs)
+		if err != nil {
+			return false
+		}
+		s += uint64(charge)
 
 		return false
 	})
@@ -87,7 +91,10 @@ func (k Keeper) StorageStats(c context.Context, req *types.QueryStorageStats) (*
 		allUsers[val.Owner] = true
 		activeUsers[val.Owner] = true
 
-		m := val.FileSize * val.MaxProofs
+		m, err := mulStorageCharge(val.FileSize, val.MaxProofs)
+		if err != nil {
+			return false
+		}
 
 		if val.Expires > 0 {
 			spacePurchased += m
