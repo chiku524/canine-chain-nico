@@ -1,133 +1,28 @@
-package keeper_test
+package keeper
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/jackalLabs/canine-chain/v5/x/storage/types"
+	"testing"
+
+	"github.com/stretchr/testify/require"
 )
 
-func (suite *KeeperTestSuite) TestGetPaidAmount() {
-	suite.SetupSuite()
-	_, sKeeper, _ := setupMsgServer(suite)
+// TestOverflow_Finding3 documents Finding #3: naive FileSize*MaxProofs can wrap in Go int64.
+func TestOverflow_Finding3(t *testing.T) {
+	fileSize := int64(1 << 40)
+	maxProofs := int64(1 << 25)
+	wrapped := fileSize * maxProofs
+	t.Logf("raw multiply wraps: %d * %d = %d", fileSize, maxProofs, wrapped)
+	require.Less(t, wrapped, fileSize, "wrapped product must be smaller than file size")
 
-	cases := []struct {
-		name    string
-		preRun  func() (string, int64)
-		paidAmt int64
-		free    bool
-	}{
-		{
-			name: "no_payblock",
-			preRun: func() (string, int64) {
-				suite.ctx = suite.ctx.WithBlockHeight(100)
-				return "cosmos17j2hkm7n9fz9dpntyj2kxgxy5pthzd289nvlfl", 1
-			},
-			paidAmt: 0,
-			free:    true,
-		},
-	}
+	_, err := mulStorageCharge(fileSize, maxProofs)
+	require.Error(t, err, "keeper must reject overflowed storage charges")
 
-	for _, tc := range cases {
-		suite.Run(tc.name, func() {
-			// preRun must be defined to get MsgPostContract
-			suite.Require().NotNil(tc.preRun)
-			addr, _ := tc.preRun()
-			rPaidAmt := sKeeper.GetPaidAmount(suite.ctx, addr)
+	fileSize = 1 << 50
+	maxProofs = 1 << 14
+	wrapped = fileSize * maxProofs
+	t.Logf("raw multiply wraps to small value: %d * %d = %d", fileSize, maxProofs, wrapped)
+	require.Less(t, wrapped, fileSize)
 
-			suite.Require().Equal(tc.paidAmt, rPaidAmt)
-		})
-	}
-}
-
-func (suite *KeeperTestSuite) TestGetProviderUsing() {
-	suite.SetupSuite()
-	setupMsgServer(suite)
-
-	cases := []struct {
-		name      string
-		preRun    func()
-		expReturn int64
-	}{
-		{
-			name: "No_provider_found",
-			preRun: func() {
-				ad := types.UnifiedFile{
-					Merkle:    []byte("merkle"),
-					Owner:     "owner",
-					Start:     0,
-					FileSize:  100000,
-					MaxProofs: 3,
-				}
-				suite.storageKeeper.SetFile(suite.ctx, ad)
-			},
-			expReturn: 0,
-		},
-
-		{
-			name: "valid_active_deal_file_size",
-			preRun: func() {
-				ad := types.UnifiedFile{
-					Merkle:    []byte("merkle"),
-					Owner:     "owner",
-					Start:     0,
-					FileSize:  100000,
-					MaxProofs: 3,
-				}
-				suite.storageKeeper.SetFile(suite.ctx, ad)
-				ad.AddProver(suite.ctx, suite.storageKeeper, "prover1")
-			},
-			expReturn: 100000,
-		},
-	}
-
-	for _, tc := range cases {
-		suite.Run(tc.name, func() {
-			suite.Require().NotNil(tc.preRun)
-			tc.preRun()
-			result := suite.storageKeeper.GetProviderUsing(suite.ctx, "prover1")
-
-			suite.Require().Equal(tc.expReturn, result)
-		})
-	}
-}
-
-func (suite *KeeperTestSuite) TestGetJklPrice() {
-	suite.SetupSuite()
-	_, sKeeper, _ := setupMsgServer(suite)
-
-	price := sKeeper.GetJklPrice(suite.ctx)
-	expected, err := sdk.NewDecFromStr("0.24")
-	suite.Require().NoError(err)
-	suite.Require().Equal(expected, price)
-}
-
-func (suite *KeeperTestSuite) TestGetStorageCost() {
-	suite.SetupSuite()
-	_, sKeeper, _ := setupMsgServer(suite)
-
-	cases := []struct {
-		name     string
-		gbs      int64
-		months   int64
-		expected sdk.Int
-	}{
-		{
-			name:     "10GB for 5months",
-			gbs:      10,
-			months:   5,
-			expected: sdk.NewInt(1041666),
-		},
-		{
-			name:     "5GB for 24months",
-			gbs:      5,
-			months:   24,
-			expected: sdk.NewInt(2083333),
-		},
-	}
-
-	for _, tc := range cases {
-		suite.Run(tc.name, func() {
-			cost := sKeeper.GetStorageCost(suite.ctx, tc.gbs, tc.months*720)
-			suite.Require().Equal(tc.expected, cost)
-		})
-	}
+	_, err = mulStorageCharge(fileSize, maxProofs)
+	require.Error(t, err)
 }

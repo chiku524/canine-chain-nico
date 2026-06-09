@@ -16,9 +16,19 @@
 
 ## Installing the Canine CLI
 ### Prerequisites
-* Install Go — see [Cosmos modernization doc](docs/COSMOS-MODERNIZATION.md) for the version required by your branch (mainnet: 1.23+; migration branch: 1.23.8; target 0.54: 1.25+)
-* Install build essentials (GNU Make)
-* For wasm/CosmWasm builds: CGO enabled and the **wasmvm** shared library matching your `go.mod` pin (see modernization doc; do not use stale v1.2.6 URLs below on migration branches)
+* **Go 1.23.8** on `feat/cosmos-modernization-phase1` (see `go.mod`; mainnet today: 1.23+; north-star 0.54 stack: Go 1.25+)
+* GNU Make and a C toolchain (`build-essential` on Debian/Ubuntu)
+* **CGO enabled** for `canined` and wasm tests (`CGO_ENABLED=1`)
+* **wasmvm shared library** matching `go.mod` (migration branch: **v1.5.9**):
+
+```sh
+# Linux amd64 — replace TAG with the wasmvm version from go.mod (e.g. v1.5.9)
+WASMVM_TAG=v1.5.9
+sudo wget -q "https://github.com/CosmWasm/wasmvm/raw/${WASMVM_TAG}/internal/api/libwasmvm.x86_64.so" \
+  -O /usr/lib/libwasmvm.x86_64.so
+```
+
+On macOS use `libwasmvm.dylib` from the same tag path under `internal/api/`.
 
 ### Installing
 > if you want to use pebble follow this: https://github.com/JackalLabs/canine-chain/pull/511

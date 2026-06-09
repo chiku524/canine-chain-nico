@@ -86,7 +86,10 @@ func (k msgServer) PostFile(goCtx context.Context, msg *types.MsgPostFile) (*typ
 		),
 	)
 
-	totalSize := msg.FileSize * msg.MaxProofs
+	totalSize, err := mulStorageCharge(msg.FileSize, msg.MaxProofs)
+	if err != nil {
+		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+	}
 	if msg.Expires > 0 { // if the file is posted as a one-time payment
 		kbs := totalSize / 1000
 		var kbMin int64 = 1024

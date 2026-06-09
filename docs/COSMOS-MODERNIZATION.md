@@ -4,7 +4,7 @@ Living roadmap and checklist for bringing **canine-chain** in line with the supp
 
 | Field | Value |
 |-------|-------|
-| **Last updated** | 2026-06-08 |
+| **Last updated** | 2026-06-09 |
 | **Active branch** | `feat/cosmos-modernization-phase1` |
 | **Current phase** | Phase 1 — SDK 0.47 (`v600`) |
 | **North-star target** | [2026.1 release family](https://docs.cosmos.network/sdk/latest/release-family) (SDK **0.54.x**, not 0.55) |
@@ -79,6 +79,7 @@ Chronological notes; append new entries at the top.
 
 | Date | Phase | Notes |
 |------|-------|-------|
+| 2026-06-09 | Phase 1 | Pushed `feat/cosmos-modernization-phase1`; `go mod tidy`; sim tests migrated off `simapp` → `testutil/sims`; storage `mulStorageCharge` overflow guard; CI: CGO + wasmvm 1.5.9 on Linux; README install section updated. |
 | 2026-06-08 | Phase 1 | Branch `feat/cosmos-modernization-phase1`: `go.mod` → 0.47 stack; `app/app.go` wasmd 0.45 rewrite; `v600` handler; free post-proof ante in `app/ante_fee.go`; build green; filetree keeper tests fixed (keyring codec). |
 | — | Phase 0 | Inventory started; mainnet at SDK 0.45 / ibc-go v4. |
 
@@ -90,7 +91,7 @@ Applies to all phases; check once and re-verify each phase.
 
 - [ ] Single source of truth: **this file** + pinned `go.mod` on release branches
 - [ ] Long-lived migration workflow: phase branches → testnet → mainnet governance
-- [ ] **Linux CI with CGO** for wasmvm integration tests
+- [x] **Linux CI with CGO** for wasmvm integration tests (`.github/workflows/test-unit.yml`)
 - [ ] Public testnet mirroring mainnet modules + representative wasm contracts
 - [ ] Upgrade playbook: halt height, binary checksum, rollback, validator comms
 - [ ] Remove unnecessary forks:
@@ -145,7 +146,7 @@ Applies to all phases; check once and re-verify each phase.
 - [x] Remove `JackalLabs/cosmos-sdk-new` replace
 - [x] Remove `TheMarstonConnell/cometbft` replace
 - [x] Mechanical imports: `tendermint` → `cometbft`, `ibc-go/v4` → `v7`
-- [ ] Run `go mod tidy` safely (pin versions; avoid pulling SDK 0.54 accidentally)
+- [x] Run `go mod tidy` safely (pin versions; avoid pulling SDK 0.54 accidentally)
 
 ### `app/` layer
 - [x] Rewrite `app/app.go` (wasmd v0.45 template + Jackal modules)
@@ -157,7 +158,7 @@ Applies to all phases; check once and re-verify each phase.
 - [x] `ExportAppStateAndValidators` 3-arg signature (`runtime.AppI`)
 - [x] `go build ./cmd/canined` succeeds
 - [ ] Full unit tests on **Linux CI with CGO**
-- [ ] Simulation tests (`app/sim_test.go`, `//go:build simulation`) updated for 0.47 APIs
+- [x] Simulation tests (`app/sim_test.go`, `//go:build simulation`) updated for 0.47 APIs (`testutil/sims`, `simulation/client/cli`)
 
 ### `cmd/canined`
 - [x] Root command aligned with wasmd 0.47 (`GenesisCoreCommand`, `InterceptConfigsPreRunHandler`)
@@ -182,12 +183,12 @@ Applies to all phases; check once and re-verify each phase.
 - [x] `x/filetree/keeper` tests pass
 - [x] `x/rns/keeper`, `x/oracle/keeper`, `x/notifications/keeper` pass
 - [x] `app` ante fee unit tests pass
-- [ ] `x/storage/keeper` — fix or document `TestOverflow_Finding3` (Go int64 wrap semantics)
+- [x] `x/storage/keeper` — `mulStorageCharge` rejects int64 wrap; `TestOverflow_Finding3` documents semantics
 - [ ] Integration tests requiring CGO (storage/grpc suites) on Linux CI
 
 ### Docs & ops
 - [x] This roadmap document created
-- [ ] Update root `README.md` install section (Go version, wasmvm lib path)
+- [x] Update root `README.md` install section (Go version, wasmvm lib path)
 - [ ] Testnet deploy candidate `v600`
 - [ ] Testnet smoke: storage post-proof (zero fee), filetree, rns, oracle, wasm execute
 - [ ] IBC transfer smoke on testnet

@@ -5,26 +5,21 @@ package app
 import (
 	"encoding/json"
 	"fmt"
-	"math/rand"
 	"os"
-	"path/filepath"
 	"testing"
-	"time"
 
-	filetreemoduletypes "github.com/jackalLabs/canine-chain/v5/x/filetree/types"
-	oraclemoduletypes "github.com/jackalLabs/canine-chain/v5/x/oracle/types"
-	rnsmoduletypes "github.com/jackalLabs/canine-chain/v5/x/rns/types"
-	storagemoduletypes "github.com/jackalLabs/canine-chain/v5/x/storage/types"
-
-	"github.com/cosmos/cosmos-sdk/store"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	dbm "github.com/cometbft/cometbft-db"
+	"github.com/cometbft/cometbft/libs/log"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	"github.com/stretchr/testify/require"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	"github.com/cosmos/cosmos-sdk/codec"
-	"github.com/cosmos/cosmos-sdk/simapp"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/server"
+	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/types/kv"
-	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
@@ -36,125 +31,83 @@ import (
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
+	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	ibchost "github.com/cosmos/ibc-go/v7/modules/core/24-host"
+	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
 	minttypes "github.com/jackalLabs/canine-chain/v5/x/jklmint/types"
-	"github.com/stretchr/testify/require"
-	"github.com/cometbft/cometbft/libs/log"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	dbm "github.com/cometbft/cometbft-db"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
+	filetreemoduletypes "github.com/jackalLabs/canine-chain/v5/x/filetree/types"
+	oraclemoduletypes "github.com/jackalLabs/canine-chain/v5/x/oracle/types"
+	rnsmoduletypes "github.com/jackalLabs/canine-chain/v5/x/rns/types"
+	storagemoduletypes "github.com/jackalLabs/canine-chain/v5/x/storage/types"
 )
 
-// Get flags every time the simulator is run
+// SimAppChainID hardcoded chainID for simulation.
+const SimAppChainID = "simulation-app"
+
 func init() {
-	simapp.GetSimulatorFlags()
+	simcli.GetSimulatorFlags()
 }
 
 type StoreKeysPrefixes struct {
-	A        sdk.StoreKey
-	B        sdk.StoreKey
+	A        storetypes.StoreKey
+	B        storetypes.StoreKey
 	Prefixes [][]byte
 }
 
-// SetupSimulation wraps simapp.SetupSimulation in order to create any export directory if they do not exist yet
-func SetupSimulation(dirPrefix, dbName string) (simtypes.Config, dbm.DB, string, log.Logger, bool, error) {
-	setBech32ForTest()
-
-	simapp.FlagEnabledValue = true
-	config, db, dir, logger, skip, err := simapp.SetupSimulation(dirPrefix, dbName)
-	config.Commit = true
-	config.Seed = rand.Int63()
-	if err != nil {
-		return simtypes.Config{}, nil, "", nil, false, err
-	}
-
-	paths := []string{config.ExportParamsPath, config.ExportStatePath, config.ExportStatsPath}
-	for _, path := range paths {
-		if len(path) == 0 {
-			continue
-		}
-
-		path = filepath.Dir(path)
-		if _, err := os.Stat(path); os.IsNotExist(err) {
-			if err := os.MkdirAll(path, os.ModePerm); err != nil {
-				panic(err)
-			}
-		}
-	}
-
-	return config, db, dir, logger, skip, err
-}
-
-// GetSimulationLog unmarshals the KVPair's Value to the corresponding type based on the
-// each's module store key and the prefix bytes of the KVPair's key.
-func GetSimulationLog(storeName string, sdr sdk.StoreDecoderRegistry, kvAs, kvBs []kv.Pair) (log string) {
-	for i := 0; i < len(kvAs); i++ {
-		if len(kvAs[i].Value) == 0 && len(kvBs[i].Value) == 0 {
-			// skip if the value doesn't have any bytes
-			continue
-		}
-
-		decoder, ok := sdr[storeName]
-		if ok {
-			log += decoder(kvAs[i], kvBs[i])
-		} else {
-			log += fmt.Sprintf("store A %q => %q\nstore B %q => %q\n", kvAs[i].Key, kvAs[i].Value, kvBs[i].Key, kvBs[i].Value)
-		}
-	}
-
-	return log
-}
-
-// fauxMerkleModeOpt returns a BaseApp option to use a dbStoreAdapter instead of
-// an IAVLStore for faster simulation speed.
 func fauxMerkleModeOpt(bapp *baseapp.BaseApp) {
 	bapp.SetFauxMerkleMode()
 }
 
-func TestAppImportExport(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping testing in short mode")
-	}
-	config, db, dir, logger, skip, err := SetupSimulation("leveldb-app-sim", "Simulation")
-	if skip {
-		t.Skip("skipping application import/export simulation")
-	}
-	require.NoError(t, err, "simulation setup failed")
+func TestFullAppSimulation(t *testing.T) {
+	config, db, _, app := setupSimulationApp(t, "skipping application simulation")
 
-	defer func() {
-		db.Close()
-		require.NoError(t, os.RemoveAll(dir))
-	}()
-
-	encConf := MakeEncodingConfig()
-	app := NewJackalApp(logger, db, nil, true, map[int64]bool{}, dir, simapp.FlagPeriodValue, encConf, wasm.EnableAllProposals, EmptyBaseAppOptions{}, nil, fauxMerkleModeOpt)
-	require.Equal(t, appName, app.Name())
-
-	// Run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
 		t,
 		os.Stdout,
 		app.BaseApp,
-		AppStateFn(app.AppCodec(), app.SimulationManager()),
+		simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts,
-		simapp.SimulationOperations(app, app.AppCodec(), config),
-		app.ModuleAccountAddrs(),
+		simtestutil.SimulationOperations(app, app.AppCodec(), config),
+		BlockedAddresses(),
 		config,
 		app.AppCodec(),
 	)
 
-	// export state and simParams before the simulation error is checked
-	err = simapp.CheckExportSimulation(app, config, simParams)
+	err := simtestutil.CheckExportSimulation(app, config, simParams)
 	require.NoError(t, err)
 	require.NoError(t, simErr)
 
 	if config.Commit {
-		simapp.PrintStats(db)
+		simtestutil.PrintStats(db)
+	}
+}
+
+func TestAppImportExport(t *testing.T) {
+	config, db, _, app := setupSimulationApp(t, "skipping application import/export simulation")
+
+	_, simParams, simErr := simulation.SimulateFromSeed(
+		t,
+		os.Stdout,
+		app.BaseApp,
+		simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
+		simtypes.RandomAccounts,
+		simtestutil.SimulationOperations(app, app.AppCodec(), config),
+		BlockedAddresses(),
+		config,
+		app.AppCodec(),
+	)
+
+	err := simtestutil.CheckExportSimulation(app, config, simParams)
+	require.NoError(t, err)
+	require.NoError(t, simErr)
+
+	if config.Commit {
+		simtestutil.PrintStats(db)
 	}
 
 	t.Log("exporting genesis...")
@@ -164,18 +117,21 @@ func TestAppImportExport(t *testing.T) {
 
 	t.Log("importing genesis...")
 
-	simConfig, newDB, newDir, simLogger, simFlag, err := SetupSimulation("leveldb-app-sim-2", "Simulation-2")
+	newDB, newDir, _, _, err := simtestutil.SetupSimulation(config, "leveldb-app-sim-2", "Simulation-2", simcli.FlagVerboseValue, simcli.FlagEnabledValue)
 	require.NoError(t, err, "simulation setup failed")
 
-	_ = simConfig
-	_ = simLogger
-	_ = simFlag
-
 	defer func() {
-		newDB.Close()
+		require.NoError(t, newDB.Close())
 		require.NoError(t, os.RemoveAll(newDir))
 	}()
-	newApp := NewJackalApp(logger, newDB, nil, true, map[int64]bool{}, newDir, simapp.FlagPeriodValue, encConf, wasm.EnableAllProposals, EmptyBaseAppOptions{}, nil, fauxMerkleModeOpt)
+
+	encConf := MakeEncodingConfig()
+	appOptions := make(simtestutil.AppOptionsMap)
+	appOptions[flags.FlagHome] = newDir
+	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
+
+	newApp := NewJackalApp(log.NewNopLogger(), newDB, nil, true, map[int64]bool{}, newDir, simcli.FlagPeriodValue,
+		encConf, wasmtypes.EnableAllProposals, appOptions, nil, fauxMerkleModeOpt, baseapp.SetChainID(SimAppChainID))
 	require.Equal(t, appName, newApp.Name())
 
 	var genesisState GenesisState
@@ -206,7 +162,7 @@ func TestAppImportExport(t *testing.T) {
 		{app.keys[govtypes.StoreKey], newApp.keys[govtypes.StoreKey], [][]byte{}},
 		{app.keys[evidencetypes.StoreKey], newApp.keys[evidencetypes.StoreKey], [][]byte{}},
 		{app.keys[capabilitytypes.StoreKey], newApp.keys[capabilitytypes.StoreKey], [][]byte{}},
-		{app.keys[ibchost.StoreKey], newApp.keys[ibchost.StoreKey], [][]byte{}},
+		{app.keys[ibcexported.StoreKey], newApp.keys[ibcexported.StoreKey], [][]byte{}},
 		{app.keys[ibctransfertypes.StoreKey], newApp.keys[ibctransfertypes.StoreKey], [][]byte{}},
 		{app.keys[authzkeeper.StoreKey], newApp.keys[authzkeeper.StoreKey], [][]byte{}},
 		{app.keys[feegrant.StoreKey], newApp.keys[feegrant.StoreKey], [][]byte{}},
@@ -217,11 +173,9 @@ func TestAppImportExport(t *testing.T) {
 		{app.keys[rnsmoduletypes.StoreKey], newApp.keys[rnsmoduletypes.StoreKey], [][]byte{}},
 	}
 
-	// delete persistent tx counter value
 	ctxA.KVStore(app.keys[wasm.StoreKey]).Delete(wasmtypes.TXCounterPrefix)
 
-	// reset contract code index in source DB for comparison with dest DB
-	dropContractHistory := func(s store.KVStore, keys ...[]byte) {
+	dropContractHistory := func(s sdk.KVStore, keys ...[]byte) {
 		for _, key := range keys {
 			prefixStore := prefix.NewStore(s, key)
 			iter := prefixStore.Iterator(nil, nil)
@@ -235,23 +189,23 @@ func TestAppImportExport(t *testing.T) {
 	dropContractHistory(ctxA.KVStore(app.keys[wasm.StoreKey]), prefixes...)
 	dropContractHistory(ctxB.KVStore(newApp.keys[wasm.StoreKey]), prefixes...)
 
-	normalizeContractInfo := func(ctx sdk.Context, app *JackalApp) {
+	normalizeContractInfo := func(ctx sdk.Context, jackalApp *JackalApp) {
 		var index uint64
-		app.wasmKeeper.IterateContractInfo(ctx, func(address sdk.AccAddress, info wasmtypes.ContractInfo) bool {
+		jackalApp.wasmKeeper.IterateContractInfo(ctx, func(address sdk.AccAddress, info wasmtypes.ContractInfo) bool {
 			created := &wasmtypes.AbsoluteTxPosition{
 				BlockHeight: uint64(0),
 				TxIndex:     index,
 			}
 			info.Created = created
-			store := ctx.KVStore(app.keys[wasm.StoreKey])
-			store.Set(wasmtypes.GetContractAddressKey(address), app.appCodec.MustMarshal(&info))
+			kvStore := ctx.KVStore(jackalApp.keys[wasm.StoreKey])
+			kvStore.Set(wasmtypes.GetContractAddressKey(address), jackalApp.appCodec.MustMarshal(&info))
 			index++
 			return false
 		})
 	}
 	normalizeContractInfo(ctxA, app)
 	normalizeContractInfo(ctxB, newApp)
-	// diff both stores
+
 	for _, skp := range storeKeysPrefixes {
 		storeA := ctxA.KVStore(skp.A)
 		storeB := ctxB.KVStore(skp.B)
@@ -260,99 +214,132 @@ func TestAppImportExport(t *testing.T) {
 		require.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare")
 
 		t.Logf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), skp.A, skp.B)
-		require.Len(t, failedKVAs, 0, GetSimulationLog(skp.A.Name(), app.SimulationManager().StoreDecoders, failedKVAs, failedKVBs))
+		require.Len(t, failedKVAs, 0, simtestutil.GetSimulationLog(skp.A.Name(), app.SimulationManager().StoreDecoders, failedKVAs, failedKVBs))
 	}
 }
 
-func TestFullAppSimulation(t *testing.T) {
-	if testing.Short() {
-		t.Skip("skipping testing in short mode")
-	}
-	config, db, dir, logger, skip, err := SetupSimulation("leveldb-app-sim", "Simulation")
-
-	if skip {
-		t.Skip("skipping application simulation")
-	}
-	require.NoError(t, err, "simulation setup failed")
-
-	defer func() {
-		db.Close()
-		require.NoError(t, os.RemoveAll(dir))
-	}()
-	encConf := MakeEncodingConfig()
-	app := NewJackalApp(logger, db, nil, true, map[int64]bool{}, t.TempDir(), simapp.FlagPeriodValue,
-		encConf, wasm.EnableAllProposals, simapp.EmptyAppOptions{}, nil, fauxMerkleModeOpt)
-	require.Equal(t, "JackalApp", app.Name())
-
-	// run randomized simulation
-	_, simParams, simErr := simulation.SimulateFromSeed(
-		t,
-		os.Stdout,
-		app.BaseApp,
-		AppStateFn(app.appCodec, app.SimulationManager()),
-		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-		simapp.SimulationOperations(app, app.AppCodec(), config),
-		app.ModuleAccountAddrs(),
-		config,
-		app.AppCodec(),
-	)
-
-	// export state and simParams before the simulation error is checked
-	err = simapp.CheckExportSimulation(app, config, simParams)
-	require.NoError(t, err)
-	require.NoError(t, simErr)
-
-	if config.Commit {
-		simapp.PrintStats(db)
-	}
-}
-
-// if you want to start pprof graph: go tool pprof -http localhost:8080 cpu.out
 func BenchmarkFullAppSimulation(b *testing.B) {
-	config, db, dir, logger, _, err := SetupSimulation("leveldb-app-sim", "Simulation")
-	require.NoError(b, err, "simulation setup failed")
+	config, db, _, app := setupSimulationApp(b, "skipping application simulation")
 
-	defer func() {
-		db.Close()
-		require.NoError(b, os.RemoveAll(dir))
-	}()
-	encConf := MakeEncodingConfig()
-	app := NewJackalApp(logger, db, nil, true, map[int64]bool{}, b.TempDir(), simapp.FlagPeriodValue,
-		encConf, wasm.EnableAllProposals, simapp.EmptyAppOptions{}, nil, fauxMerkleModeOpt)
-	require.Equal(b, "JackalApp", app.Name())
-
-	// run randomized simulation
 	_, simParams, simErr := simulation.SimulateFromSeed(
 		b,
 		os.Stdout,
 		app.BaseApp,
-		AppStateFn(app.appCodec, app.SimulationManager()),
-		simtypes.RandomAccounts, // Replace with own random account function if using keys other than secp256k1
-		simapp.SimulationOperations(app, app.AppCodec(), config),
-		app.ModuleAccountAddrs(),
+		simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
+		simtypes.RandomAccounts,
+		simtestutil.SimulationOperations(app, app.AppCodec(), config),
+		BlockedAddresses(),
 		config,
 		app.AppCodec(),
 	)
 
-	// export state and simParams before the simulation error is checked
-	err = simapp.CheckExportSimulation(app, config, simParams)
+	err := simtestutil.CheckExportSimulation(app, config, simParams)
 	require.NoError(b, err)
 	require.NoError(b, simErr)
 
 	if config.Commit {
-		simapp.PrintStats(db)
+		simtestutil.PrintStats(db)
 	}
 }
 
-// AppStateFn returns the initial application state using a genesis or the simulation parameters.
-// It panics if the user provides files for both of them.
-// If a file is not given for the genesis or the sim params, it creates a randomized one.
-func AppStateFn(codec codec.Codec, manager *module.SimulationManager) simtypes.AppStateFn {
-	// quick hack to setup app state genesis with our app modules
-	simapp.ModuleBasics = ModuleBasics
-	if simapp.FlagGenesisTimeValue == 0 { // always set to have a block time
-		simapp.FlagGenesisTimeValue = time.Now().Unix()
+func setupSimulationApp(t testing.TB, skipMsg string) (simtypes.Config, dbm.DB, simtestutil.AppOptionsMap, *JackalApp) {
+	t.Helper()
+	setBech32ForTest()
+
+	config := simcli.NewConfigFromFlags()
+	config.ChainID = SimAppChainID
+	config.Commit = true
+
+	db, dir, logger, skip, err := simtestutil.SetupSimulation(config, "leveldb-app-sim", "Simulation", simcli.FlagVerboseValue, simcli.FlagEnabledValue)
+	if skip {
+		t.Skip(skipMsg)
+	}
+	require.NoError(t, err, "simulation setup failed")
+
+	t.Cleanup(func() {
+		require.NoError(t, db.Close())
+		require.NoError(t, os.RemoveAll(dir))
+	})
+
+	appOptions := make(simtestutil.AppOptionsMap)
+	appOptions[flags.FlagHome] = dir
+	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
+
+	encConf := MakeEncodingConfig()
+	app := NewJackalApp(logger, db, nil, true, map[int64]bool{}, dir, simcli.FlagPeriodValue,
+		encConf, wasmtypes.EnableAllProposals, appOptions, nil, fauxMerkleModeOpt, baseapp.SetChainID(SimAppChainID))
+	require.Equal(t, appName, app.Name())
+
+	return config, db, appOptions, app
+}
+
+func TestAppStateDeterminism(t *testing.T) {
+	if !simcli.FlagEnabledValue {
+		t.Skip("skipping application simulation")
 	}
 
-	return simapp.AppStateFn(codec, manager)
+	config := simcli.NewConfigFromFlags()
+	config.InitialBlockHeight = 1
+	config.ExportParamsPath = ""
+	config.OnOperation = false
+	config.AllInvariants = false
+	config.ChainID = SimAppChainID
+
+	numSeeds := 3
+	numTimesToRunPerSeed := 5
+	appHashList := make([]json.RawMessage, numTimesToRunPerSeed)
+
+	appOptions := make(simtestutil.AppOptionsMap)
+	appOptions[flags.FlagHome] = t.TempDir()
+	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
+
+	for i := 0; i < numSeeds; i++ {
+		config.Seed += int64(i)
+
+		for j := 0; j < numTimesToRunPerSeed; j++ {
+			var logger log.Logger
+			if simcli.FlagVerboseValue {
+				logger = log.TestingLogger()
+			} else {
+				logger = log.NewNopLogger()
+			}
+
+			db := dbm.NewMemDB()
+			encConf := MakeEncodingConfig()
+			app := NewJackalApp(logger, db, nil, true, map[int64]bool{}, t.TempDir(), simcli.FlagPeriodValue,
+				encConf, wasmtypes.EnableAllProposals, appOptions, nil, fauxMerkleModeOpt, baseapp.SetChainID(SimAppChainID))
+
+			fmt.Printf(
+				"running non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",
+				config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
+			)
+
+			_, _, err := simulation.SimulateFromSeed(
+				t,
+				os.Stdout,
+				app.BaseApp,
+				simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
+				simtypes.RandomAccounts,
+				simtestutil.SimulationOperations(app, app.AppCodec(), config),
+				BlockedAddresses(),
+				config,
+				app.AppCodec(),
+			)
+			require.NoError(t, err)
+
+			if config.Commit {
+				simtestutil.PrintStats(db)
+			}
+
+			appHash := app.LastCommitID().Hash
+			appHashList[j] = appHash
+
+			if j != 0 {
+				require.Equal(
+					t, string(appHashList[0]), string(appHashList[j]),
+					"non-determinism in seed %d: %d/%d, attempt: %d/%d\n", config.Seed, i+1, numSeeds, j+1, numTimesToRunPerSeed,
+				)
+			}
+		}
+	}
 }

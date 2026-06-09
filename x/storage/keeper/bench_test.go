@@ -337,23 +337,3 @@ func TestSpaceUsedAsymmetry_Finding10(t *testing.T) {
 	}
 }
 
-// TestOverflow_Finding3 demonstrates Finding #3: FileSize*MaxProofs wraps.
-func TestOverflow_Finding3(t *testing.T) {
-	// Two representative cases the keeper does not bound-check today.
-	// Case A: size fits, but size*maxProofs overflows to negative.
-	var fileSize int64 = 1 << 40 // ~1 TiB
-	var maxProofs int64 = 1 << 25
-	product := fileSize * maxProofs
-	t.Logf("FINDING #3 case A: %d * %d = %d (negative=%v)",
-		fileSize, maxProofs, product, product < 0)
-	if product >= 0 {
-		t.Fatal("expected product to overflow to negative")
-	}
-
-	// Case B: overflow wraps back to small positive → bypass min-size guard.
-	fileSize = 1 << 50
-	maxProofs = 1 << 14
-	product = fileSize * maxProofs
-	t.Logf("FINDING #3 case B: %d * %d = %d (SpaceUsed would be mutated by %d)",
-		fileSize, maxProofs, product, product)
-}
