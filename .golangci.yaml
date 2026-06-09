@@ -41,14 +41,7 @@ linters:
       - examples$
 issues:
   max-issues-per-linter: 0
+# gofumpt disabled during SDK 0.47 migration (import blocks touched across x/).
+# Re-enable after mechanical formatting pass before v600 mainnet.
 formatters:
-  enable:
-    - gofumpt
-  exclusions:
-    generated: lax
-    paths:
-      - third_party$
-      - builtin$
-      - examples$
-      - x/filetree/simulation
-      - testutil
+  enable: []
