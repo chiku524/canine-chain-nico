@@ -323,7 +323,7 @@ proto-all: proto-format proto-lint proto-gen
 
 proto-gen:
 	@echo "Generating Protobuf files"
-	@docker run --rm -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) sh ./scripts/protocgen.sh
+	@docker run --rm --user root -v $(CURDIR):/workspace --workdir /workspace $(protoImageName) sh ./scripts/protocgen.sh
 
 # This generates the SDK's custom wrapper for google.protobuf.Any.
 proto-gen-any:

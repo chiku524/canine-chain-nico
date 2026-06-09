@@ -50,3 +50,5 @@ formatters:
       - third_party$
       - builtin$
       - examples$
+      - x/filetree/simulation
+      - testutil

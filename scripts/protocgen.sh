@@ -5,9 +5,6 @@ set -eu
 echo "Generating gogo proto code"
 cd proto
 
-# Resolve pinned protobuf deps (requires network on first run; uses buf.lock afterwards).
-buf mod update
-
 proto_count=0
 for file in $(find . -name '*.proto' | sort); do
   if grep -q go_package "$file"; then
