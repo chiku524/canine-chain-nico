@@ -170,6 +170,7 @@ func NewTestValidatorSet(t *testing.T) *tmtypes.ValidatorSet {
 // SetupTestingAppWithGenesis returns an initialized JackalApp with one bonded validator.
 func SetupTestingAppWithGenesis(t *testing.T) *JackalApp {
 	t.Helper()
+	setBech32ForTest()
 	pubKeys := CreateTestPubKeys(1)
 	valSet := NewTestValidatorSet(t)
 	genAcc := authtypes.NewBaseAccount(sdk.AccAddress(pubKeys[0].Address()), pubKeys[0], 0, 0)

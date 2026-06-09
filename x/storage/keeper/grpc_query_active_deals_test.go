@@ -2,8 +2,8 @@ package keeper_test
 
 import (
 	"context"
-	"encoding/json"
 	"fmt"
+	"testing"
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -12,63 +12,21 @@ import (
 	"github.com/jackalLabs/canine-chain/v5/testutil"
 	"github.com/jackalLabs/canine-chain/v5/x/storage/types"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	dbm "github.com/cometbft/cometbft-db"
-
-	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
 )
 
-func genApp(withGenesis bool, invCheckPeriod uint) (*jklapp.JackalApp, jklapp.GenesisState) {
-	db := dbm.NewMemDB()
-	encCdc := jklapp.MakeEncodingConfig()
-	app := jklapp.NewJackalApp(
-		log.NewNopLogger(),
-		db,
-		nil,
-		true,
-		map[int64]bool{},
-		jklapp.DefaultNodeHome,
-		invCheckPeriod,
-		encCdc,
-		jklapp.GetEnabledProposals(),
-		jklapp.EmptyBaseAppOptions{},
-		jklapp.GetWasmOpts(jklapp.EmptyBaseAppOptions{}),
-	)
-
-	if withGenesis {
-		return app, jklapp.NewDefaultGenesisState()
+func setup(t *testing.T) *jklapp.JackalApp {
+	t.Helper()
+	if !testutil.CgoEnabled() {
+		t.Skip("integration tests require CGO for wasmvm")
 	}
-
-	return app, jklapp.GenesisState{}
-}
-
-func setup(isCheckTx bool) *jklapp.JackalApp {
-	app, genesisState := genApp(!isCheckTx, 5)
-	if !isCheckTx {
-		// init chain must be called to stop deliverState from being nil
-		stateBytes, err := json.MarshalIndent(genesisState, "", " ")
-		if err != nil {
-			panic(err)
-		}
-
-		// Initialize the chain
-		app.InitChain(
-			abci.RequestInitChain{
-				Validators:      []abci.ValidatorUpdate{},
-				ConsensusParams: jklapp.DefaultConsensusParams,
-				AppStateBytes:   stateBytes,
-			},
-		)
-	}
-
-	return app
+	return jklapp.SetupTestingAppWithGenesis(t)
 }
 
 func (suite *KeeperTestSuite) SetupTest() {
 	if !testutil.CgoEnabled() {
 		suite.T().Skip("integration tests require CGO for wasmvm")
 	}
-	app := setup(false)
+	app := setup(suite.T())
 	ctx := app.NewContext(false, tmproto.Header{})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry)

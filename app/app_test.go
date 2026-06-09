@@ -13,6 +13,8 @@ import (
 
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
+	sdk "github.com/cosmos/cosmos-sdk/types"
+
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 )
@@ -45,9 +47,9 @@ func TestBlockedAddrs(t *testing.T) {
 
 	gapp := SetupTestingAppWithGenesis(t)
 
-	for acc := range maccPerms {
-		t.Run(acc, func(t *testing.T) {
-			require.True(t, gapp.BankKeeper.BlockedAddr(gapp.AccountKeeper.GetModuleAddress(acc)),
+	for addr, blocked := range BlockedAddresses() {
+		t.Run(addr, func(t *testing.T) {
+			require.Equal(t, blocked, gapp.BankKeeper.BlockedAddr(sdk.MustAccAddressFromBech32(addr)),
 				"ensure that blocked addresses are properly set in bank keeper",
 			)
 		})
