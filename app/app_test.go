@@ -4,15 +4,14 @@ package app
 
 import (
 	"encoding/json"
-	"os"
 	"testing"
 
+	"github.com/cometbft/cometbft/libs/log"
+	dbm "github.com/cometbft/cometbft-db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-	"github.com/cometbft/cometbft/libs/log"
-	db "github.com/cometbft/cometbft-db"
 
-	abci "github.com/cometbft/cometbft/abci/types"
+	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -23,34 +22,28 @@ var emptyWasmOpts []wasmkeeper.Option
 func TestWasmdExport(t *testing.T) {
 	setBech32ForTest()
 
-	db := db.NewMemDB()
-	gapp := NewJackalApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, MakeEncodingConfig(), wasmtypes.EnableAllProposals, EmptyBaseAppOptions{}, emptyWasmOpts)
+	gapp := SetupTestingAppWithGenesis(t)
 
-	genesisState := NewDefaultGenesisState()
-	stateBytes, err := json.MarshalIndent(genesisState, "", "  ")
+	exported, err := gapp.ExportAppStateAndValidators(false, []string{}, nil)
 	require.NoError(t, err)
 
-	// Initialize the chain
-	gapp.InitChain(
-		abci.RequestInitChain{
-			Validators:    []abci.ValidatorUpdate{},
-			AppStateBytes: stateBytes,
-		},
-	)
-	gapp.Commit()
+	db := dbm.NewMemDB()
+	newGapp := NewJackalApp(log.NewNopLogger(), db, nil, true, map[int64]bool{}, DefaultNodeHome, 5,
+		MakeEncodingConfig(), wasmtypes.EnableAllProposals, EmptyBaseAppOptions{}, emptyWasmOpts)
 
-	// Making a new app object with the db, so that initchain hasn't been called
-	newGapp := NewJackalApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, MakeEncodingConfig(), wasmtypes.EnableAllProposals, EmptyBaseAppOptions{}, emptyWasmOpts)
-	_, err = newGapp.ExportAppStateAndValidators(false, []string{}, nil)
-	require.NoError(t, err, "ExportAppStateAndValidators should not have an error")
+	var genesisState GenesisState
+	require.NoError(t, json.Unmarshal(exported.AppState, &genesisState))
+
+	ctx := newGapp.NewContext(true, tmproto.Header{Height: 0})
+	newGapp.mm.InitGenesis(ctx, newGapp.AppCodec(), genesisState)
+	newGapp.StoreConsensusParams(ctx, exported.ConsensusParams)
 }
 
 // ensure that blocked addresses are properly set in bank keeper
 func TestBlockedAddrs(t *testing.T) {
 	setBech32ForTest()
 
-	db := db.NewMemDB()
-	gapp := NewJackalApp(log.NewTMLogger(log.NewSyncWriter(os.Stdout)), db, nil, true, map[int64]bool{}, DefaultNodeHome, 0, MakeEncodingConfig(), wasmtypes.EnableAllProposals, EmptyBaseAppOptions{}, emptyWasmOpts)
+	gapp := SetupTestingAppWithGenesis(t)
 
 	for acc := range maccPerms {
 		t.Run(acc, func(t *testing.T) {
@@ -95,23 +88,4 @@ func TestGetEnabledProposals(t *testing.T) {
 			assert.Equal(t, tc.expected, proposals)
 		})
 	}
-}
-
-func setGenesis(gapp *JackalApp) error { //nolint:unused
-	genesisState := NewDefaultGenesisState()
-	stateBytes, err := json.MarshalIndent(genesisState, "", " ")
-	if err != nil {
-		return err
-	}
-
-	// Initialize the chain
-	gapp.InitChain(
-		abci.RequestInitChain{
-			Validators:    []abci.ValidatorUpdate{},
-			AppStateBytes: stateBytes,
-		},
-	)
-
-	gapp.Commit()
-	return nil
 }

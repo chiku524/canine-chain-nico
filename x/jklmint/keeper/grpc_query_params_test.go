@@ -25,7 +25,7 @@ func (suite *MintTestSuite) SetupTest() {
 	if !testutil.CgoEnabled() {
 		suite.T().Skip("integration tests require CGO for wasmvm")
 	}
-	app := setup(false)
+	app := setup(suite.T(), false)
 	ctx := app.NewContext(false, tmproto.Header{})
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry)

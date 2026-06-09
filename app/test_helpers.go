@@ -157,6 +157,29 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	return app
 }
 
+// NewTestValidatorSet returns a CometBFT validator set with a single validator.
+func NewTestValidatorSet(t *testing.T) *tmtypes.ValidatorSet {
+	t.Helper()
+	pubKeys := CreateTestPubKeys(1)
+	tmPk, err := codec.ToTmPubKeyInterface(pubKeys[0])
+	require.NoError(t, err)
+	val := tmtypes.NewValidator(tmPk, 1)
+	return tmtypes.NewValidatorSet([]*tmtypes.Validator{val})
+}
+
+// SetupTestingAppWithGenesis returns an initialized JackalApp with one bonded validator.
+func SetupTestingAppWithGenesis(t *testing.T) *JackalApp {
+	t.Helper()
+	pubKeys := CreateTestPubKeys(1)
+	valSet := NewTestValidatorSet(t)
+	genAcc := authtypes.NewBaseAccount(sdk.AccAddress(pubKeys[0].Address()), pubKeys[0], 0, 0)
+	balance := banktypes.Balance{
+		Address: genAcc.GetAddress().String(),
+		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100_000_000_000_000))),
+	}
+	return SetupWithGenesisValSet(t, valSet, []authtypes.GenesisAccount{genAcc}, nil, balance)
+}
+
 // SetupWithEmptyStore setup a wasmd app instance with empty DB
 func SetupWithEmptyStore(t testing.TB) *JackalApp {
 	app, _ := setup(t, false, 0)
