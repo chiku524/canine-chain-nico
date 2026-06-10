@@ -16,6 +16,8 @@
 6. [v600 testnet upgrade playbook](docs/V600-TESTNET-UPGRADE.md)
 7. [v600 mainnet governance template](docs/V600-MAINNET-GOVERNANCE.md)
 8. [Public network endpoints](docs/NETWORK-ENDPOINTS.md)
+9. [Windows dev setup (WSL / Docker)](docs/WINDOWS-DEV.md)
+10. [Private testnet (fork-owned)](docs/PRIVATE-TESTNET.md)
 
 
 ## Installing the Canine CLI
