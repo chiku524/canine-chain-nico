@@ -139,7 +139,15 @@ Handlers registered in `app/upgrades.go` → `registerMainnetUpgradeHandlers`:
 | wasmvm (migration branch) | **v1.5.9** — lib path: `internal/api/libwasmvm.x86_64.so` |
 | wasmd | v0.45.0 — legacy gov wasm proposals still enabled (`EnableAllProposals`) |
 | Custom bindings | `wasmbinding/` — storage, filetree, notifications message plugins |
-| Mainnet code IDs | Run `./scripts/capture-chain-inventory.sh` — paste summary here after capture |
+| Mainnet code IDs | **Captured 2026-06-10** — see `docs/inventory/captured-mainnet-20260610T2333Z.json` (height **18380416**) |
+
+| Code ID | Creator | Data hash |
+|---------|---------|-----------|
+| 1 | jkl19j955sucqvyyk4l2cdxe3xfgy54qluf49pddnd | `0ADF4677…17E01E` |
+| 2 | jkl1qr9g68c4kgy00meyy4tk2yycpw5r6us3vccy7v | `CA0C4BF7…B55DD8` |
+| 3 | jkl1qr9g68c4kgy00meyy4tk2yycpw5r6us3vccy7v | `56CCC5F3…10B9B9` |
+| 4 | jkl1gues8xhxwcp7k76dpm86dh3z4ac08gxkx4t5jh | `E0A23691…4B70F8` |
+| 5 | jkl1gues8xhxwcp7k76dpm86dh3z4ac08gxkx4t5jh | `A30BB174…F0F425D` |
 
 > Action: export `canined query wasm list-code` from mainnet and attach code IDs + checksums before testnet wasm smoke tests.
 
@@ -151,8 +159,8 @@ Handlers registered in `app/upgrades.go` → `registerMainnetUpgradeHandlers`:
 |------|-------|
 | ibc-go major | v4 (mainnet) → **v7** (migration) |
 | Middleware | IBC fee module wired in `app/app.go` |
-| Connected chains | Run inventory script — document counterparty chain IDs + channel IDs |
-| Relayer | **TBD** — pin Hermes / Go relayer version compatible with ibc-go v7 (recommend Hermes ≥ 1.8 for ibc-go v7) |
+| Connected chains | **157 channels** at height 18380416 — **93 OPEN** (`transfer`: 60, `icahost`: 33). Full list in captured JSON. Counterparties include Archway (ICA), Osmosis, and others — filter `STATE_OPEN` in inventory file. |
+| Relayer | **TBD** — pin Hermes / Go relayer version compatible with ibc-go v7 (recommend Hermes ≥ 1.8 for ibc-go v7). Testnet capture pending (Jackal testnet REST timed out from this environment). |
 
 ---
 
@@ -162,8 +170,8 @@ Handlers registered in `app/upgrades.go` → `registerMainnetUpgradeHandlers`:
 - [ ] Tag mainnet release binary (`v5.1.x`) and archive `go.mod` + replaces
 - [x] App export/import round-trip tested (`app.TestWasmdExport` with CGO)
 - [ ] State export tested at **current mainnet height** (`canined export --height <H>`)
-- [ ] Mainnet wasm code ID list captured (`scripts/capture-chain-inventory.sh`)
-- [ ] IBC channel + relayer inventory captured (`scripts/capture-chain-inventory.sh`)
+- [x] Mainnet wasm code ID list captured (`scripts/capture-chain-inventory.sh` → `docs/inventory/captured-mainnet-20260610T2333Z.json`)
+- [x] IBC channel inventory captured (mainnet; relayer version still TBD)
 - [x] Validator communication plan drafted ([V600-MAINNET-GOVERNANCE.md](./V600-MAINNET-GOVERNANCE.md))
 
 ---

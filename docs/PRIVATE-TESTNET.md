@@ -35,6 +35,27 @@ Chain ID in that script is `testing`. For a named private net, use Option B.
 
 ## Option B — Single-node private net (`jackal-nico-1`)
 
+One command (WSL, after `make install`):
+
+```bash
+./scripts/init-nico-testnet.sh
+canined start --home ~/.canine-nico
+```
+
+Or init and start together:
+
+```bash
+START=1 ./scripts/init-nico-testnet.sh
+```
+
+Submit a **`v600`** upgrade proposal once the node is running:
+
+```bash
+./scripts/submit-v600-upgrade-proposal.sh
+```
+
+Manual steps (equivalent):
+
 ```bash
 export CHAIN_ID=jackal-nico-1
 export MONIKER=nico-validator
@@ -54,8 +75,6 @@ canined validate-genesis --home $HOME_DIR
 
 canined start --home $HOME_DIR
 ```
-
-Test `v600` upgrade locally with a governance proposal (see `scripts/upgrade-test.sh` pattern).
 
 ---
 

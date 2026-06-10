@@ -79,7 +79,7 @@ Chronological notes; append new entries at the top.
 
 | Date | Phase | Notes |
 |------|-------|-------|
-| 2026-06-11 | Phase 0–1 | Ops tooling: `capture-chain-inventory.sh`, `verify-v600-candidate.sh`, `NETWORK-ENDPOINTS.md`; README/playbooks updated for `master`. |
+| 2026-06-10 | Phase 0 | Mainnet inventory captured (5 wasm codes, 157 IBC channels); fixed `capture-chain-inventory.sh` for Windows; added `init-nico-testnet.sh` + `submit-v600-upgrade-proposal.sh`. |
 | 2026-06-11 | Phase 1 | CI green on fork (`test-unit`, golangci-lint, proto-gen, build); storage/jklmint integration test fixes; merged to `master`. |
 | 2026-06-10 | Phase 0–1 | `make proto-gen` via `ghcr.io/cosmos/proto-builder:0.13.1`; regenerated `.pb.go` with `cosmos/gogoproto`; Phase 0 inventory + v600 testnet/mainnet playbooks; `scripts/smoke-v600-testnet.sh`; proto-gen CI workflow; `v600` upgrade unit test. |
 | 2026-06-09 | Phase 1 | Pushed `feat/cosmos-modernization-phase1`; `go mod tidy`; sim tests migrated off `simapp` → `testutil/sims`; storage `mulStorageCharge` overflow guard; CI: CGO + wasmvm 1.5.9 on Linux; README install section updated. |
@@ -116,8 +116,8 @@ Applies to all phases; check once and re-verify each phase.
 - [x] List Jackal-only patches (historical SDK fork, CometBFT fork, custom ante, wasm gas) — [PHASE0-INVENTORY.md](./PHASE0-INVENTORY.md)
 - [x] Inventory custom modules: `storage`, `filetree`, `rns`, `oracle`, `jklmint`, `notifications`
 - [x] Inventory IBC: transfer, ICA, fee middleware, wasm IBC handler
-- [ ] List mainnet wasm code IDs / pinned contracts (per wasmvm hop) — **`scripts/capture-chain-inventory.sh`**
-- [ ] Document connected IBC chains and relayer versions — **`scripts/capture-chain-inventory.sh`**
+- [x] List mainnet wasm code IDs / pinned contracts (per wasmvm hop) — **`docs/inventory/captured-mainnet-20260610T2333Z.json`**
+- [x] Document connected IBC chains (mainnet capture; relayer version still TBD)
 
 ### Operations
 - [ ] Test state export at current mainnet height (`canined export --height <H>`; app round-trip: `TestWasmdExport`)
