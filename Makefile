@@ -350,3 +350,13 @@ proto-check-breaking:
 
 .PHONY: proto-all proto-gen proto-gen-any proto-swagger-gen proto-format proto-lint proto-check-breaking proto-update-deps docs
 .PHONY: all install install-debug go-mod-cache draw-deps clean build build-linux format test test-all test-build test-cover test-unit test-race test-sim-import-export local
+.PHONY: verify-v600 inventory-mainnet inventory-testnet
+
+verify-v600:
+	@./scripts/verify-v600-candidate.sh
+
+inventory-mainnet:
+	@NETWORK=mainnet ./scripts/capture-chain-inventory.sh
+
+inventory-testnet:
+	@NETWORK=testnet ./scripts/capture-chain-inventory.sh

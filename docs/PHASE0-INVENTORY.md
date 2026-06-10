@@ -1,7 +1,21 @@
 # Phase 0 — Baseline inventory
 
-Recorded **2026-06-09** for the Jackal (`canine-chain`) Cosmos modernization program.  
+Recorded **2026-06-11** for the Jackal (`canine-chain`) Cosmos modernization program.  
 See [COSMOS-MODERNIZATION.md](./COSMOS-MODERNIZATION.md) for the living roadmap.
+
+---
+
+## Current codebase (`master` — Phase 1 / v600)
+
+| Package | Version |
+|---------|---------|
+| Cosmos SDK | 0.47.17 |
+| CometBFT | 0.37.15 |
+| cometbft-db | 0.14.1 |
+| ibc-go | v7.10.0 |
+| wasmd | v0.45.0 |
+| wasmvm | v1.5.9 |
+| Go / toolchain | 1.23.1 / go1.23.8 |
 
 ---
 
@@ -35,7 +49,20 @@ See [COSMOS-MODERNIZATION.md](./COSMOS-MODERNIZATION.md) for the living roadmap.
 
 ---
 
-## Migration branch (`feat/cosmos-modernization-phase1`)
+## Public network endpoints
+
+See [NETWORK-ENDPOINTS.md](./NETWORK-ENDPOINTS.md). Capture live wasm + IBC data:
+
+```bash
+./scripts/capture-chain-inventory.sh
+NETWORK=testnet ./scripts/capture-chain-inventory.sh
+```
+
+Output lands in `docs/inventory/captured-*.json` — merge code IDs and channel IDs into the tables below.
+
+---
+
+## Migration branch (historical: `feat/cosmos-modernization-phase1`, now merged to `master`)
 
 | Package | Version |
 |---------|---------|
@@ -112,7 +139,7 @@ Handlers registered in `app/upgrades.go` → `registerMainnetUpgradeHandlers`:
 | wasmvm (migration branch) | **v1.5.9** — lib path: `internal/api/libwasmvm.x86_64.so` |
 | wasmd | v0.45.0 — legacy gov wasm proposals still enabled (`EnableAllProposals`) |
 | Custom bindings | `wasmbinding/` — storage, filetree, notifications message plugins |
-| Mainnet code IDs | **TBD** — record per pinned contract before testnet regression (fill in after export) |
+| Mainnet code IDs | Run `./scripts/capture-chain-inventory.sh` — paste summary here after capture |
 
 > Action: export `canined query wasm list-code` from mainnet and attach code IDs + checksums before testnet wasm smoke tests.
 
@@ -124,8 +151,8 @@ Handlers registered in `app/upgrades.go` → `registerMainnetUpgradeHandlers`:
 |------|-------|
 | ibc-go major | v4 (mainnet) → **v7** (migration) |
 | Middleware | IBC fee module wired in `app/app.go` |
-| Connected chains | **TBD** — document counterparty chain IDs + channel IDs |
-| Relayer | **TBD** — pin Hermes / Go relayer version compatible with ibc-go v7 |
+| Connected chains | Run inventory script — document counterparty chain IDs + channel IDs |
+| Relayer | **TBD** — pin Hermes / Go relayer version compatible with ibc-go v7 (recommend Hermes ≥ 1.8 for ibc-go v7) |
 
 ---
 
@@ -133,10 +160,11 @@ Handlers registered in `app/upgrades.go` → `registerMainnetUpgradeHandlers`:
 
 - [x] Inventory documented (this file)
 - [ ] Tag mainnet release binary (`v5.1.x`) and archive `go.mod` + replaces
-- [ ] State export tested at current mainnet height (`canined export`)
-- [ ] Mainnet wasm code ID list captured
-- [ ] IBC channel + relayer inventory captured
-- [ ] Validator communication plan drafted (see [V600-MAINNET-GOVERNANCE.md](./V600-MAINNET-GOVERNANCE.md))
+- [x] App export/import round-trip tested (`app.TestWasmdExport` with CGO)
+- [ ] State export tested at **current mainnet height** (`canined export --height <H>`)
+- [ ] Mainnet wasm code ID list captured (`scripts/capture-chain-inventory.sh`)
+- [ ] IBC channel + relayer inventory captured (`scripts/capture-chain-inventory.sh`)
+- [x] Validator communication plan drafted ([V600-MAINNET-GOVERNANCE.md](./V600-MAINNET-GOVERNANCE.md))
 
 ---
 
@@ -145,3 +173,4 @@ Handlers registered in `app/upgrades.go` → `registerMainnetUpgradeHandlers`:
 - [COSMOS-MODERNIZATION.md](./COSMOS-MODERNIZATION.md)
 - [V600-TESTNET-UPGRADE.md](./V600-TESTNET-UPGRADE.md)
 - [V600-MAINNET-GOVERNANCE.md](./V600-MAINNET-GOVERNANCE.md)
+- [NETWORK-ENDPOINTS.md](./NETWORK-ENDPOINTS.md)

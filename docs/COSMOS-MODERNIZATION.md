@@ -79,6 +79,7 @@ Chronological notes; append new entries at the top.
 
 | Date | Phase | Notes |
 |------|-------|-------|
+| 2026-06-11 | Phase 0–1 | Ops tooling: `capture-chain-inventory.sh`, `verify-v600-candidate.sh`, `NETWORK-ENDPOINTS.md`; README/playbooks updated for `master`. |
 | 2026-06-11 | Phase 1 | CI green on fork (`test-unit`, golangci-lint, proto-gen, build); storage/jklmint integration test fixes; merged to `master`. |
 | 2026-06-10 | Phase 0–1 | `make proto-gen` via `ghcr.io/cosmos/proto-builder:0.13.1`; regenerated `.pb.go` with `cosmos/gogoproto`; Phase 0 inventory + v600 testnet/mainnet playbooks; `scripts/smoke-v600-testnet.sh`; proto-gen CI workflow; `v600` upgrade unit test. |
 | 2026-06-09 | Phase 1 | Pushed `feat/cosmos-modernization-phase1`; `go mod tidy`; sim tests migrated off `simapp` → `testutil/sims`; storage `mulStorageCharge` overflow guard; CI: CGO + wasmvm 1.5.9 on Linux; README install section updated. |
@@ -95,7 +96,7 @@ Applies to all phases; check once and re-verify each phase.
 - [ ] Long-lived migration workflow: phase branches → testnet → mainnet governance
 - [x] **Linux CI with CGO** for wasmvm integration tests (`.github/workflows/test-unit.yml`)
 - [ ] Public testnet mirroring mainnet modules + representative wasm contracts
-- [x] Upgrade playbook: halt height, binary checksum, rollback, validator comms ([V600-TESTNET-UPGRADE.md](./V600-TESTNET-UPGRADE.md), [V600-MAINNET-GOVERNANCE.md](./V600-MAINNET-GOVERNANCE.md))
+- [x] Upgrade playbook: halt height, binary checksum, rollback, validator comms ([V600-TESTNET-UPGRADE.md](./V600-TESTNET-UPGRADE.md), [V600-MAINNET-GOVERNANCE.md](./V600-MAINNET-GOVERNANCE.md), [NETWORK-ENDPOINTS.md](./NETWORK-ENDPOINTS.md))
 - [ ] Remove unnecessary forks:
   - [x] Free post-proof ante → `app/ante_fee.go` (no SDK fork)
   - [x] CometBFT fork → upstream CometBFT (Phase 1)
@@ -115,11 +116,11 @@ Applies to all phases; check once and re-verify each phase.
 - [x] List Jackal-only patches (historical SDK fork, CometBFT fork, custom ante, wasm gas) — [PHASE0-INVENTORY.md](./PHASE0-INVENTORY.md)
 - [x] Inventory custom modules: `storage`, `filetree`, `rns`, `oracle`, `jklmint`, `notifications`
 - [x] Inventory IBC: transfer, ICA, fee middleware, wasm IBC handler
-- [ ] List mainnet wasm code IDs / pinned contracts (per wasmvm hop) — **fill TBD fields in inventory**
-- [ ] Document connected IBC chains and relayer versions — **fill TBD fields in inventory**
+- [ ] List mainnet wasm code IDs / pinned contracts (per wasmvm hop) — **`scripts/capture-chain-inventory.sh`**
+- [ ] Document connected IBC chains and relayer versions — **`scripts/capture-chain-inventory.sh`**
 
 ### Operations
-- [ ] Test state export at current mainnet height
+- [ ] Test state export at current mainnet height (`canined export --height <H>`; app round-trip: `TestWasmdExport`)
 - [x] Validator / provider communication plan for upgrade windows — [V600-MAINNET-GOVERNANCE.md](./V600-MAINNET-GOVERNANCE.md)
 
 **Exit criteria:** Inventory complete; export tested; team agrees on phased plan.
@@ -191,8 +192,9 @@ Applies to all phases; check once and re-verify each phase.
 ### Docs & ops
 - [x] This roadmap document created
 - [x] Update root `README.md` install section (Go version, wasmvm lib path)
-- [ ] Testnet deploy candidate `v600` — **playbook ready:** [V600-TESTNET-UPGRADE.md](./V600-TESTNET-UPGRADE.md)
-- [ ] Testnet smoke: storage post-proof (zero fee), filetree, rns, oracle, wasm execute — script: `scripts/smoke-v600-testnet.sh`
+- [x] Testnet deploy candidate playbook — [V600-TESTNET-UPGRADE.md](./V600-TESTNET-UPGRADE.md), [NETWORK-ENDPOINTS.md](./NETWORK-ENDPOINTS.md)
+- [ ] Testnet deploy candidate `v600` executed on Jackal testnet
+- [ ] Testnet smoke: storage post-proof (zero fee), filetree, rns, oracle, wasm execute — `scripts/smoke-v600-testnet.sh`, `scripts/verify-v600-candidate.sh`
 - [ ] IBC transfer smoke on testnet
 - [ ] Mainnet governance: upgrade name `v600`, halt height, binary checksum — **template:** [V600-MAINNET-GOVERNANCE.md](./V600-MAINNET-GOVERNANCE.md)
 - [ ] Post-upgrade monitoring (48–72h) — checklist in governance doc

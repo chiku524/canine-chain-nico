@@ -2,7 +2,11 @@
 # Smoke tests for v600 testnet candidate. Run against a funded testnet key.
 #
 # Usage:
-#   CHAIN_ID=jackal-testnet-1 NODE=https://rpc.example.com KEY=mykey \
+#   CHAIN_ID=jackal-testnet-1 NODE=https://testnet-rpc.jackalprotocol.com:443 KEY=mykey \
+#     ./scripts/smoke-v600-testnet.sh
+#
+# Mainnet read-only smoke (queries only):
+#   CHAIN_ID=jackal-1 NODE=https://rpc.jackalprotocol.com:443 KEY=mykey \
 #     ./scripts/smoke-v600-testnet.sh
 #
 # Requires: canined, jq, configured key in canined keyring.
@@ -10,7 +14,7 @@
 set -eo pipefail
 
 CHAIN_ID="${CHAIN_ID:-jackal-testnet-1}"
-NODE="${NODE:-http://localhost:26657}"
+NODE="${NODE:-https://testnet-rpc.jackalprotocol.com:443}"
 KEY="${KEY:-test}"
 DENOM="${DENOM:-ujkl}"
 

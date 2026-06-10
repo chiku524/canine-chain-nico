@@ -15,11 +15,12 @@
 5. [Phase 0 inventory](docs/PHASE0-INVENTORY.md)
 6. [v600 testnet upgrade playbook](docs/V600-TESTNET-UPGRADE.md)
 7. [v600 mainnet governance template](docs/V600-MAINNET-GOVERNANCE.md)
+8. [Public network endpoints](docs/NETWORK-ENDPOINTS.md)
 
 
 ## Installing the Canine CLI
 ### Prerequisites
-* **Go 1.23.8** on `feat/cosmos-modernization-phase1` (see `go.mod`; mainnet today: 1.23+; north-star 0.54 stack: Go 1.25+)
+* **Go 1.23.8** on `master` (Phase 1 / v600; see `go.mod`; north-star 0.54 stack: Go 1.25+)
 * GNU Make and a C toolchain (`build-essential` on Debian/Ubuntu)
 * **CGO enabled** for `canined` and wasm tests (`CGO_ENABLED=1`)
 * **wasmvm shared library** matching `go.mod` (migration branch: **v1.5.9**):
@@ -58,6 +59,14 @@ You may also need to run `sudo chmod +x canined` inside the executables director
 
 ```shell
 make test
+```
+
+### v600 candidate verification (Linux + CGO)
+
+```shell
+./scripts/verify-v600-candidate.sh
+./scripts/capture-chain-inventory.sh          # mainnet wasm + IBC snapshot
+NETWORK=testnet ./scripts/capture-chain-inventory.sh
 ```
 
 ## Version Map

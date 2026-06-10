@@ -5,7 +5,7 @@ Deploy and validate the **Cosmos SDK 0.47** migration (`v600`) on a Jackal testn
 | Field | Value |
 |-------|-------|
 | Upgrade name | `v600` |
-| Branch | `feat/cosmos-modernization-phase1` |
+| Branch | `master` |
 | Handler | `app/upgrades/v600/upgrades.go` |
 | Binary requirements | Go 1.23.8, CGO, wasmvm **v1.5.9** |
 
@@ -14,7 +14,7 @@ Deploy and validate the **Cosmos SDK 0.47** migration (`v600`) on a Jackal testn
 ## 1. Build release candidate
 
 ```bash
-git checkout feat/cosmos-modernization-phase1
+git checkout master
 git pull
 
 # Linux amd64 (validators)
@@ -101,7 +101,7 @@ canined query storage params
 Automated script (queries only):
 
 ```bash
-CHAIN_ID=jackal-testnet-1 NODE=https://rpc.testnet.example.com KEY=test \
+CHAIN_ID=jackal-testnet-1 NODE=https://testnet-rpc.jackalprotocol.com:443 KEY=test \
   ./scripts/smoke-v600-testnet.sh
 ```
 
