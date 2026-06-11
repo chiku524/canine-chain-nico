@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/jackalLabs/canine-chain/v5/testutil"
 	types "github.com/jackalLabs/canine-chain/v5/x/rns/types"
@@ -23,7 +24,7 @@ func (suite *KeeperTestSuite) TestBuyMsg() {
 	brokeBuyer, err := sdk.AccAddressFromBech32(testAddresses[2])
 	suite.Require().NoError(err)
 
-	coins := sdk.NewCoins(sdk.NewCoin("ujkl", sdk.NewInt(10000000000)))
+	coins := sdk.NewCoins(sdk.NewCoin("ujkl", sdkmath.NewInt(10000000000)))
 	err = suite.bankKeeper.SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, nameOwner, coins)
 	suite.Require().NoError(err)
 

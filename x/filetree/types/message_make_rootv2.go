@@ -2,6 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -42,19 +43,19 @@ func (msg *MsgProvisionFileTree) GetSignBytes() []byte {
 func (msg *MsgProvisionFileTree) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 
 	if msg.Editors == "" {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest,
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest,
 			"invalid editors: %s", msg.Editors)
 	}
 	if msg.Viewers == "" {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest,
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest,
 			"invalid viewers: %s", msg.Viewers)
 	}
 	if msg.TrackingNumber == "" {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest,
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest,
 			"invalid tracking number: %s", msg.TrackingNumber)
 	}
 

@@ -87,7 +87,7 @@ func SendTx(clientCtx client.Context, flagSet *pflag.FlagSet, msgs ...sdk.Msg) (
 	}
 
 	tx.SetFeeGranter(clientCtx.GetFeeGranterAddress())
-	err = txns.Sign(txf, clientCtx.GetFromName(), tx, true)
+	err = txns.Sign(clientCtx.CmdContext, txf, clientCtx.GetFromName(), tx, true)
 	if err != nil {
 		return nil, err
 	}

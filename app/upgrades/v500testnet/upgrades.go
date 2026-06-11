@@ -1,10 +1,11 @@
 package v500testnet
 
 import (
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"context"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/jackalLabs/canine-chain/v5/app/upgrades"
 )
 
@@ -29,8 +30,10 @@ func (u *Upgrade) Name() string {
 }
 
 func (u *Upgrade) Handler() upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		ctx.Logger().Info("Updating the Jackal Protocol to v5...")
+	return func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+		sdkCtx.Logger().Info("Updating the Jackal Protocol to v5...")
 
 		return fromVM, nil
 	}

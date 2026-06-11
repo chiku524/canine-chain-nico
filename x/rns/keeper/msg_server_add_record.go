@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/jackalLabs/canine-chain/v5/x/rns/types"
 )
@@ -22,25 +23,25 @@ func (k msgServer) AddRecord(goCtx context.Context, msg *types.MsgAddRecord) (*t
 	whois, isFound := k.GetNames(ctx, name, tld)
 
 	if !isFound {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "name does not exist or has expired")
+		return nil, errorsmod.Wrap(sdkerrors.ErrNotFound, "name does not exist or has expired")
 	}
 
 	if ctx.BlockHeight() > whois.Expires {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "name does not exist or has expired")
+		return nil, errorsmod.Wrap(sdkerrors.ErrNotFound, "name does not exist or has expired")
 	}
 
 	if msg.Creator != whois.Value {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "you do not own this name")
+		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "you do not own this name")
 	}
 
 	if strings.Contains(msg.Value, ".") {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "cannot have a '.' in a record")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidType, "cannot have a '.' in a record")
 	}
 
 	// checking if the subdomain is already added
 	for _, sd := range whois.Subdomains {
 		if sd.Name == msg.Record {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidType, "Subdomain already exists")
+			return nil, errorsmod.Wrap(sdkerrors.ErrInvalidType, "Subdomain already exists")
 		}
 	}
 

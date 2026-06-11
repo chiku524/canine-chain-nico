@@ -1,12 +1,14 @@
 package keeper
 
 import (
+	storetypes "cosmossdk.io/store/types"
 	"fmt"
 	"strings"
 
+	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/jackalLabs/canine-chain/v5/x/rns/types"
 )
@@ -114,7 +116,7 @@ func (k Keeper) RemoveNames(
 // GetAllNames returns all names
 func (k Keeper) GetAllNames(ctx sdk.Context) (list []types.Names) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.NamesKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 
@@ -131,7 +133,7 @@ func (k Keeper) GetAllNames(ctx sdk.Context) (list []types.Names) {
 func (k Keeper) CheckExistence(ctx sdk.Context) bool {
 	// initializing the iterator
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.NamesKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 
@@ -148,7 +150,7 @@ func (k Keeper) CheckExistence(ctx sdk.Context) bool {
 
 func (k Keeper) Resolve(ctx sdk.Context, name string) (sdk.AccAddress, error) {
 	if len(name) == 0 {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "name cannot be empty")
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "name cannot be empty")
 	}
 
 	adr, err := sdk.AccAddressFromBech32(name) // the name passed was actually already bech32
@@ -158,19 +160,19 @@ func (k Keeper) Resolve(ctx sdk.Context, name string) (sdk.AccAddress, error) {
 
 	n, tld, err := GetNameAndTLD(name)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "cannot parse the name and tld from given rns")
+		return nil, errorsmod.Wrapf(err, "cannot parse the name and tld from given rns")
 	}
 
 	rnsName, found := k.GetNames(ctx, n, tld)
 	if !found {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrNotFound, "cannot find name in key store")
+		return nil, errorsmod.Wrapf(sdkerrors.ErrNotFound, "cannot find name in key store")
 	}
 
 	val := rnsName.Value
 
 	address, err := sdk.AccAddressFromBech32(val)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "cannot parse an address from rns entry")
+		return nil, errorsmod.Wrapf(err, "cannot parse an address from rns entry")
 	}
 
 	return address, nil

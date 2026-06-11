@@ -6,14 +6,14 @@ import (
 	types2 "github.com/jackalLabs/canine-chain/v5/x/filetree/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
 	"github.com/jackalLabs/canine-chain/v5/x/storage/types"
 )
 
 func (k Keeper) DoReport(ctx sdk.Context, prover string, merkle []byte, owner string, start int64, creator string) error {
 	form, found := k.GetReportForm(ctx, prover, merkle, owner, start)
 	if !found {
-		return sdkerrors.Wrapf(types.ErrAttestInvalid, "cannot find this report")
+		return errorsmod.Wrapf(types.ErrAttestInvalid, "cannot find this report")
 	}
 
 	done := false
@@ -33,7 +33,7 @@ func (k Keeper) DoReport(ctx sdk.Context, prover string, merkle []byte, owner st
 	}
 
 	if !done {
-		return sdkerrors.Wrapf(types.ErrAttestInvalid, "you cannot attest to this deal")
+		return errorsmod.Wrapf(types.ErrAttestInvalid, "you cannot attest to this deal")
 	}
 
 	if count < k.GetParams(ctx).AttestMinToPass {
@@ -45,7 +45,7 @@ func (k Keeper) DoReport(ctx sdk.Context, prover string, merkle []byte, owner st
 	deal, found := k.GetFile(ctx, merkle, owner, start)
 
 	if !found {
-		return sdkerrors.Wrapf(types.ErrDealNotFound, "cannot find active deal from form")
+		return errorsmod.Wrapf(types.ErrDealNotFound, "cannot find active deal from form")
 	}
 
 	k.RemoveReport(ctx, prover, merkle, owner, start)
@@ -82,29 +82,29 @@ func (k msgServer) Report(goCtx context.Context, msg *types.MsgReport) (*types.M
 func (k Keeper) RequestReport(ctx sdk.Context, prover string, merkle []byte, owner string, start int64) ([]string, error) {
 	deal, found := k.GetFile(ctx, merkle, owner, start)
 	if !found {
-		return nil, sdkerrors.Wrapf(types.ErrDealNotFound, "cannot find active deal for report form")
+		return nil, errorsmod.Wrapf(types.ErrDealNotFound, "cannot find active deal for report form")
 	}
 
 	_, found = k.GetReportForm(ctx, prover, merkle, owner, start)
 	if found {
-		return nil, sdkerrors.Wrapf(types.ErrAttestAlreadyExists, "report form already exists")
+		return nil, errorsmod.Wrapf(types.ErrAttestAlreadyExists, "report form already exists")
 	}
 
 	_, err := deal.GetProver(ctx, k, prover)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "not a provider of this file")
+		return nil, errorsmod.Wrapf(err, "not a provider of this file")
 	}
 
 	provider, found := k.GetProviders(ctx, prover)
 	if !found {
-		return nil, sdkerrors.Wrapf(types.ErrProviderNotFound, "cannot find provider matching deal")
+		return nil, errorsmod.Wrapf(types.ErrProviderNotFound, "cannot find provider matching deal")
 	}
 
 	providers := k.GetActiveProviders(ctx, provider.Ip) // get a random list of active providers
 	params := k.GetParams(ctx)
 
 	if len(providers) < int(params.AttestFormSize) {
-		return nil, sdkerrors.Wrapf(types.ErrInvalidLengthQuery, "not enough providers online")
+		return nil, errorsmod.Wrapf(types.ErrInvalidLengthQuery, "not enough providers online")
 	}
 
 	attestations := make([]*types.Attestation, params.AttestFormSize)

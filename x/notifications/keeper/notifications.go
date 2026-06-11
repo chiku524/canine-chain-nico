@@ -1,9 +1,10 @@
 package keeper
 
 import (
+	storetypes "cosmossdk.io/store/types"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/jackalLabs/canine-chain/v5/x/notifications/types"
 )
@@ -78,7 +79,7 @@ func (k Keeper) RemoveNotification(
 // GetAllNotifications returns all notifications
 func (k Keeper) GetAllNotifications(ctx sdk.Context) (list []types.Notification) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.NotificationsKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {
@@ -93,7 +94,7 @@ func (k Keeper) GetAllNotifications(ctx sdk.Context) (list []types.Notification)
 // GetAllNotificationsByAddress returns all notifications that belong to a given address
 func (k Keeper) GetAllNotificationsByAddress(ctx sdk.Context, address string) (list []types.Notification) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.NotificationsKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte(fmt.Sprintf("%s/", address)))
+	iterator := storetypes.KVStorePrefixIterator(store, []byte(fmt.Sprintf("%s/", address)))
 	defer iterator.Close()
 
 	for ; iterator.Valid(); iterator.Next() {

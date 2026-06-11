@@ -25,16 +25,19 @@
 * **Go 1.23.8** on `master` (Phase 1 / v600; see `go.mod`; north-star 0.54 stack: Go 1.25+)
 * GNU Make and a C toolchain (`build-essential` on Debian/Ubuntu)
 * **CGO enabled** for `canined` and wasm tests (`CGO_ENABLED=1`)
-* **wasmvm shared library** matching `go.mod` (migration branch: **v1.5.9**):
+* **wasmvm shared library** matching `go.mod`:
 
 ```sh
-# Linux amd64 — replace TAG with the wasmvm version from go.mod (e.g. v1.5.9)
-WASMVM_TAG=v1.5.9
-sudo wget -q "https://github.com/CosmWasm/wasmvm/raw/${WASMVM_TAG}/internal/api/libwasmvm.x86_64.so" \
+# Linux amd64 — version from go.mod (Phase 1: v1.5.9; Phase 2+: v2.x from releases/)
+WASMVM_VERSION=$(go list -m -f '{{.Version}}' github.com/CosmWasm/wasmvm/v2 2>/dev/null \
+  || go list -m -f '{{.Version}}' github.com/CosmWasm/wasmvm)
+sudo wget -q "https://github.com/CosmWasm/wasmvm/releases/download/${WASMVM_VERSION}/libwasmvm.x86_64.so" \
   -O /usr/lib/libwasmvm.x86_64.so
+# Phase 1 (wasmvm v1.x) only — if the command above fails:
+# sudo wget -q "https://github.com/CosmWasm/wasmvm/raw/v1.5.9/internal/api/libwasmvm.x86_64.so" -O /usr/lib/libwasmvm.x86_64.so
 ```
 
-On macOS use `libwasmvm.dylib` from the same tag path under `internal/api/`.
+On macOS use `libwasmvm.dylib` from the same release URL pattern (`releases/download/${WASMVM_VERSION}/`).
 
 ### Installing
 > if you want to use pebble follow this: https://github.com/JackalLabs/canine-chain/pull/511
@@ -48,11 +51,13 @@ make install
 ```
 
 ### Pre-built Binary
-[Releases](https://github.com/JackalLabs/canine-chain/releases) — download the latest release for your network. Install the **wasmvm** shared library version that matches the release (see `go.mod` and [docs/COSMOS-MODERNIZATION.md](docs/COSMOS-MODERNIZATION.md)). Example for wasmvm **1.5.x** (migration branch):
+[Releases](https://github.com/JackalLabs/canine-chain/releases) — download the latest release for your network. Install the **wasmvm** shared library version that matches the release (see `go.mod` and [docs/COSMOS-MODERNIZATION.md](docs/COSMOS-MODERNIZATION.md)):
 
 ```sh
-# Replace TAG with the wasmvm version from go.mod (e.g. v1.5.9)
-sudo wget "https://github.com/CosmWasm/wasmvm/raw/TAG/internal/api/libwasmvm.x86_64.so" -O /lib/libwasmvm.x86_64.so
+WASMVM_VERSION=$(go list -m -f '{{.Version}}' github.com/CosmWasm/wasmvm/v2 2>/dev/null \
+  || go list -m -f '{{.Version}}' github.com/CosmWasm/wasmvm)
+sudo wget -q "https://github.com/CosmWasm/wasmvm/releases/download/${WASMVM_VERSION}/libwasmvm.x86_64.so" \
+  -O /usr/lib/libwasmvm.x86_64.so
 ```
 
 You may also need to run `sudo chmod +x canined` inside the executables directory to allow it to run.

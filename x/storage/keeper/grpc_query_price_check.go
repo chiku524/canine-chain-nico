@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"time"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/jackalLabs/canine-chain/v5/x/storage/types"
 	"google.golang.org/grpc/codes"
@@ -27,13 +28,13 @@ func (k Keeper) PriceCheck(c context.Context, req *types.QueryPriceCheck) (*type
 
 	bytes := req.Bytes
 
-	size := sdk.NewInt(bytes)
-	s := size.Quo(sdk.NewInt(1_000_000)).Int64() // round to mbs
+	size := sdkmath.NewInt(bytes)
+	s := size.Quo(sdkmath.NewInt(1_000_000)).Int64() // round to mbs
 	if s <= 0 {
 		s = 1
 	}
 
-	hours := sdk.NewDec(duration.Milliseconds()).Quo(sdk.NewDec(60 * 60 * 1000))
+	hours := sdkmath.LegacyNewDec(duration.Milliseconds()).Quo(sdkmath.LegacyNewDec(60 * 60 * 1000))
 
 	cost := k.GetStorageCostKbs(ctx, s*1000, hours.TruncateInt64()) // pay for 200 years in mbs
 

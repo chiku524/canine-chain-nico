@@ -6,7 +6,6 @@ package types
 import (
 	context "context"
 	fmt "fmt"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
 	proto "github.com/cosmos/gogoproto/proto"
@@ -147,7 +146,7 @@ func (m *QueryInflation) XXX_DiscardUnknown() {
 var xxx_messageInfo_QueryInflation proto.InternalMessageInfo
 
 type QueryInflationResponse struct {
-	Inflation github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,1,opt,name=inflation,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"inflation"`
+	Inflation Dec `protobuf:"bytes,1,opt,name=inflation,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"inflation"`
 }
 
 func (m *QueryInflationResponse) Reset()         { *m = QueryInflationResponse{} }

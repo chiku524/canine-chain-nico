@@ -2,6 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -48,31 +49,31 @@ func (msg *MsgPostFile) GetSignBytes() []byte {
 func (msg *MsgPostFile) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 
 	if msg.Account == "" {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest,
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest,
 			"invalid account: %s", msg.Account)
 	}
 	if msg.HashParent == "" {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest,
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest,
 			"invalid hash parent: %s", msg.HashParent)
 	}
 	if msg.HashChild == "" {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest,
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest,
 			"invalid hash child: %s", msg.HashChild)
 	}
 	if msg.Viewers == "" {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest,
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest,
 			"invalid viewers: %s", msg.Viewers)
 	}
 	if msg.Editors == "" {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest,
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest,
 			"invalid editors: %s", msg.Editors)
 	}
 	if msg.TrackingNumber == "" {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest,
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest,
 			"invalid tracking number: %s", msg.TrackingNumber)
 	}
 

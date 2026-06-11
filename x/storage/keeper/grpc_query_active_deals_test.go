@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -12,7 +13,6 @@ import (
 	jklapp "github.com/jackalLabs/canine-chain/v5/app"
 	"github.com/jackalLabs/canine-chain/v5/testutil"
 	"github.com/jackalLabs/canine-chain/v5/x/storage/types"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 )
 
 func setup(t *testing.T) *jklapp.JackalApp {
@@ -28,7 +28,7 @@ func (suite *KeeperTestSuite) SetupTest() {
 		suite.T().Skip("integration tests require CGO for wasmvm")
 	}
 	app := setup(suite.T())
-	ctx := app.NewContext(false, tmproto.Header{})
+	ctx := app.NewContext(false)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry)
 	types.RegisterQueryServer(queryHelper, app.StorageKeeper)
@@ -48,7 +48,7 @@ func (suite *KeeperTestSuite) TestAllFiles() {
 	testAccount := testAddresses[0]
 	depoAccount := testAddresses[1]
 
-	coins := sdk.NewCoins(sdk.NewCoin("ujkl", sdk.NewInt(100000000000))) // Send some coins to their account
+	coins := sdk.NewCoins(sdk.NewCoin("ujkl", sdkmath.NewInt(100000000000))) // Send some coins to their account
 	testAcc, _ := sdk.AccAddressFromBech32(testAccount)
 	err = suite.bankKeeper.SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, testAcc, coins)
 	suite.Require().NoError(err)
@@ -113,7 +113,7 @@ func (suite *KeeperTestSuite) TestOpenFiles() {
 	testAccount := testAddresses[0]
 	depoAccount := testAddresses[1]
 
-	coins := sdk.NewCoins(sdk.NewCoin("ujkl", sdk.NewInt(100000000000))) // Send some coins to their account
+	coins := sdk.NewCoins(sdk.NewCoin("ujkl", sdkmath.NewInt(100000000000))) // Send some coins to their account
 	testAcc, _ := sdk.AccAddressFromBech32(testAccount)
 	err = suite.bankKeeper.SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, testAcc, coins)
 	suite.Require().NoError(err)
@@ -186,7 +186,7 @@ func (suite *KeeperTestSuite) TestFileNotes() {
 	testAccount := testAddresses[0]
 	depoAccount := testAddresses[1]
 
-	coins := sdk.NewCoins(sdk.NewCoin("ujkl", sdk.NewInt(100000000000))) // Send some coins to their account
+	coins := sdk.NewCoins(sdk.NewCoin("ujkl", sdkmath.NewInt(100000000000))) // Send some coins to their account
 	testAcc, _ := sdk.AccAddressFromBech32(testAccount)
 	err = suite.bankKeeper.SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, testAcc, coins)
 	suite.Require().NoError(err)
@@ -228,8 +228,8 @@ func (suite *KeeperTestSuite) TestFileNotes() {
 	})
 
 	bk := "terribleKey"
-	bv := sdk.NewDec(46)
-	bm := make(map[string]sdk.Dec)
+	bv := sdkmath.LegacyNewDec(46)
+	bm := make(map[string]sdkmath.LegacyDec)
 	bm[bk] = bv
 	bb, err := json.Marshal(bm)
 	suite.Require().NoError(err)
@@ -305,7 +305,7 @@ func (suite *KeeperTestSuite) TestProofsByAddress() {
 	depoAccount := testAddresses[1]
 	providerAccount := testAddresses[2]
 
-	coins := sdk.NewCoins(sdk.NewCoin("ujkl", sdk.NewInt(100000000000))) // Send some coins to their account
+	coins := sdk.NewCoins(sdk.NewCoin("ujkl", sdkmath.NewInt(100000000000))) // Send some coins to their account
 	testAcc, _ := sdk.AccAddressFromBech32(testAccount)
 	err = suite.bankKeeper.SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, testAcc, coins)
 	suite.Require().NoError(err)

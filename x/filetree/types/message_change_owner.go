@@ -2,6 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -42,20 +43,20 @@ func (msg *MsgChangeOwner) GetSignBytes() []byte {
 func (msg *MsgChangeOwner) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 
 	// Check empty values
 	if msg.NewOwner == "" {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest,
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest,
 			"invalid new owner: %s", msg.NewOwner)
 	}
 	if msg.FileOwner == "" {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest,
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest,
 			"invalid file owner: %s", msg.FileOwner)
 	}
 	if msg.Address == "" {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest,
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest,
 			"invalid address: %s", msg.Address)
 	}
 

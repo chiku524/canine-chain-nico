@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -52,11 +53,11 @@ func (msg *MsgCreateNotification) GetSignBytes() []byte {
 func (msg *MsgCreateNotification) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 
 	if !json.Valid([]byte(msg.Contents)) {
-		return sdkerrors.Wrapf(ErrInvalidContents, "cannot verify contents")
+		return errorsmod.Wrapf(ErrInvalidContents, "cannot verify contents")
 	}
 
 	return nil
@@ -100,7 +101,7 @@ func (msg *MsgDeleteNotification) GetSignBytes() []byte {
 func (msg *MsgDeleteNotification) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 	return nil
 }

@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"fmt"
 	"testing"
 
@@ -41,7 +42,7 @@ func (suite *KeeperTestSuite) reset() {
 	types.RegisterQueryServer(queryHelper, rnsKeeper)
 	queryClient := types.NewQueryClient(queryHelper)
 
-	coins := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000000000)))
+	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(1000000000)))
 	err := bankKeeper.MintCoins(ctx, minttypes.ModuleName, coins)
 	suite.NoError(err)
 	err = bankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, types.ModuleName, coins)

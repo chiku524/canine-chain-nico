@@ -1,6 +1,7 @@
 package app
 
 import (
+	"bytes"
 	"fmt"
 	"math"
 
@@ -50,7 +51,7 @@ func JackalTxFeeChecker(ctx sdk.Context, tx sdk.Tx) (sdk.Coins, int64, error) {
 func checkTxFeeWithValidatorMinGasPrices(ctx sdk.Context, tx sdk.Tx) (sdk.Coins, int64, error) {
 	feeTx, ok := tx.(sdk.FeeTx)
 	if !ok {
-		return nil, 0, sdkerrors.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
+		return nil, 0, errorsmod.Wrap(sdkerrors.ErrTxDecode, "Tx must be a FeeTx")
 	}
 
 	feeCoins := feeTx.GetFee()
@@ -66,7 +67,7 @@ func checkTxFeeWithValidatorMinGasPrices(ctx sdk.Context, tx sdk.Tx) (sdk.Coins,
 				requiredFees[i] = sdk.NewCoin(gp.Denom, fee.Ceil().RoundInt())
 			}
 			if !feeCoins.IsAnyGTE(requiredFees) {
-				return nil, 0, sdkerrors.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s required: %s", feeCoins, requiredFees)
+				return nil, 0, errorsmod.Wrapf(sdkerrors.ErrInsufficientFee, "insufficient fees; got: %s required: %s", feeCoins, requiredFees)
 			}
 		}
 	}
@@ -158,13 +159,13 @@ func (dfd JackalDeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx
 	feeGranter := feeTx.FeeGranter()
 	deductFeesFrom := feePayer
 
-	if feeGranter != nil {
+	if len(feeGranter) != 0 {
 		if dfd.feegrantKeeper == nil {
 			return sdkerrors.ErrInvalidRequest.Wrap("fee grants are not enabled")
-		} else if !feeGranter.Equals(feePayer) {
+		} else if !bytes.Equal(feeGranter, feePayer) {
 			err := dfd.feegrantKeeper.UseGrantedFees(ctx, feeGranter, feePayer, fee, sdkTx.GetMsgs())
 			if err != nil {
-				return errorsmod.Wrapf(err, "%s does not allow to pay fees for %s", feeGranter, feePayer)
+				return errorsmod.Wrapf(err, "%s does not allow to pay fees for %s", sdk.AccAddress(feeGranter), sdk.AccAddress(feePayer))
 			}
 		}
 		deductFeesFrom = feeGranter
@@ -185,7 +186,7 @@ func (dfd JackalDeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx
 		sdk.NewEvent(
 			sdk.EventTypeTx,
 			sdk.NewAttribute(sdk.AttributeKeyFee, fee.String()),
-			sdk.NewAttribute(sdk.AttributeKeyFeePayer, deductFeesFrom.String()),
+			sdk.NewAttribute(sdk.AttributeKeyFeePayer, sdk.AccAddress(deductFeesFrom).String()),
 		),
 	})
 

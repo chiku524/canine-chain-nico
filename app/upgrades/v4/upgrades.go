@@ -1,21 +1,23 @@
 package v4
 
 import (
+	"context"
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"strconv"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
+	sdkmath "cosmossdk.io/math"
 
 	jklminttypes "github.com/jackalLabs/canine-chain/v5/x/jklmint/types"
 
 	notificationsmoduletypes "github.com/jackalLabs/canine-chain/v5/x/notifications/types"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/jackalLabs/canine-chain/v5/app/upgrades"
 	filetreemodulekeeper "github.com/jackalLabs/canine-chain/v5/x/filetree/keeper"
 	storagekeeper "github.com/jackalLabs/canine-chain/v5/x/storage/keeper"
@@ -212,26 +214,28 @@ func UpdateFiles(ctx sdk.Context, sk *storagekeeper.Keeper) map[string][]byte {
 
 // Handler implements upgrades.Upgrade
 func (u *Upgrade) Handler() upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		ctx.Logger().Info("\nNow updating the Jackal Protocol to:\n\n █████╗  ██████╗ █████╗  ██████╗██╗ █████╗ \n██╔══██╗██╔════╝██╔══██╗██╔════╝██║██╔══██╗\n███████║██║     ███████║██║     ██║███████║\n██╔══██║██║     ██╔══██║██║     ██║██╔══██║\n██║  ██║╚██████╗██║  ██║╚██████╗██║██║  ██║\n╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝ ╚═════╝╚═╝╚═╝  ╚═╝\n                                           \n")
+	return func(ctx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+		sdkCtx.Logger().Info("\nNow updating the Jackal Protocol to:\n\n █████╗  ██████╗ █████╗  ██████╗██╗ █████╗ \n██╔══██╗██╔════╝██╔══██╗██╔════╝██║██╔══██╗\n███████║██║     ███████║██║     ██║███████║\n██╔══██║██║     ██╔══██║██║     ██║██╔══██║\n██║  ██║╚██████╗██║  ██║╚██████╗██║██║  ██║\n╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝ ╚═════╝╚═╝╚═╝  ╚═╝\n                                           \n")
 
 		fromVM[storagemoduletypes.ModuleName] = 5
 		fromVM[jklminttypes.ModuleName] = 4
 
-		newVM, err := u.mm.RunMigrations(ctx, u.configurator, fromVM)
+		newVM, err := u.mm.RunMigrations(sdkCtx, u.configurator, fromVM)
 		if err != nil {
 			return newVM, err
 		}
 
-		fidMerkleMap := UpdateFiles(ctx, u.sk)
+		fidMerkleMap := UpdateFiles(sdkCtx, u.sk)
 
-		UpdateFileTree(ctx, u.fk, fidMerkleMap)
+		UpdateFileTree(sdkCtx, u.fk, fidMerkleMap)
 
-		UpdatePaymentInfo(ctx, u.sk) // updating payment info with values at time of upgrade
+		UpdatePaymentInfo(sdkCtx, u.sk) // updating payment info with values at time of upgrade
 
-		err = u.ProvisionGauges(ctx)
+		err = u.ProvisionGauges(sdkCtx)
 		if err != nil {
-			return newVM, sdkerrors.Wrapf(err, "could not provision gauges")
+			return newVM, errorsmod.Wrapf(err, "could not provision gauges")
 		}
 
 		return newVM, err
@@ -245,7 +249,7 @@ func (u *Upgrade) ProvisionGauges(ctx sdk.Context) error {
 	depAcc := params.DepositAccount
 	dep, err := sdk.AccAddressFromBech32(depAcc)
 	if err != nil {
-		return sdkerrors.Wrapf(err, "cannot parse deposit account from params")
+		return errorsmod.Wrapf(err, "cannot parse deposit account from params")
 	}
 
 	c := u.bk.GetBalance(ctx, dep, "ujkl")
@@ -253,34 +257,34 @@ func (u *Upgrade) ProvisionGauges(ctx sdk.Context) error {
 
 	err = u.bk.SendCoinsFromAccountToModule(ctx, dep, storagemoduletypes.ModuleName, toMove) // send tokens to token account
 	if err != nil {
-		return sdkerrors.Wrapf(err, "cannot send tokens from deposit account")
+		return errorsmod.Wrapf(err, "cannot send tokens from deposit account")
 	}
 
-	total := sdk.NewDecFromInt(c.Amount)
-	year := total.Mul(sdk.NewDec(15).QuoInt64(100)) // 15%
+	total := sdkmath.LegacyNewDecFromInt(c.Amount)
+	year := total.Mul(sdkmath.LegacyNewDec(15).QuoInt64(100)) // 15%
 	yearSend := sdk.NewCoins(sdk.NewCoin("ujkl", year.TruncateInt()))
 
-	rest := total.Mul(sdk.NewDec(100 - 15).QuoInt64(100)) // 85%
+	rest := total.Mul(sdkmath.LegacyNewDec(100 - 15).QuoInt64(100)) // 85%
 	restSend := sdk.NewCoins(sdk.NewCoin("ujkl", rest.TruncateInt()))
 
 	gaugeOne := u.sk.NewGauge(ctx, yearSend, ctx.BlockTime().AddDate(1, 0, 0)) // 15% dripped over the first year
 	gaugeOneAccount, err := storagemoduletypes.GetGaugeAccount(gaugeOne)
 	if err != nil {
-		return sdkerrors.Wrapf(err, "cannot send tokens to token holder account")
+		return errorsmod.Wrapf(err, "cannot send tokens to token holder account")
 	}
 	err = u.bk.SendCoinsFromModuleToAccount(ctx, storagemoduletypes.ModuleName, gaugeOneAccount, yearSend)
 	if err != nil {
-		return sdkerrors.Wrapf(err, "cannot send tokens to token holder account")
+		return errorsmod.Wrapf(err, "cannot send tokens to token holder account")
 	}
 
 	gaugeTwo := u.sk.NewGauge(ctx, restSend, ctx.BlockTime().AddDate(200, 0, 0)) // rest dripped over the next 200 years
 	gaugeTwoAccount, err := storagemoduletypes.GetGaugeAccount(gaugeTwo)
 	if err != nil {
-		return sdkerrors.Wrapf(err, "cannot send tokens to token holder account")
+		return errorsmod.Wrapf(err, "cannot send tokens to token holder account")
 	}
 	err = u.bk.SendCoinsFromModuleToAccount(ctx, storagemoduletypes.ModuleName, gaugeTwoAccount, restSend)
 	if err != nil {
-		return sdkerrors.Wrapf(err, "cannot send tokens to token holder account")
+		return errorsmod.Wrapf(err, "cannot send tokens to token holder account")
 	}
 
 	return nil

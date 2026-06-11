@@ -5,7 +5,7 @@ import (
 	"encoding/hex"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
 )
 
 const (
@@ -23,7 +23,7 @@ func GetAccount(name string) (sdk.AccAddress, error) {
 	mh := hex.EncodeToString(m)
 	adr, err := sdk.AccAddressFromHexUnsafe(mh)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "cannot get account account")
+		return nil, errorsmod.Wrapf(err, "cannot get account account")
 	}
 	return adr, nil
 }

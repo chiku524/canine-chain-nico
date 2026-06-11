@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"github.com/jackalLabs/canine-chain/v5/x/oracle/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -49,7 +50,7 @@ func (suite *KeeperTestSuite) TestCreateFeed() {
 
 			// TODO: setup simulation and use that instead
 			// Fund account
-			coins := sdk.NewCoins(sdk.NewCoin("ujkl", sdk.NewInt(1000000000000)))
+			coins := sdk.NewCoins(sdk.NewCoin("ujkl", sdkmath.NewInt(1000000000000)))
 			err := suite.bankKeeper.MintCoins(suite.ctx, minttypes.ModuleName, coins)
 			suite.NoError(err)
 			err = suite.bankKeeper.SendCoinsFromModuleToModule(suite.ctx, minttypes.ModuleName, types.ModuleName, coins)

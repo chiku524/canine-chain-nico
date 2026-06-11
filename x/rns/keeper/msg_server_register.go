@@ -8,6 +8,7 @@ import (
 	allTypes "github.com/jackalLabs/canine-chain/v5/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/jackalLabs/canine-chain/v5/x/rns/types"
@@ -30,7 +31,7 @@ func (k Keeper) RegisterRNSName(ctx sdk.Context, sender string, nm string, data 
 
 	cost, err := GetCostOfName(name, tld)
 	if err != nil {
-		return sdkerrors.Wrap(err, "failed to get cost")
+		return errorsmod.Wrap(err, "failed to get cost")
 	}
 
 	price := sdk.Coins{sdk.NewInt64Coin("ujkl", cost*years)}
@@ -41,7 +42,7 @@ func (k Keeper) RegisterRNSName(ctx sdk.Context, sender string, nm string, data 
 
 	owner, err := sdk.AccAddressFromBech32(sender)
 	if err != nil {
-		return sdkerrors.Wrap(err, "cannot parse sender")
+		return errorsmod.Wrap(err, "cannot parse sender")
 	}
 
 	if isFound { // name exists
@@ -51,7 +52,7 @@ func (k Keeper) RegisterRNSName(ctx sdk.Context, sender string, nm string, data 
 			if whois.Value == owner.String() { // already owned by me
 				time = whois.Expires + time
 			} else { // not owned by me
-				return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "name already registered")
+				return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "name already registered")
 			}
 		}
 	} else { // name doesn't exist

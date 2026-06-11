@@ -1,3 +1,5 @@
+//go:build test
+
 package app
 
 import (
@@ -17,10 +19,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/codec"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/ed25519"
 	cryptotypes "github.com/cosmos/cosmos-sdk/crypto/types"
-	"github.com/cosmos/cosmos-sdk/snapshots"
-	snapshottypes "github.com/cosmos/cosmos-sdk/snapshots/types"
+	"cosmossdk.io/store/snapshots"
+	snapshottypes "cosmossdk.io/store/snapshots/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
@@ -29,10 +33,10 @@ import (
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
 	"github.com/stretchr/testify/require"
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
+	"cosmossdk.io/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	tmtypes "github.com/cometbft/cometbft/types"
-	dbm "github.com/cometbft/cometbft-db"
+	dbm "github.com/cosmos/cosmos-db"
 
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
@@ -88,7 +92,7 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	validators := make([]stakingtypes.Validator, 0, len(valSet.Validators))
 	delegations := make([]stakingtypes.Delegation, 0, len(valSet.Validators))
 
-	bondAmt := sdk.NewInt(1000000) //nolint:staticcheck // legacy test helper
+	bondAmt := sdkmath.NewInt(1000000)
 
 	for _, val := range valSet.Validators {
 		pk, err := codec.FromTmPubKeyInterface(val.PubKey)
@@ -101,15 +105,15 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 			Jailed:            false,
 			Status:            stakingtypes.Bonded,
 			Tokens:            bondAmt,
-			DelegatorShares:   sdk.OneDec(),
+			DelegatorShares:   sdkmath.LegacyOneDec(),
 			Description:       stakingtypes.Description{},
 			UnbondingHeight:   int64(0),
 			UnbondingTime:     time.Unix(0, 0).UTC(),
-			Commission:        stakingtypes.NewCommission(sdk.ZeroDec(), sdk.ZeroDec(), sdk.ZeroDec()),
-			MinSelfDelegation: sdk.ZeroInt(),
+			Commission:        stakingtypes.NewCommission(sdkmath.LegacyZeroDec(), sdkmath.LegacyZeroDec(), sdkmath.LegacyZeroDec()),
+			MinSelfDelegation: sdkmath.ZeroInt(),
 		}
 		validators = append(validators, validator)
-		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress(), val.Address.Bytes(), sdk.OneDec()))
+		delegations = append(delegations, stakingtypes.NewDelegation(genAccs[0].GetAddress().String(), sdk.ValAddress(val.Address).String(), sdkmath.LegacyOneDec()))
 
 	}
 
@@ -137,22 +141,19 @@ func SetupWithGenesisValSet(t *testing.T, valSet *tmtypes.ValidatorSet, genAccs 
 	require.NoError(t, err)
 
 	// init chain will set the validator set and initialize the genesis accounts
-	app.InitChain(
-		abci.RequestInitChain{
-			Validators:      []abci.ValidatorUpdate{},
-			ConsensusParams: DefaultConsensusParams,
-			AppStateBytes:   stateBytes,
-		},
-	)
+	_, err = app.InitChain(&abci.RequestInitChain{
+		Validators:      []abci.ValidatorUpdate{},
+		ConsensusParams: DefaultConsensusParams,
+		AppStateBytes:   stateBytes,
+	})
+	require.NoError(t, err)
 
-	// commit genesis changes
-	app.Commit()
-	app.BeginBlock(abci.RequestBeginBlock{Header: tmproto.Header{
+	_, err = app.FinalizeBlock(&abci.RequestFinalizeBlock{
 		Height:             app.LastBlockHeight() + 1,
-		AppHash:            app.LastCommitID().Hash,
-		ValidatorsHash:     valSet.Hash(),
+		Hash:               app.LastCommitID().Hash,
 		NextValidatorsHash: valSet.Hash(),
-	}})
+	})
+	require.NoError(t, err)
 
 	return app
 }
@@ -176,7 +177,7 @@ func SetupTestingAppWithGenesis(t *testing.T) *JackalApp {
 	genAcc := authtypes.NewBaseAccount(sdk.AccAddress(pubKeys[0].Address()), pubKeys[0], 0, 0)
 	balance := banktypes.Balance{
 		Address: genAcc.GetAddress().String(),
-		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdk.NewInt(100_000_000_000_000))),
+		Coins:   sdk.NewCoins(sdk.NewCoin(sdk.DefaultBondDenom, sdkmath.NewInt(100_000_000_000_000))),
 	}
 	return SetupWithGenesisValSet(t, valSet, []authtypes.GenesisAccount{genAcc}, nil, balance)
 }
@@ -229,8 +230,8 @@ func createIncrementalAccounts(accNum int) []sdk.AccAddress {
 }
 
 // AddTestAddrsFromPubKeys adds the addresses into the JackalApp providing only the public keys.
-func AddTestAddrsFromPubKeys(app *JackalApp, ctx sdk.Context, pubKeys []cryptotypes.PubKey, accAmt sdk.Int) {
-	initCoins := sdk.NewCoins(sdk.NewCoin(app.stakingKeeper.BondDenom(ctx), accAmt))
+func AddTestAddrsFromPubKeys(app *JackalApp, ctx sdk.Context, pubKeys []cryptotypes.PubKey, accAmt sdkmath.Int) {
+	initCoins := sdk.NewCoins(sdk.NewCoin(bondDenom(app, ctx), accAmt))
 
 	for _, pk := range pubKeys {
 		initAccountWithCoins(app, ctx, sdk.AccAddress(pk.Address()), initCoins)
@@ -239,20 +240,20 @@ func AddTestAddrsFromPubKeys(app *JackalApp, ctx sdk.Context, pubKeys []cryptoty
 
 // AddTestAddrs constructs and returns accNum amount of accounts with an
 // initial balance of accAmt in random order
-func AddTestAddrs(app *JackalApp, ctx sdk.Context, accNum int, accAmt sdk.Int) []sdk.AccAddress {
+func AddTestAddrs(app *JackalApp, ctx sdk.Context, accNum int, accAmt sdkmath.Int) []sdk.AccAddress {
 	return addTestAddrs(app, ctx, accNum, accAmt, createRandomAccounts)
 }
 
 // AddTestAddrs constructs and returns accNum amount of accounts with an
 // initial balance of accAmt in random order
-func AddTestAddrsIncremental(app *JackalApp, ctx sdk.Context, accNum int, accAmt sdk.Int) []sdk.AccAddress {
+func AddTestAddrsIncremental(app *JackalApp, ctx sdk.Context, accNum int, accAmt sdkmath.Int) []sdk.AccAddress {
 	return addTestAddrs(app, ctx, accNum, accAmt, createIncrementalAccounts)
 }
 
-func addTestAddrs(app *JackalApp, ctx sdk.Context, accNum int, accAmt sdk.Int, strategy GenerateAccountStrategy) []sdk.AccAddress {
+func addTestAddrs(app *JackalApp, ctx sdk.Context, accNum int, accAmt sdkmath.Int, strategy GenerateAccountStrategy) []sdk.AccAddress {
 	testAddrs := strategy(accNum)
 
-	initCoins := sdk.NewCoins(sdk.NewCoin(app.stakingKeeper.BondDenom(ctx), accAmt))
+	initCoins := sdk.NewCoins(sdk.NewCoin(bondDenom(app, ctx), accAmt))
 
 	// fill all the addresses with some coins, set the loose pool tokens simultaneously
 	for _, addr := range testAddrs {
@@ -260,6 +261,14 @@ func addTestAddrs(app *JackalApp, ctx sdk.Context, accNum int, accAmt sdk.Int, s
 	}
 
 	return testAddrs
+}
+
+func bondDenom(app *JackalApp, ctx sdk.Context) string {
+	denom, err := app.stakingKeeper.BondDenom(ctx)
+	if err != nil {
+		panic(err)
+	}
+	return denom
 }
 
 func initAccountWithCoins(app *JackalApp, ctx sdk.Context, addr sdk.AccAddress, coins sdk.Coins) {
@@ -308,8 +317,8 @@ func TestAddr(addr string, bech string) (sdk.AccAddress, error) {
 
 // CheckBalance checks the balance of an account.
 func CheckBalance(t *testing.T, app *JackalApp, addr sdk.AccAddress, balances sdk.Coins) {
-	ctxCheck := app.NewContext(true, tmproto.Header{})
-	require.True(t, balances.IsEqual(app.BankKeeper.GetAllBalances(ctxCheck, addr)))
+	ctxCheck := app.NewContext(true)
+	require.True(t, balances.Equal(app.BankKeeper.GetAllBalances(ctxCheck, addr)))
 }
 
 const DefaultGas = 1200000
@@ -349,9 +358,8 @@ func SignCheckDeliver(
 	}
 
 	// Simulate a sending a transaction and committing a block
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-	gInfo, res, err := app.SimDeliver(txCfg.TxEncoder(), tx)
-
+	var gInfo sdk.GasInfo
+	gInfo, res, err = deliverViaFinalizeBlock(app, header, txBytes)
 	if expPass {
 		require.NoError(t, err)
 		require.NotNil(t, res)
@@ -359,9 +367,6 @@ func SignCheckDeliver(
 		require.Error(t, err)
 		require.Nil(t, res)
 	}
-
-	app.EndBlock(abci.RequestEndBlock{})
-	app.Commit()
 
 	return gInfo, res, err
 }
@@ -385,11 +390,10 @@ func SignAndDeliver(
 		priv...,
 	)
 	require.NoError(t, err)
+	txBytes, err := txCfg.TxEncoder()(tx)
+	require.NoError(t, err)
 
-	// Simulate a sending a transaction and committing a block
-	app.BeginBlock(abci.RequestBeginBlock{Header: header})
-	gInfo, res, err := app.SimDeliver(txCfg.TxEncoder(), tx)
-
+	gInfo, res, err := deliverViaFinalizeBlock(app, header, txBytes)
 	if expPass {
 		require.NoError(t, err)
 		require.NotNil(t, res)
@@ -398,10 +402,27 @@ func SignAndDeliver(
 		require.Nil(t, res)
 	}
 
-	app.EndBlock(abci.RequestEndBlock{})
-	app.Commit()
-
 	return gInfo, res, err
+}
+
+func deliverViaFinalizeBlock(app *bam.BaseApp, header tmproto.Header, txBytes []byte) (sdk.GasInfo, *sdk.Result, error) {
+	fbRes, err := app.FinalizeBlock(&abci.RequestFinalizeBlock{
+		Height: header.Height,
+		Time:   header.Time,
+		Txs:    [][]byte{txBytes},
+	})
+	if err != nil {
+		return sdk.GasInfo{}, nil, err
+	}
+	if len(fbRes.TxResults) == 0 {
+		return sdk.GasInfo{}, nil, nil
+	}
+	txRes := fbRes.TxResults[0]
+	gInfo := sdk.GasInfo{GasUsed: uint64(txRes.GasUsed), GasWanted: uint64(txRes.GasWanted)}
+	if txRes.Code != 0 {
+		return gInfo, nil, errorsmod.ABCIError(txRes.Codespace, txRes.Code, txRes.Log)
+	}
+	return gInfo, &sdk.Result{Data: txRes.Data, Log: txRes.Log}, nil
 }
 
 // GenSequenceOfTxs generates a set of signed transactions of messages, such
@@ -461,18 +482,9 @@ func NewPubKeyFromHex(pk string) (res cryptotypes.PubKey) {
 		panic(err)
 	}
 	if len(pkBytes) != ed25519.PubKeySize {
-		panic(sdkerrors.Wrap(sdkerrors.ErrInvalidPubKey, "invalid pubkey size"))
+		panic(errorsmod.Wrap(sdkerrors.ErrInvalidPubKey, "invalid pubkey size"))
 	}
 	return &ed25519.PubKey{Key: pkBytes}
-}
-
-// SetBech32ForTest configures Jackal bech32 prefixes for tests.
-func SetBech32ForTest() {
-	cfg := sdk.GetConfig()
-	cfg.SetBech32PrefixForAccount(Bech32PrefixAccAddr, Bech32PrefixAccPub)
-	cfg.SetBech32PrefixForValidator(Bech32PrefixValAddr, Bech32PrefixValPub)
-	cfg.SetBech32PrefixForConsensusNode(Bech32PrefixConsAddr, Bech32PrefixConsPub)
-	cfg.SetAddressVerifier(wasmtypes.VerifyAddressLen())
 }
 
 // EmptyBaseAppOptions is a stub implementing AppOptions

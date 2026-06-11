@@ -2,6 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -43,24 +44,24 @@ func (msg *MsgAddEditors) GetSignBytes() []byte {
 func (msg *MsgAddEditors) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 
 	// Check empty values
 	if msg.EditorIds == "" {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest,
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest,
 			"invalid editor ids: %s", msg.EditorIds)
 	}
 	if msg.EditorKeys == "" {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest,
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest,
 			"invalid editor keys: %s", msg.EditorKeys)
 	}
 	if msg.Address == "" {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest,
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest,
 			"invalid address: %s", msg.Address)
 	}
 	if msg.FileOwner == "" {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest,
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest,
 			"invalid file owner: %s", msg.FileOwner)
 	}
 

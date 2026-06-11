@@ -1,8 +1,8 @@
 package keeper
 
 import (
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/store/prefix"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/jackalLabs/canine-chain/v5/x/storage/types"
 )
@@ -78,7 +78,7 @@ func (k Keeper) RemoveFile(
 // GetAllFileByMerkle returns all File
 func (k Keeper) GetAllFileByMerkle(ctx sdk.Context) (list []types.UnifiedFile) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.FilePrimaryKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 
@@ -97,9 +97,9 @@ func (k Keeper) IterateFilesByMerkle(ctx sdk.Context, reverse bool, fn func(key 
 
 	var iterator storetypes.Iterator
 	if reverse {
-		iterator = sdk.KVStoreReversePrefixIterator(store, []byte{})
+		iterator = storetypes.KVStoreReversePrefixIterator(store, []byte{})
 	} else {
-		iterator = sdk.KVStorePrefixIterator(store, []byte{})
+		iterator = storetypes.KVStorePrefixIterator(store, []byte{})
 	}
 
 	defer iterator.Close()
@@ -118,9 +118,9 @@ func (k Keeper) IterateAndParseFilesByMerkle(ctx sdk.Context, reverse bool, fn f
 
 	var iterator storetypes.Iterator
 	if reverse {
-		iterator = sdk.KVStoreReversePrefixIterator(store, []byte{})
+		iterator = storetypes.KVStoreReversePrefixIterator(store, []byte{})
 	} else {
-		iterator = sdk.KVStorePrefixIterator(store, []byte{})
+		iterator = storetypes.KVStorePrefixIterator(store, []byte{})
 	}
 
 	defer iterator.Close()
@@ -142,7 +142,7 @@ func (k Keeper) IterateAndParseFilesByMerkle(ctx sdk.Context, reverse bool, fn f
 // GetAllFilesWithMerkle returns all Files that start with a specific merkle
 func (k Keeper) GetAllFilesWithMerkle(ctx sdk.Context, merkle []byte) (list []types.UnifiedFile) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.FilesMerklePrefix(merkle))
-	iterator := sdk.KVStorePrefixIterator(store, nil)
+	iterator := storetypes.KVStorePrefixIterator(store, nil)
 
 	defer iterator.Close()
 

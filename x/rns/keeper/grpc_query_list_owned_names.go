@@ -3,9 +3,9 @@ package keeper
 import (
 	"context"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/jackalLabs/canine-chain/v5/x/rns/types"
@@ -33,9 +33,9 @@ func (k Keeper) ListOwnedNames(goCtx context.Context, req *types.QueryListOwnedN
 
 	var iterator storetypes.Iterator
 	if reverse {
-		iterator = sdk.KVStoreReversePrefixIterator(namesStore, []byte{})
+		iterator = storetypes.KVStoreReversePrefixIterator(namesStore, []byte{})
 	} else {
-		iterator = sdk.KVStorePrefixIterator(namesStore, []byte{})
+		iterator = storetypes.KVStorePrefixIterator(namesStore, []byte{})
 	}
 
 	defer iterator.Close()

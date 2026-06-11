@@ -1,9 +1,10 @@
 package wasmbinding
 
 import (
-	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	storagekeeper "github.com/jackalLabs/canine-chain/v5/x/storage/keeper"
@@ -16,7 +17,7 @@ func PerformPostFile(s *storagekeeper.Keeper, ctx sdk.Context, contractAddr sdk.
 	}
 
 	if postFile.Creator != contractAddr.String() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
 	}
 
 	if err := postFile.ValidateBasic(); err != nil {
@@ -26,7 +27,7 @@ func PerformPostFile(s *storagekeeper.Keeper, ctx sdk.Context, contractAddr sdk.
 	msgServer := storagekeeper.NewMsgServerImpl(*s)
 	_, err := msgServer.PostFile(sdk.WrapSDKContext(ctx), postFile)
 	if err != nil {
-		return sdkerrors.Wrap(err, "post file error from message")
+		return errorsmod.Wrap(err, "post file error from message")
 	}
 
 	return nil
@@ -38,7 +39,7 @@ func PerformDeleteFile(s *storagekeeper.Keeper, ctx sdk.Context, contractAddr sd
 	}
 
 	if deleteFile.Creator != contractAddr.String() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
 	}
 
 	if err := deleteFile.ValidateBasic(); err != nil {
@@ -48,7 +49,7 @@ func PerformDeleteFile(s *storagekeeper.Keeper, ctx sdk.Context, contractAddr sd
 	msgServer := storagekeeper.NewMsgServerImpl(*s)
 	_, err := msgServer.DeleteFile(sdk.WrapSDKContext(ctx), deleteFile)
 	if err != nil {
-		return sdkerrors.Wrap(err, "delete file error from message")
+		return errorsmod.Wrap(err, "delete file error from message")
 	}
 
 	return nil
@@ -60,7 +61,7 @@ func PerformBuyStorage(s *storagekeeper.Keeper, ctx sdk.Context, contractAddr sd
 	}
 
 	if buyStorage.Creator != contractAddr.String() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
 	}
 
 	if err := buyStorage.ValidateBasic(); err != nil {
@@ -70,7 +71,7 @@ func PerformBuyStorage(s *storagekeeper.Keeper, ctx sdk.Context, contractAddr sd
 	msgServer := storagekeeper.NewMsgServerImpl(*s)
 	_, err := msgServer.BuyStorage(sdk.WrapSDKContext(ctx), buyStorage)
 	if err != nil {
-		return sdkerrors.Wrap(err, "buy storage error from message")
+		return errorsmod.Wrap(err, "buy storage error from message")
 	}
 
 	return nil
@@ -82,7 +83,7 @@ func PerformRequestReportForm(s *storagekeeper.Keeper, ctx sdk.Context, contract
 	}
 
 	if requestReportForm.Creator != contractAddr.String() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
 	}
 
 	if err := requestReportForm.ValidateBasic(); err != nil {
@@ -92,7 +93,7 @@ func PerformRequestReportForm(s *storagekeeper.Keeper, ctx sdk.Context, contract
 	msgServer := storagekeeper.NewMsgServerImpl(*s)
 	_, err := msgServer.RequestReportForm(sdk.WrapSDKContext(ctx), requestReportForm)
 	if err != nil {
-		return sdkerrors.Wrap(err, "request report form error from message")
+		return errorsmod.Wrap(err, "request report form error from message")
 	}
 
 	return nil

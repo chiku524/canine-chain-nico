@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	"github.com/jackalLabs/canine-chain/v5/x/rns/types"
@@ -22,21 +23,21 @@ func (k msgServer) DelRecord(goCtx context.Context, msg *types.MsgDelRecord) (*t
 	sub, n, hasSub := GetSubdomain(n)
 
 	if !hasSub {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, "name does not contain records")
+		return nil, errorsmod.Wrap(sdkerrors.ErrKeyNotFound, "name does not contain records")
 	}
 
 	val, found := k.GetNames(ctx, n, tld)
 
 	if !found {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, "cannot find name")
+		return nil, errorsmod.Wrap(sdkerrors.ErrKeyNotFound, "cannot find name")
 	}
 
 	if ctx.BlockHeight() > val.Expires {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrNotFound, "name does not exist or has expired")
+		return nil, errorsmod.Wrap(sdkerrors.ErrNotFound, "name does not exist or has expired")
 	}
 
 	if msg.Creator != val.Value {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "you do not own this name")
+		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "you do not own this name")
 	}
 
 	removed := false
@@ -49,7 +50,7 @@ func (k msgServer) DelRecord(goCtx context.Context, msg *types.MsgDelRecord) (*t
 		removed = true
 	}
 	if !removed {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "record does not exist for this name")
+		return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "record does not exist for this name")
 	}
 
 	val.Subdomains = dms

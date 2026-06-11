@@ -90,8 +90,10 @@ func GenerateOrBroadcastTx(clientCtx client.Context, flags *pflag.FlagSet, msgs 
 	}
 
 	for _, msg := range msgs {
-		if err := msg.ValidateBasic(); err != nil {
-			return nil, err
+		if vb, ok := msg.(interface{ ValidateBasic() error }); ok {
+			if err := vb.ValidateBasic(); err != nil {
+				return nil, err
+			}
 		}
 	}
 
@@ -137,7 +139,7 @@ func GenerateOrBroadcastTx(clientCtx client.Context, flags *pflag.FlagSet, msgs 
 	}
 
 	txn.SetFeeGranter(clientCtx.GetFeeGranterAddress())
-	err = tx.Sign(txf, clientCtx.GetFromName(), txn, true)
+	err = tx.Sign(context.Background(), txf, clientCtx.GetFromName(), txn, true)
 	if err != nil {
 		return nil, err
 	}

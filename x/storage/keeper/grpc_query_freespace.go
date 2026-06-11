@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/jackalLabs/canine-chain/v5/x/storage/types"
 	"google.golang.org/grpc/codes"
@@ -25,7 +26,7 @@ func (k Keeper) FreeSpace(goCtx context.Context, req *types.QueryFreeSpace) (*ty
 		return nil, fmt.Errorf("can't find provider")
 	}
 
-	space, ok := sdk.NewIntFromString(provider.Totalspace)
+	space, ok := sdkmath.NewIntFromString(provider.Totalspace)
 
 	if !ok {
 		return nil, fmt.Errorf("can't parse total space")

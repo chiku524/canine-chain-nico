@@ -3,7 +3,7 @@ package types
 import (
 	"fmt"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"gopkg.in/yaml.v2"
@@ -86,7 +86,7 @@ func (p *Params) ParamSetPairs() paramtypes.ParamSetPairs {
 func (p *Params) Validate() error {
 	err := validateInt64(p.StorageProviderRatio)
 	if err != nil {
-		return sdkerrors.Wrapf(err, "storage p ratio is %d", p.StorageProviderRatio)
+		return errorsmod.Wrapf(err, "storage p ratio is %d", p.StorageProviderRatio)
 	}
 
 	err = validateMintDenom(p.MintDenom)
@@ -101,22 +101,22 @@ func (p *Params) Validate() error {
 
 	err = validateInt64(p.TokensPerBlock)
 	if err != nil {
-		return sdkerrors.Wrapf(err, "tokens per block is %d", p.TokensPerBlock)
+		return errorsmod.Wrapf(err, "tokens per block is %d", p.TokensPerBlock)
 	}
 
 	err = validateInt64(p.DevGrantsRatio)
 	if err != nil {
-		return sdkerrors.Wrapf(err, "dev grants ratio is %d", p.DevGrantsRatio)
+		return errorsmod.Wrapf(err, "dev grants ratio is %d", p.DevGrantsRatio)
 	}
 
 	err = validateInt64(p.MintDecrease)
 	if err != nil {
-		return sdkerrors.Wrapf(err, "mint decrease is %d", p.MintDecrease)
+		return errorsmod.Wrapf(err, "mint decrease is %d", p.MintDecrease)
 	}
 
 	err = validateInt64(p.StakerRatio)
 	if err != nil {
-		return sdkerrors.Wrapf(err, "staker ratio is %d", p.StakerRatio)
+		return errorsmod.Wrapf(err, "staker ratio is %d", p.StakerRatio)
 	}
 	return nil
 }

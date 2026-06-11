@@ -1,3 +1,5 @@
+//go:build simulation
+
 package simulation
 
 import (

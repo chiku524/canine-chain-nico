@@ -14,6 +14,7 @@ import (
 	keyring "github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdkTypes "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	eciesgo "github.com/ecies/go/v2"
 	"github.com/google/uuid"
 )
@@ -39,7 +40,7 @@ func MakePrivateKey(fromName string) (*eciesgo.PrivateKey, error) {
 		return nil, err
 	}
 
-	signed, _, err := ctx.Keyring.Sign(ctx.FromName, []byte("jackal_init"))
+	signed, _, err := ctx.Keyring.Sign(ctx.FromName, []byte("jackal_init"), signing.SignMode_SIGN_MODE_DIRECT)
 	if err != nil {
 		return nil, err
 	}

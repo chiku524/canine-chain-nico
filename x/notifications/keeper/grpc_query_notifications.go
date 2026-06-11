@@ -3,9 +3,9 @@ package keeper
 import (
 	"context"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/jackalLabs/canine-chain/v5/x/notifications/types"
@@ -22,7 +22,7 @@ func (k Keeper) AllNotificationsByAddress(c context.Context, req *types.QueryAll
 
 	page, limit, err := query.ParsePagination(req.Pagination)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "cannot parse pagination")
+		return nil, errorsmod.Wrapf(err, "cannot parse pagination")
 	}
 	offset := (page - 1) * limit
 

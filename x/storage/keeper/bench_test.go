@@ -1,6 +1,8 @@
 package keeper_test
 
 import (
+	sdkmath "cosmossdk.io/math"
+	storetypes "cosmossdk.io/store/types"
 	"fmt"
 	"testing"
 	"time"
@@ -26,8 +28,8 @@ import (
 func benchKeeper(tb testing.TB) (*keeper.Keeper, sdk.Context) {
 	tb.Helper()
 
-	key := sdk.NewKVStoreKey(types.StoreKey)
-	tkey := sdk.NewTransientStoreKey("transient_test")
+	key := storetypes.NewKVStoreKey(types.StoreKey)
+	tkey := storetypes.NewTransientStoreKey("transient_test")
 	ctx := canineglobaltestutil.DefaultContext(key, tkey).
 		WithBlockHeader(tmproto.Header{Time: tmtime.Now()}).
 		WithBlockTime(time.Now())
@@ -52,7 +54,7 @@ func benchKeeper(tb testing.TB) (*keeper.Keeper, sdk.Context) {
 	bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).Return(nil).AnyTimes()
 	bankKeeper.EXPECT().GetAllBalances(gomock.Any(), gomock.Any()).Return(sdk.Coins{}).AnyTimes()
-	bankKeeper.EXPECT().GetBalance(gomock.Any(), gomock.Any(), gomock.Any()).Return(sdk.NewCoin("ujkl", sdk.ZeroInt())).AnyTimes()
+	bankKeeper.EXPECT().GetBalance(gomock.Any(), gomock.Any(), gomock.Any()).Return(sdk.NewCoin("ujkl", sdkmath.ZeroInt())).AnyTimes()
 
 	accountKeeper.EXPECT().GetModuleAddress(gomock.Any()).Return(authtypes.NewModuleAddress(types.ModuleName)).AnyTimes()
 

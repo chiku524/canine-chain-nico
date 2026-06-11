@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"strings"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
 
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"gopkg.in/yaml.v2"
@@ -246,12 +246,12 @@ func validateAttestFormSize(i interface{}) error {
 func (p *Params) Validate() error {
 	err := validateInt64(p.PolRatio)
 	if err != nil {
-		return sdkerrors.Wrapf(err, "pol ratio is %d", p.PolRatio)
+		return errorsmod.Wrapf(err, "pol ratio is %d", p.PolRatio)
 	}
 
 	err = validateInt64(p.ReferralCommission)
 	if err != nil {
-		return sdkerrors.Wrapf(err, "referral commission is %d", p.ReferralCommission)
+		return errorsmod.Wrapf(err, "referral commission is %d", p.ReferralCommission)
 	}
 
 	return nil

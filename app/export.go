@@ -2,10 +2,12 @@ package app
 
 import (
 	"encoding/json"
+	"fmt"
 	"log"
 
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
+	storetypes "cosmossdk.io/store/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -16,10 +18,10 @@ import (
 // ExportAppStateAndValidators exports the state of the application for a genesis
 // file.
 func (app *JackalApp) ExportAppStateAndValidators(
-	forZeroHeight bool, jailAllowedAddrs []string, _ []string,
+	forZeroHeight bool, jailAllowedAddrs []string, modulesToExport []string,
 ) (servertypes.ExportedApp, error) {
 	// as if they could withdraw from the start of the next block
-	ctx := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
+	ctx := app.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()})
 
 	// We export at last height + 1, because that's the height at which
 	// Tendermint will start InitChain.
@@ -29,7 +31,10 @@ func (app *JackalApp) ExportAppStateAndValidators(
 		app.prepForZeroHeightGenesis(ctx, jailAllowedAddrs)
 	}
 
-	genState := app.mm.ExportGenesis(ctx, app.appCodec)
+	genState, err := app.mm.ExportGenesisForModules(ctx, app.appCodec, modulesToExport)
+	if err != nil {
+		return servertypes.ExportedApp{}, err
+	}
 	appState, err := json.MarshalIndent(genState, "", "  ")
 	if err != nil {
 		return servertypes.ExportedApp{}, err
@@ -49,7 +54,11 @@ func (app *JackalApp) ExportAppStateAndValidators(
 //
 //	in favour of export at a block height
 func (app *JackalApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs []string) {
-	applyAllowedAddrs := len(jailAllowedAddrs) > 0
+	applyAllowedAddrs := false
+
+	if len(jailAllowedAddrs) > 0 {
+		applyAllowedAddrs = true
+	}
 
 	allowedAddrsMap := make(map[string]bool)
 
@@ -61,101 +70,124 @@ func (app *JackalApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs
 		allowedAddrsMap[addr] = true
 	}
 
-	/* Just to be safe, assert the invariants on current state. */
 	app.crisisKeeper.AssertInvariants(ctx)
 
-	/* Handle fee distribution state. */
-
-	// withdraw all validator commission
-	app.stakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
-		_, _ = app.distrKeeper.WithdrawValidatorCommission(ctx, val.GetOperator()) //nolint:errcheck
+	err := app.stakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
+		valBz, err := app.stakingKeeper.ValidatorAddressCodec().StringToBytes(val.GetOperator())
+		if err != nil {
+			panic(err)
+		}
+		_, _ = app.distrKeeper.WithdrawValidatorCommission(ctx, valBz)
 		return false
 	})
+	if err != nil {
+		panic(err)
+	}
 
-	// withdraw all delegator rewards
-	dels := app.stakingKeeper.GetAllDelegations(ctx)
+	dels, err := app.stakingKeeper.GetAllDelegations(ctx)
+	if err != nil {
+		panic(err)
+	}
+
 	for _, delegation := range dels {
 		valAddr, err := sdk.ValAddressFromBech32(delegation.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
 
-		delAddr, err := sdk.AccAddressFromBech32(delegation.DelegatorAddress)
-		if err != nil {
+		delAddr := sdk.MustAccAddressFromBech32(delegation.DelegatorAddress)
+
+		if _, err = app.distrKeeper.WithdrawDelegationRewards(ctx, delAddr, valAddr); err != nil {
 			panic(err)
 		}
-		_, _ = app.distrKeeper.WithdrawDelegationRewards(ctx, delAddr, valAddr) //nolint:errcheck
 	}
 
-	// clear validator slash events
 	app.distrKeeper.DeleteAllValidatorSlashEvents(ctx)
-
-	// clear validator historical rewards
 	app.distrKeeper.DeleteAllValidatorHistoricalRewards(ctx)
 
-	// set context height to zero
 	height := ctx.BlockHeight()
 	ctx = ctx.WithBlockHeight(0)
 
-	// reinitialize all validators
-	app.stakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
-		// donate any unwithdrawn outstanding reward fraction tokens to the community pool
-		scraps := app.distrKeeper.GetValidatorOutstandingRewardsCoins(ctx, val.GetOperator())
-		feePool := app.distrKeeper.GetFeePool(ctx)
+	err = app.stakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
+		valBz, err := app.stakingKeeper.ValidatorAddressCodec().StringToBytes(val.GetOperator())
+		if err != nil {
+			panic(err)
+		}
+		scraps, err := app.distrKeeper.GetValidatorOutstandingRewardsCoins(ctx, valBz)
+		if err != nil {
+			panic(err)
+		}
+		feePool, err := app.distrKeeper.FeePool.Get(ctx)
+		if err != nil {
+			panic(err)
+		}
 		feePool.CommunityPool = feePool.CommunityPool.Add(scraps...)
-		app.distrKeeper.SetFeePool(ctx, feePool)
+		if err := app.distrKeeper.FeePool.Set(ctx, feePool); err != nil {
+			panic(err)
+		}
 
-		_ = app.distrKeeper.Hooks().AfterValidatorCreated(ctx, val.GetOperator())
+		if err := app.distrKeeper.Hooks().AfterValidatorCreated(ctx, valBz); err != nil {
+			panic(err)
+		}
 		return false
 	})
+	if err != nil {
+		panic(err)
+	}
 
-	// reinitialize all delegations
 	for _, del := range dels {
 		valAddr, err := sdk.ValAddressFromBech32(del.ValidatorAddress)
 		if err != nil {
 			panic(err)
 		}
-		delAddr, err := sdk.AccAddressFromBech32(del.DelegatorAddress)
-		if err != nil {
-			panic(err)
+		delAddr := sdk.MustAccAddressFromBech32(del.DelegatorAddress)
+
+		if err := app.distrKeeper.Hooks().BeforeDelegationCreated(ctx, delAddr, valAddr); err != nil {
+			panic(fmt.Errorf("error while incrementing period: %w", err))
 		}
-		_ = app.distrKeeper.Hooks().BeforeDelegationCreated(ctx, delAddr, valAddr)
-		_ = app.distrKeeper.Hooks().AfterDelegationModified(ctx, delAddr, valAddr)
+
+		if err := app.distrKeeper.Hooks().AfterDelegationModified(ctx, delAddr, valAddr); err != nil {
+			panic(fmt.Errorf("error while creating a new delegation period record: %w", err))
+		}
 	}
 
-	// reset context height
 	ctx = ctx.WithBlockHeight(height)
 
-	/* Handle staking state. */
-
-	// iterate through redelegations, reset creation height
-	app.stakingKeeper.IterateRedelegations(ctx, func(_ int64, red stakingtypes.Redelegation) (stop bool) {
+	err = app.stakingKeeper.IterateRedelegations(ctx, func(_ int64, red stakingtypes.Redelegation) (stop bool) {
 		for i := range red.Entries {
 			red.Entries[i].CreationHeight = 0
 		}
-		app.stakingKeeper.SetRedelegation(ctx, red)
+		err = app.stakingKeeper.SetRedelegation(ctx, red)
+		if err != nil {
+			panic(err)
+		}
 		return false
 	})
+	if err != nil {
+		panic(err)
+	}
 
-	// iterate through unbonding delegations, reset creation height
-	app.stakingKeeper.IterateUnbondingDelegations(ctx, func(_ int64, ubd stakingtypes.UnbondingDelegation) (stop bool) {
+	err = app.stakingKeeper.IterateUnbondingDelegations(ctx, func(_ int64, ubd stakingtypes.UnbondingDelegation) (stop bool) {
 		for i := range ubd.Entries {
 			ubd.Entries[i].CreationHeight = 0
 		}
-		app.stakingKeeper.SetUnbondingDelegation(ctx, ubd)
+		err = app.stakingKeeper.SetUnbondingDelegation(ctx, ubd)
+		if err != nil {
+			panic(err)
+		}
 		return false
 	})
+	if err != nil {
+		panic(err)
+	}
 
-	// Iterate through validators by power descending, reset bond heights, and
-	// update bond intra-tx counters.
 	store := ctx.KVStore(app.keys[stakingtypes.StoreKey])
-	iter := sdk.KVStoreReversePrefixIterator(store, stakingtypes.ValidatorsKey)
-	counter := int16(0)
+	iter := storetypes.KVStoreReversePrefixIterator(store, stakingtypes.ValidatorsKey)
 
 	for ; iter.Valid(); iter.Next() {
-		addr := sdk.ValAddress(iter.Key()[1:])
-		validator, found := app.stakingKeeper.GetValidator(ctx, addr)
-		if !found {
+		addr := sdk.ValAddress(stakingtypes.AddressFromValidatorsKey(iter.Key()))
+		validator, err := app.stakingKeeper.GetValidator(ctx, addr)
+		if err != nil {
 			panic("expected validator, not found")
 		}
 
@@ -164,26 +196,33 @@ func (app *JackalApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs
 			validator.Jailed = true
 		}
 
-		app.stakingKeeper.SetValidator(ctx, validator)
-		counter++
+		err = app.stakingKeeper.SetValidator(ctx, validator)
+		if err != nil {
+			panic(err)
+		}
 	}
 
-	iter.Close()
+	if err := iter.Close(); err != nil {
+		app.Logger().Error("error while closing the key-value store reverse prefix iterator: ", err)
+		return
+	}
 
-	_, err := app.stakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
+	_, err = app.stakingKeeper.ApplyAndReturnValidatorSetUpdates(ctx)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	/* Handle slashing state. */
-
-	// reset start height on signing infos
-	app.slashingKeeper.IterateValidatorSigningInfos(
+	err = app.slashingKeeper.IterateValidatorSigningInfos(
 		ctx,
 		func(addr sdk.ConsAddress, info slashingtypes.ValidatorSigningInfo) (stop bool) {
 			info.StartHeight = 0
-			app.slashingKeeper.SetValidatorSigningInfo(ctx, addr, info)
+			if err := app.slashingKeeper.SetValidatorSigningInfo(ctx, addr, info); err != nil {
+				panic(err)
+			}
 			return false
 		},
 	)
+	if err != nil {
+		panic(err)
+	}
 }

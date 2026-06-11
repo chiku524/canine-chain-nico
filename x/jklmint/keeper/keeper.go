@@ -4,9 +4,10 @@ import (
 	"fmt"
 	"math/big"
 
-	"github.com/cometbft/cometbft/libs/log"
+	sdkmath "cosmossdk.io/math"
+	"cosmossdk.io/log"
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/jackalLabs/canine-chain/v5/x/jklmint/types"
@@ -83,15 +84,15 @@ func FloatToBigInt(val float64) *big.Int {
 	return result
 }
 
-func (k Keeper) GetInflation(ctx sdk.Context) (sdk.Dec, error) {
+func (k Keeper) GetInflation(ctx sdk.Context) (sdkmath.LegacyDec, error) {
 	params := k.GetParams(ctx)
 	denom := params.MintDenom
 	coins := k.bankKeeper.GetSupply(ctx, denom)
 
-	amt := sdk.NewDecFromInt(coins.Amount)
+	amt := sdkmath.LegacyNewDecFromInt(coins.Amount)
 
 	if amt.IsZero() {
-		return sdk.NewDec(0), nil
+		return sdkmath.LegacyNewDec(0), nil
 	}
 
 	var blocksPerYearEstiamte int64 = (365 * 24 * 60 * 60) / 6
@@ -104,7 +105,7 @@ func (k Keeper) GetInflation(ctx sdk.Context) (sdk.Dec, error) {
 
 	printedPerYear := blocksPerYearEstiamte * mintedNum
 
-	inflate := sdk.NewDec(printedPerYear)
+	inflate := sdkmath.LegacyNewDec(printedPerYear)
 
 	quo := inflate.Quo(amt)
 

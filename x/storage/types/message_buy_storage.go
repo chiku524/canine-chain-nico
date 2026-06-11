@@ -5,6 +5,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
+	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -46,22 +47,22 @@ func (msg *MsgBuyStorage) GetSignBytes() []byte {
 func (msg *MsgBuyStorage) ValidateBasic() error {
 	prefix, _, err := bech32.DecodeAndConvert(msg.Creator)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 	if prefix != AddressPrefix {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator prefix (%s)", fmt.Errorf("%s is not a valid prefix here. Expected `jkl`", prefix))
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator prefix (%s)", fmt.Errorf("%s is not a valid prefix here. Expected `jkl`", prefix))
 	}
 
 	prefix, _, err = bech32.DecodeAndConvert(msg.ForAddress)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 	if prefix != AddressPrefix {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator prefix (%s)", fmt.Errorf("%s is not a valid prefix here. Expected `jkl`", prefix))
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator prefix (%s)", fmt.Errorf("%s is not a valid prefix here. Expected `jkl`", prefix))
 	}
 
 	if msg.DurationDays <= 0 {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "duration cannot be less than 1 (%d)", msg.DurationDays)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "duration cannot be less than 1 (%d)", msg.DurationDays)
 	}
 
 	return nil

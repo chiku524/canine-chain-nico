@@ -1,15 +1,16 @@
 package v450
 
 import (
+	"context"
 	_ "embed"
 
 	types2 "github.com/jackalLabs/canine-chain/v5/types"
 	"github.com/jackalLabs/canine-chain/v5/x/storage/types"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/jackalLabs/canine-chain/v5/app/upgrades"
 	storageKeeper "github.com/jackalLabs/canine-chain/v5/x/storage/keeper"
 )
@@ -73,8 +74,10 @@ func (u *Upgrade) fixPayment(ctx sdk.Context) { // fixing payment mismatch from 
 
 // Handler implements upgrades.Upgrade
 func (u *Upgrade) Handler() upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		err := upgrades.RecoverFiles(ctx, u.sk, UpgradeData, plan.Height, "v4.5.0")
+	return func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+		err := upgrades.RecoverFiles(sdkCtx, u.sk, UpgradeData, plan.Height, "v4.5.0")
 		if err != nil {
 			return nil, err
 		}
@@ -86,14 +89,14 @@ func (u *Upgrade) Handler() upgradetypes.UpgradeHandler {
 
 		storageAccount := u.ak.GetModuleAddress(types.ModuleName)
 
-		bal := u.bk.GetBalance(ctx, storageAccount, "ujkl")
+		bal := u.bk.GetBalance(sdkCtx, storageAccount, "ujkl")
 
-		err = u.bk.SendCoinsFromModuleToAccount(ctx, types.ModuleName, pol, sdk.NewCoins(bal))
+		err = u.bk.SendCoinsFromModuleToAccount(sdkCtx, types.ModuleName, pol, sdk.NewCoins(bal))
 		if err != nil {
 			return nil, err
 		}
 
-		u.fixPayment(ctx)
+		u.fixPayment(sdkCtx)
 
 		return fromVM, nil
 	}

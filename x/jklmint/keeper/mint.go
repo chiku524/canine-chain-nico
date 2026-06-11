@@ -5,16 +5,17 @@ import (
 	"encoding/hex"
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cosmos/cosmos-sdk/telemetry"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/jackalLabs/canine-chain/v5/x/jklmint/types"
 )
 
 func (k Keeper) send(ctx sdk.Context, denom string, amount int64, receiver string) error {
 	adr, err := sdk.AccAddressFromBech32(receiver)
 	if err != nil {
-		return sdkerrors.Wrapf(err, "cannot parse receiver address")
+		return errorsmod.Wrapf(err, "cannot parse receiver address")
 	}
 
 	c := sdk.NewInt64Coin(denom, amount)
@@ -22,14 +23,14 @@ func (k Keeper) send(ctx sdk.Context, denom string, amount int64, receiver strin
 
 	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, adr, cs)
 	if err != nil {
-		return sdkerrors.Wrapf(err, "cannot send coins from the mint module to %s", receiver)
+		return errorsmod.Wrapf(err, "cannot send coins from the mint module to %s", receiver)
 	}
 
 	return nil
 }
 
 func (k Keeper) mintStaker(ctx sdk.Context, mintTokens int64, denom string, params types.Params) error {
-	stakerRatio := sdk.NewDec(params.StakerRatio).QuoInt64(100)
+	stakerRatio := sdkmath.LegacyNewDec(params.StakerRatio).QuoInt64(100)
 
 	stakerCoinValue := stakerRatio.MulInt64(mintTokens).TruncateInt64()
 	stakerCoins := sdk.NewCoins(sdk.NewInt64Coin(denom, stakerCoinValue))
@@ -37,7 +38,7 @@ func (k Keeper) mintStaker(ctx sdk.Context, mintTokens int64, denom string, para
 	// send the minted validator coins to the fee collector account
 	err := k.AddCollectedFees(ctx, stakerCoins)
 	if err != nil {
-		return sdkerrors.Wrapf(err, "cannot send tokens to stakers & community pool")
+		return errorsmod.Wrapf(err, "cannot send tokens to stakers & community pool")
 	}
 
 	return nil
@@ -54,37 +55,37 @@ func GetAccount(name string) (sdk.AccAddress, error) {
 	mh := hex.EncodeToString(m)
 	adr, err := sdk.AccAddressFromHexUnsafe(mh)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "cannot get account account")
+		return nil, errorsmod.Wrapf(err, "cannot get account account")
 	}
 	return adr, nil
 }
 
 func (k Keeper) mintDevGrants(ctx sdk.Context, mintTokens int64, denom string, params types.Params) error {
-	devGrantRatio := sdk.NewDec(params.DevGrantsRatio).QuoInt64(100)
+	devGrantRatio := sdkmath.LegacyNewDec(params.DevGrantsRatio).QuoInt64(100)
 
 	devGrantTokenAmount := devGrantRatio.MulInt64(mintTokens).TruncateInt64()
 
 	address, err := GetDevGrantsAccount()
 	if err != nil {
-		return sdkerrors.Wrapf(err, "cannot create dev grants address")
+		return errorsmod.Wrapf(err, "cannot create dev grants address")
 	}
 
 	err = k.send(ctx, denom, devGrantTokenAmount, address.String())
 	if err != nil {
-		return sdkerrors.Wrapf(err, "cannot send tokens to dev grants")
+		return errorsmod.Wrapf(err, "cannot send tokens to dev grants")
 	}
 
 	return nil
 }
 
 func (k Keeper) mintStorageProviderStipend(ctx sdk.Context, mintTokens int64, denom string, params types.Params) error {
-	provRatio := sdk.NewDec(params.StorageProviderRatio).QuoInt64(100)
+	provRatio := sdkmath.LegacyNewDec(params.StorageProviderRatio).QuoInt64(100)
 
 	provTokens := provRatio.MulInt64(mintTokens).TruncateInt64()
 
 	err := k.send(ctx, denom, provTokens, params.StorageStipendAddress)
 	if err != nil {
-		return sdkerrors.Wrapf(err, "cannot send tokens to storage provider stipends")
+		return errorsmod.Wrapf(err, "cannot send tokens to storage provider stipends")
 	}
 
 	return nil
@@ -113,7 +114,7 @@ func (k Keeper) BlockMint(ctx sdk.Context) {
 
 	err := k.MintCoins(ctx, coins)
 	if err != nil {
-		ctx.Logger().Error(sdkerrors.Wrapf(err, "could not mint tokens at block %d", ctx.BlockHeight()).Error())
+		ctx.Logger().Error(errorsmod.Wrapf(err, "could not mint tokens at block %d", ctx.BlockHeight()).Error())
 		return
 	}
 

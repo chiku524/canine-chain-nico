@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -29,7 +30,7 @@ func (suite *KeeperTestSuite) TestMsgRegisterName() {
 	cost, err := keeper.GetCostOfName(n, t)
 	suite.Require().NoError(err)
 
-	coin := sdk.NewCoin("ujkl", sdk.NewInt(10000000000000000))
+	coin := sdk.NewCoin("ujkl", sdkmath.NewInt(10000000000000000))
 	coins := sdk.NewCoins(coin)
 
 	err = suite.bankKeeper.SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, address, coins)
@@ -108,13 +109,13 @@ func (suite *KeeperTestSuite) TestMsgRegisterExpiredName() {
 
 	err = suite.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, address, sdk.Coins{sdk.Coin{
 		Denom:  "ujkl",
-		Amount: sdk.NewInt(9_999_999_999),
+		Amount: sdkmath.NewInt(9_999_999_999),
 	}})
 	suite.Require().NoError(err)
 
 	err = suite.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, address2, sdk.Coins{sdk.Coin{
 		Denom:  "ujkl",
-		Amount: sdk.NewInt(9_999_999_999),
+		Amount: sdkmath.NewInt(9_999_999_999),
 	}})
 	suite.Require().NoError(err)
 

@@ -1,8 +1,9 @@
 package keeper
 
 import (
+	sdkmath "cosmossdk.io/math"
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/jackalLabs/canine-chain/v5/x/storage/types"
 )
 
@@ -33,16 +34,16 @@ func (k Keeper) pullTokensFromGauges(ctx sdk.Context) sdk.Coins {
 		totalTime := pg.End.Sub(pg.Start)
 		timeLeft := pg.End.Sub(currentTime)
 
-		totalTimeDec := sdk.NewDec(totalTime.Microseconds())
-		timeLeftDec := sdk.NewDec(timeLeft.Microseconds())
+		totalTimeDec := sdkmath.LegacyNewDec(totalTime.Microseconds())
+		timeLeftDec := sdkmath.LegacyNewDec(timeLeft.Microseconds())
 
-		timeRatio := sdk.NewDec(1).Sub(timeLeftDec.Quo(totalTimeDec))
+		timeRatio := sdkmath.LegacyNewDec(1).Sub(timeLeftDec.Quo(totalTimeDec))
 
 		for _, coin := range allGaugeCoins {
-			coinAmountDec := sdk.NewDecFromInt(coin.Amount)
+			coinAmountDec := sdkmath.LegacyNewDecFromInt(coin.Amount)
 			bal := gaugeBalance.AmountOf(coin.Denom)
 
-			b := sdk.NewDecFromInt(coin.Amount.Sub(bal))
+			b := sdkmath.LegacyNewDecFromInt(coin.Amount.Sub(bal))
 			wouldBeBalance := timeRatio.Mul(coinAmountDec)
 			newBalance := wouldBeBalance.Sub(b)
 
@@ -55,7 +56,7 @@ func (k Keeper) pullTokensFromGauges(ctx sdk.Context) sdk.Coins {
 			coinsToDistribute = coinsToDistribute.Add(c)
 			err := k.bankKeeper.SendCoinsFromAccountToModule(ctx, gaugeWallet, types.ModuleName, sdk.NewCoins(c))
 			if err != nil {
-				ctx.Logger().Error(sdkerrors.Wrapf(err, "cannot send tokens from gauge to storage account").Error())
+				ctx.Logger().Error(errorsmod.Wrapf(err, "cannot send tokens from gauge to storage account").Error())
 				continue
 			}
 		}
@@ -66,27 +67,27 @@ func (k Keeper) pullTokensFromGauges(ctx sdk.Context) sdk.Coins {
 
 func (k Keeper) rewardAllProviders(ctx sdk.Context, totalSize int64, trackers []types.RewardTracker) {
 	coins := k.pullTokensFromGauges(ctx)
-	networkValue := sdk.NewDec(totalSize)
+	networkValue := sdkmath.LegacyNewDec(totalSize)
 
 	for _, tracker := range trackers { // loop through a sorted list of providers
 		worth := tracker.Size_
 		prover := tracker.Provider
-		providerValue := sdk.NewDec(worth)
+		providerValue := sdkmath.LegacyNewDec(worth)
 
 		networkPercentage := providerValue.Quo(networkValue)
 		pAddress, err := sdk.AccAddressFromBech32(prover)
 		if err != nil {
-			ctx.Logger().Error(sdkerrors.Wrapf(err, "failed to convert prover address %s to bech32", prover).Error())
+			ctx.Logger().Error(errorsmod.Wrapf(err, "failed to convert prover address %s to bech32", prover).Error())
 			continue
 		}
 
 		for _, coin := range coins {
-			tokensValueOwed := networkPercentage.Mul(sdk.NewDecFromInt(coin.Amount)).TruncateInt()
+			tokensValueOwed := networkPercentage.Mul(sdkmath.LegacyNewDecFromInt(coin.Amount)).TruncateInt()
 			c := sdk.NewCoin(coin.Denom, tokensValueOwed)
 
 			err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, pAddress, sdk.NewCoins(c))
 			if err != nil {
-				ctx.Logger().Error(sdkerrors.Wrapf(err, "failed to send %s to %s", coins.String(), prover).Error())
+				ctx.Logger().Error(errorsmod.Wrapf(err, "failed to send %s to %s", coins.String(), prover).Error())
 				continue
 			}
 		}

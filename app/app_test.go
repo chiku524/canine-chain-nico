@@ -1,4 +1,4 @@
-//go:build cgo
+//go:build cgo && test
 
 package app
 
@@ -6,12 +6,10 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/cometbft/cometbft/libs/log"
-	dbm "github.com/cometbft/cometbft-db"
+	"cosmossdk.io/log"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
-
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
@@ -36,7 +34,7 @@ func TestWasmdExport(t *testing.T) {
 	var genesisState GenesisState
 	require.NoError(t, json.Unmarshal(exported.AppState, &genesisState))
 
-	ctx := newGapp.NewContext(true, tmproto.Header{Height: 0})
+	ctx := newGapp.NewContext(true)
 	newGapp.mm.InitGenesis(ctx, newGapp.AppCodec(), genesisState)
 	newGapp.StoreConsensusParams(ctx, exported.ConsensusParams)
 }

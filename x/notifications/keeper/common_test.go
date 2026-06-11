@@ -8,7 +8,7 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 	typesparams "github.com/cosmos/cosmos-sdk/x/params/types"
 
 	moduletestutil "github.com/jackalLabs/canine-chain/v5/types/module/testutil" // when importing from sdk,'go mod tidy' keeps trying to import from v0.46.
@@ -32,9 +32,9 @@ func setupNotificationsKeeper(t *testing.T) (
 	moduletestutil.TestEncodingConfig,
 	sdk.Context,
 ) {
-	key := sdk.NewKVStoreKey(types.StoreKey)
+	key := storetypes.NewKVStoreKey(types.StoreKey)
 	memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
-	testCtx := canineglobaltestutil.DefaultContextWithDB(t, sdk.NewTransientStoreKey("transient_test"), key)
+	testCtx := canineglobaltestutil.DefaultContextWithDB(t, storetypes.NewTransientStoreKey("transient_test"), key)
 	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
 
 	encCfg := moduletestutil.MakeTestEncodingConfig()

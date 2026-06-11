@@ -3,7 +3,7 @@ package keeper
 import (
 	"context"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 	"github.com/cosmos/cosmos-sdk/types/query"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"

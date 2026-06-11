@@ -1,12 +1,13 @@
 package v440
 
 import (
+	"context"
 	_ "embed"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/jackalLabs/canine-chain/v5/app/upgrades"
 	mintkeeper "github.com/jackalLabs/canine-chain/v5/x/jklmint/keeper"
 	storageKeeper "github.com/jackalLabs/canine-chain/v5/x/storage/keeper"
@@ -60,14 +61,16 @@ func BumpInterval(ctx sdk.Context, sk *storageKeeper.Keeper) {
 
 // Handler implements upgrades.Upgrade
 func (u *Upgrade) Handler() upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		params := u.mk.GetParams(ctx)
+	return func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+		params := u.mk.GetParams(sdkCtx)
 		params.TokensPerBlock = 3_830_000
-		u.mk.SetParams(ctx, params)
+		u.mk.SetParams(sdkCtx, params)
 
-		BumpInterval(ctx, u.sk)
+		BumpInterval(sdkCtx, u.sk)
 
-		err := upgrades.RecoverFiles(ctx, u.sk, UpgradeData, plan.Height, "v4.4.0")
+		err := upgrades.RecoverFiles(sdkCtx, u.sk, UpgradeData, plan.Height, "v4.4.0")
 		if err != nil {
 			return nil, err
 		}

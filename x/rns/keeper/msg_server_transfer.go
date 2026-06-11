@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/jackalLabs/canine-chain/v5/x/rns/types"
 )
@@ -30,19 +31,19 @@ func (k Keeper) TransferName(ctx sdk.Context, creator string, receiever string, 
 	blockHeight := ctx.BlockHeight()
 
 	if !isFound {
-		return sdkerrors.Wrap(sdkerrors.ErrNotFound, "Name does not exist or has expired.")
+		return errorsmod.Wrap(sdkerrors.ErrNotFound, "Name does not exist or has expired.")
 	}
 
 	if blockHeight > whois.Expires {
-		return sdkerrors.Wrap(sdkerrors.ErrNotFound, "Name does not exist or has expired.")
+		return errorsmod.Wrap(sdkerrors.ErrNotFound, "Name does not exist or has expired.")
 	}
 
 	if admin != sender.String() {
-		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "You are not the owner of that name.")
+		return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "You are not the owner of that name.")
 	}
 
 	if whois.Locked > blockHeight {
-		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "cannot transfer free name")
+		return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "cannot transfer free name")
 	}
 
 	whois.Data = "{}"

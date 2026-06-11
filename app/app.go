@@ -14,12 +14,24 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
+	"cosmossdk.io/log"
+	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/x/circuit"
+	circuitkeeper "cosmossdk.io/x/circuit/keeper"
+	circuittypes "cosmossdk.io/x/circuit/types"
+	"cosmossdk.io/x/evidence"
+	evidencekeeper "cosmossdk.io/x/evidence/keeper"
+	evidencetypes "cosmossdk.io/x/evidence/types"
+	"cosmossdk.io/x/feegrant"
+	feegrantkeeper "cosmossdk.io/x/feegrant/keeper"
+	feegrantmodule "cosmossdk.io/x/feegrant/module"
+	"cosmossdk.io/x/upgrade"
+	upgradekeeper "cosmossdk.io/x/upgrade/keeper"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 
-	dbm "github.com/cometbft/cometbft-db"
 	abci "github.com/cometbft/cometbft/abci/types"
-	"github.com/cometbft/cometbft/libs/log"
-	tmos "github.com/cometbft/cometbft/libs/os"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/spf13/cast"
 
@@ -28,8 +40,8 @@ import (
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/grpc/cmtservice"
 	nodeservice "github.com/cosmos/cosmos-sdk/client/grpc/node"
-	"github.com/cosmos/cosmos-sdk/client/grpc/tmservice"
 	"github.com/cosmos/cosmos-sdk/codec"
 	"github.com/cosmos/cosmos-sdk/codec/types"
 	"github.com/cosmos/cosmos-sdk/runtime"
@@ -37,12 +49,12 @@ import (
 	"github.com/cosmos/cosmos-sdk/server/api"
 	"github.com/cosmos/cosmos-sdk/server/config"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/version"
 	"github.com/cosmos/cosmos-sdk/x/auth"
 	"github.com/cosmos/cosmos-sdk/x/auth/ante"
+	authcodec "github.com/cosmos/cosmos-sdk/x/auth/codec"
 	authkeeper "github.com/cosmos/cosmos-sdk/x/auth/keeper"
 	"github.com/cosmos/cosmos-sdk/x/auth/posthandler"
 	authsims "github.com/cosmos/cosmos-sdk/x/auth/simulation"
@@ -56,9 +68,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/x/bank"
 	bankkeeper "github.com/cosmos/cosmos-sdk/x/bank/keeper"
 	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	"github.com/cosmos/cosmos-sdk/x/capability"
-	capabilitykeeper "github.com/cosmos/cosmos-sdk/x/capability/keeper"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
 	"github.com/cosmos/cosmos-sdk/x/consensus"
 	consensusparamkeeper "github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	consensusparamtypes "github.com/cosmos/cosmos-sdk/x/consensus/types"
@@ -68,12 +77,6 @@ import (
 	distr "github.com/cosmos/cosmos-sdk/x/distribution"
 	distrkeeper "github.com/cosmos/cosmos-sdk/x/distribution/keeper"
 	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	"github.com/cosmos/cosmos-sdk/x/evidence"
-	evidencekeeper "github.com/cosmos/cosmos-sdk/x/evidence/keeper"
-	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
-	feegrantkeeper "github.com/cosmos/cosmos-sdk/x/feegrant/keeper"
-	feegrantmodule "github.com/cosmos/cosmos-sdk/x/feegrant/module"
 	"github.com/cosmos/cosmos-sdk/x/genutil"
 	genutiltypes "github.com/cosmos/cosmos-sdk/x/genutil/types"
 	"github.com/cosmos/cosmos-sdk/x/gov"
@@ -81,44 +84,38 @@ import (
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
-	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	paramproposal "github.com/cosmos/cosmos-sdk/x/params/types/proposal"
 	"github.com/cosmos/cosmos-sdk/x/slashing"
 	slashingkeeper "github.com/cosmos/cosmos-sdk/x/slashing/keeper"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
 	"github.com/cosmos/cosmos-sdk/x/staking"
 	stakingkeeper "github.com/cosmos/cosmos-sdk/x/staking/keeper"
 	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	"github.com/cosmos/cosmos-sdk/x/upgrade"
-	upgradeclient "github.com/cosmos/cosmos-sdk/x/upgrade/client"
-	upgradekeeper "github.com/cosmos/cosmos-sdk/x/upgrade/keeper"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
-	ica "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts"
-	icacontroller "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller"
-	icacontrollerkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/keeper"
-	icacontrollertypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/controller/types"
-	icahost "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host"
-	icahostkeeper "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/keeper"
-	icahosttypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/host/types"
-	icatypes "github.com/cosmos/ibc-go/v7/modules/apps/27-interchain-accounts/types"
-	ibcfee "github.com/cosmos/ibc-go/v7/modules/apps/29-fee"
-	ibcfeekeeper "github.com/cosmos/ibc-go/v7/modules/apps/29-fee/keeper"
-	ibcfeetypes "github.com/cosmos/ibc-go/v7/modules/apps/29-fee/types"
-	"github.com/cosmos/ibc-go/v7/modules/apps/transfer"
-	ibctransferkeeper "github.com/cosmos/ibc-go/v7/modules/apps/transfer/keeper"
-	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	ibc "github.com/cosmos/ibc-go/v7/modules/core"
-	ibcclient "github.com/cosmos/ibc-go/v7/modules/core/02-client"
-	ibcclientclient "github.com/cosmos/ibc-go/v7/modules/core/02-client/client"
-	ibcclienttypes "github.com/cosmos/ibc-go/v7/modules/core/02-client/types"
-	ibcporttypes "github.com/cosmos/ibc-go/v7/modules/core/05-port/types"
-	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
-	ibckeeper "github.com/cosmos/ibc-go/v7/modules/core/keeper"
-	ibctm "github.com/cosmos/ibc-go/v7/modules/light-clients/07-tendermint"
+	"github.com/cosmos/ibc-go/modules/capability"
+	capabilitykeeper "github.com/cosmos/ibc-go/modules/capability/keeper"
+	capabilitytypes "github.com/cosmos/ibc-go/modules/capability/types"
+	ica "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts"
+	icacontroller "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller"
+	icacontrollerkeeper "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/keeper"
+	icacontrollertypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/controller/types"
+	icahost "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host"
+	icahostkeeper "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/keeper"
+	icahosttypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/host/types"
+	icatypes "github.com/cosmos/ibc-go/v8/modules/apps/27-interchain-accounts/types"
+	ibcfee "github.com/cosmos/ibc-go/v8/modules/apps/29-fee"
+	ibcfeekeeper "github.com/cosmos/ibc-go/v8/modules/apps/29-fee/keeper"
+	ibcfeetypes "github.com/cosmos/ibc-go/v8/modules/apps/29-fee/types"
+	"github.com/cosmos/ibc-go/v8/modules/apps/transfer"
+	ibctransferkeeper "github.com/cosmos/ibc-go/v8/modules/apps/transfer/keeper"
+	ibctransfertypes "github.com/cosmos/ibc-go/v8/modules/apps/transfer/types"
+	ibc "github.com/cosmos/ibc-go/v8/modules/core"
+	porttypes "github.com/cosmos/ibc-go/v8/modules/core/05-port/types"
+	ibcexported "github.com/cosmos/ibc-go/v8/modules/core/exported"
+	ibckeeper "github.com/cosmos/ibc-go/v8/modules/core/keeper"
+	ibctm "github.com/cosmos/ibc-go/v8/modules/light-clients/07-tendermint"
 
 	mint "github.com/jackalLabs/canine-chain/v5/x/jklmint"
 	mintkeeper "github.com/jackalLabs/canine-chain/v5/x/jklmint/keeper"
@@ -141,8 +138,6 @@ import (
 
 	wasmappparams "github.com/jackalLabs/canine-chain/v5/app/params"
 	owasm "github.com/jackalLabs/canine-chain/v5/wasmbinding"
-
-	_ "github.com/cosmos/cosmos-sdk/client/docs/statik"
 )
 
 const appName = "JackalApp"
@@ -173,10 +168,10 @@ func GetEnabledProposals() []wasmtypes.ProposalType {
 var (
 	DefaultNodeHome = os.ExpandEnv("$HOME/") + NodeDir
 
-	Bech32PrefixAccAddr = Bech32Prefix
-	Bech32PrefixAccPub  = Bech32Prefix + sdk.PrefixPublic
-	Bech32PrefixValAddr = Bech32Prefix + sdk.PrefixValidator + sdk.PrefixOperator
-	Bech32PrefixValPub  = Bech32Prefix + sdk.PrefixValidator + sdk.PrefixOperator + sdk.PrefixPublic
+	Bech32PrefixAccAddr  = Bech32Prefix
+	Bech32PrefixAccPub   = Bech32Prefix + sdk.PrefixPublic
+	Bech32PrefixValAddr  = Bech32Prefix + sdk.PrefixValidator + sdk.PrefixOperator
+	Bech32PrefixValPub   = Bech32Prefix + sdk.PrefixValidator + sdk.PrefixOperator + sdk.PrefixPublic
 	Bech32PrefixConsAddr = Bech32Prefix + sdk.PrefixValidator + sdk.PrefixConsensus
 	Bech32PrefixConsPub  = Bech32Prefix + sdk.PrefixValidator + sdk.PrefixConsensus + sdk.PrefixPublic
 )
@@ -188,14 +183,10 @@ var (
 		bank.AppModuleBasic{},
 		capability.AppModuleBasic{},
 		staking.AppModuleBasic{},
-		mint.AppModuleBasic{},
 		distr.AppModuleBasic{},
+		mint.AppModuleBasic{},
 		gov.NewAppModuleBasic([]govclient.ProposalHandler{
 			paramsclient.ProposalHandler,
-			upgradeclient.LegacyProposalHandler,
-			upgradeclient.LegacyCancelProposalHandler,
-			ibcclientclient.UpdateClientProposalHandler,
-			ibcclientclient.UpgradeProposalHandler,
 		}),
 		params.AppModuleBasic{},
 		crisis.AppModuleBasic{},
@@ -209,6 +200,7 @@ var (
 		transfer.AppModuleBasic{},
 		vesting.AppModuleBasic{},
 		consensus.AppModuleBasic{},
+		circuit.AppModuleBasic{},
 		wasm.AppModuleBasic{},
 		ibcfee.AppModuleBasic{},
 		ica.AppModuleBasic{},
@@ -269,6 +261,7 @@ type JackalApp struct {
 	paramsKeeper          paramskeeper.Keeper
 	ConsensusParamsKeeper consensusparamkeeper.Keeper
 	evidenceKeeper        evidencekeeper.Keeper
+	circuitKeeper         circuitkeeper.Keeper
 	ibcKeeper             *ibckeeper.Keeper
 	ibcFeeKeeper          ibcfeekeeper.Keeper
 	transferKeeper        ibctransferkeeper.Keeper
@@ -305,7 +298,7 @@ func NewJackalApp(
 	homePath string,
 	invCheckPeriod uint,
 	encodingConfig wasmappparams.EncodingConfig,
-	enabledProposals []wasmtypes.ProposalType,
+	_ []wasmtypes.ProposalType,
 	appOpts servertypes.AppOptions,
 	wasmOpts []wasmkeeper.Option,
 	baseAppOptions ...func(*baseapp.BaseApp),
@@ -321,18 +314,19 @@ func NewJackalApp(
 	bApp.SetInterfaceRegistry(interfaceRegistry)
 	bApp.SetTxEncoder(txConfig.TxEncoder())
 
-	keys := sdk.NewKVStoreKeys(
+	keys := storetypes.NewKVStoreKeys(
 		authtypes.StoreKey, banktypes.StoreKey, stakingtypes.StoreKey, crisistypes.StoreKey,
 		minttypes.StoreKey, distrtypes.StoreKey, slashingtypes.StoreKey,
 		govtypes.StoreKey, paramstypes.StoreKey, consensusparamtypes.StoreKey, upgradetypes.StoreKey,
 		evidencetypes.StoreKey, capabilitytypes.StoreKey, feegrant.StoreKey, authzkeeper.StoreKey,
+		circuittypes.StoreKey,
 		ibcexported.StoreKey, ibctransfertypes.StoreKey, ibcfeetypes.StoreKey,
 		wasmtypes.StoreKey, icacontrollertypes.StoreKey, icahosttypes.StoreKey,
 		rnsmoduletypes.StoreKey, storagemoduletypes.StoreKey, filetreemoduletypes.StoreKey,
 		oraclemoduletypes.StoreKey, notificationsmoduletypes.StoreKey,
 	)
-	tkeys := sdk.NewTransientStoreKeys(paramstypes.TStoreKey)
-	memKeys := sdk.NewMemoryStoreKeys(
+	tkeys := storetypes.NewTransientStoreKeys(paramstypes.TStoreKey)
+	memKeys := storetypes.NewMemoryStoreKeys(
 		capabilitytypes.MemStoreKey,
 		oraclemoduletypes.MemStoreKey,
 		storagemoduletypes.MemStoreKey,
@@ -356,10 +350,11 @@ func NewJackalApp(
 	app.paramsKeeper = initParamsKeeper(appCodec, legacyAmino, keys[paramstypes.StoreKey], tkeys[paramstypes.TStoreKey])
 	app.ConsensusParamsKeeper = consensusparamkeeper.NewKeeper(
 		appCodec,
-		keys[consensusparamtypes.StoreKey],
+		runtime.NewKVStoreService(keys[consensusparamtypes.StoreKey]),
 		authtypes.NewModuleAddress(govtypes.ModuleName).String(),
+		runtime.EventService{},
 	)
-	bApp.SetParamStore(&app.ConsensusParamsKeeper)
+	bApp.SetParamStore(app.ConsensusParamsKeeper.ParamsStore)
 
 	app.capabilityKeeper = capabilitykeeper.NewKeeper(appCodec, keys[capabilitytypes.StoreKey], memKeys[capabilitytypes.MemStoreKey])
 	scopedIBCKeeper := app.capabilityKeeper.ScopeToModule(ibcexported.ModuleName)
@@ -372,16 +367,38 @@ func NewJackalApp(
 	govAuthority := authtypes.NewModuleAddress(govtypes.ModuleName).String()
 
 	app.AccountKeeper = authkeeper.NewAccountKeeper(
-		appCodec, keys[authtypes.StoreKey], authtypes.ProtoBaseAccount, maccPerms, Bech32Prefix, govAuthority,
+		appCodec,
+		runtime.NewKVStoreService(keys[authtypes.StoreKey]),
+		authtypes.ProtoBaseAccount,
+		maccPerms,
+		authcodec.NewBech32Codec(Bech32Prefix),
+		Bech32Prefix,
+		govAuthority,
 	)
 	app.BankKeeper = bankkeeper.NewBaseKeeper(
-		appCodec, keys[banktypes.StoreKey], app.AccountKeeper, BlockedAddresses(), govAuthority,
+		appCodec,
+		runtime.NewKVStoreService(keys[banktypes.StoreKey]),
+		app.AccountKeeper,
+		BlockedAddresses(),
+		govAuthority,
+		logger,
 	)
-	app.authzKeeper = authzkeeper.NewKeeper(keys[authzkeeper.StoreKey], appCodec, app.MsgServiceRouter(), app.AccountKeeper)
-	app.feeGrantKeeper = feegrantkeeper.NewKeeper(appCodec, keys[feegrant.StoreKey], app.AccountKeeper)
+	app.authzKeeper = authzkeeper.NewKeeper(
+		runtime.NewKVStoreService(keys[authzkeeper.StoreKey]),
+		appCodec,
+		app.MsgServiceRouter(),
+		app.AccountKeeper,
+	)
+	app.feeGrantKeeper = feegrantkeeper.NewKeeper(appCodec, runtime.NewKVStoreService(keys[feegrant.StoreKey]), app.AccountKeeper)
 
 	app.stakingKeeper = stakingkeeper.NewKeeper(
-		appCodec, keys[stakingtypes.StoreKey], app.AccountKeeper, app.BankKeeper, govAuthority,
+		appCodec,
+		runtime.NewKVStoreService(keys[stakingtypes.StoreKey]),
+		app.AccountKeeper,
+		app.BankKeeper,
+		govAuthority,
+		authcodec.NewBech32Codec(Bech32PrefixValAddr),
+		authcodec.NewBech32Codec(Bech32PrefixConsAddr),
 	)
 
 	app.MintKeeper = mintkeeper.NewKeeper(
@@ -397,14 +414,29 @@ func NewJackalApp(
 	mintModule := mint.NewAppModule(appCodec, app.MintKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(minttypes.ModuleName))
 
 	app.distrKeeper = distrkeeper.NewKeeper(
-		appCodec, keys[distrtypes.StoreKey], app.AccountKeeper, app.BankKeeper,
-		app.stakingKeeper, authtypes.FeeCollectorName, govAuthority,
+		appCodec,
+		runtime.NewKVStoreService(keys[distrtypes.StoreKey]),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.stakingKeeper,
+		authtypes.FeeCollectorName,
+		govAuthority,
 	)
 	app.slashingKeeper = slashingkeeper.NewKeeper(
-		appCodec, legacyAmino, keys[slashingtypes.StoreKey], app.stakingKeeper, govAuthority,
+		appCodec,
+		legacyAmino,
+		runtime.NewKVStoreService(keys[slashingtypes.StoreKey]),
+		app.stakingKeeper,
+		govAuthority,
 	)
 	app.crisisKeeper = crisiskeeper.NewKeeper(
-		appCodec, keys[crisistypes.StoreKey], invCheckPeriod, app.BankKeeper, authtypes.FeeCollectorName, govAuthority,
+		appCodec,
+		runtime.NewKVStoreService(keys[crisistypes.StoreKey]),
+		invCheckPeriod,
+		app.BankKeeper,
+		authtypes.FeeCollectorName,
+		govAuthority,
+		app.AccountKeeper.AddressCodec(),
 	)
 
 	app.stakingKeeper.SetHooks(stakingtypes.NewMultiStakingHooks(
@@ -412,47 +444,69 @@ func NewJackalApp(
 		app.slashingKeeper.Hooks(),
 	))
 
+	app.circuitKeeper = circuitkeeper.NewKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keys[circuittypes.StoreKey]),
+		govAuthority,
+		app.AccountKeeper.AddressCodec(),
+	)
+	app.BaseApp.SetCircuitBreaker(&app.circuitKeeper)
+
 	app.upgradeKeeper = upgradekeeper.NewKeeper(
-		skipUpgradeHeights, keys[upgradetypes.StoreKey], appCodec, homePath, app.BaseApp, govAuthority,
+		skipUpgradeHeights,
+		runtime.NewKVStoreService(keys[upgradetypes.StoreKey]),
+		appCodec,
+		homePath,
+		app.BaseApp,
+		govAuthority,
 	)
 
 	app.ibcKeeper = ibckeeper.NewKeeper(
-		appCodec, keys[ibcexported.StoreKey], app.GetSubspace(ibcexported.ModuleName),
-		app.stakingKeeper, app.upgradeKeeper, scopedIBCKeeper,
+		appCodec,
+		keys[ibcexported.StoreKey],
+		app.GetSubspace(ibcexported.ModuleName),
+		app.stakingKeeper,
+		app.upgradeKeeper,
+		scopedIBCKeeper,
+		govAuthority,
 	)
-
-	govRouter := govv1beta1.NewRouter()
-	govRouter.AddRoute(govtypes.RouterKey, govv1beta1.ProposalHandler).
-		AddRoute(paramproposal.RouterKey, params.NewParamChangeProposalHandler(app.paramsKeeper)).
-		AddRoute(upgradetypes.RouterKey, upgrade.NewSoftwareUpgradeProposalHandler(app.upgradeKeeper)).
-		AddRoute(ibcclienttypes.RouterKey, ibcclient.NewClientProposalHandler(app.ibcKeeper.ClientKeeper))
 
 	app.ibcFeeKeeper = ibcfeekeeper.NewKeeper(
 		appCodec, keys[ibcfeetypes.StoreKey],
 		app.ibcKeeper.ChannelKeeper, app.ibcKeeper.ChannelKeeper,
-		&app.ibcKeeper.PortKeeper, app.AccountKeeper, app.BankKeeper,
+		app.ibcKeeper.PortKeeper, app.AccountKeeper, app.BankKeeper,
 	)
 
 	app.transferKeeper = ibctransferkeeper.NewKeeper(
 		appCodec, keys[ibctransfertypes.StoreKey], app.GetSubspace(ibctransfertypes.ModuleName),
-		app.ibcFeeKeeper, app.ibcKeeper.ChannelKeeper, &app.ibcKeeper.PortKeeper,
+		app.ibcFeeKeeper, app.ibcKeeper.ChannelKeeper, app.ibcKeeper.PortKeeper,
 		app.AccountKeeper, app.BankKeeper, scopedTransferKeeper,
+		govAuthority,
 	)
 	transferModule := transfer.NewAppModule(app.transferKeeper)
 
 	app.ICAHostKeeper = icahostkeeper.NewKeeper(
 		appCodec, keys[icahosttypes.StoreKey], app.GetSubspace(icahosttypes.SubModuleName),
-		app.ibcFeeKeeper, app.ibcKeeper.ChannelKeeper, &app.ibcKeeper.PortKeeper,
+		app.ibcFeeKeeper, app.ibcKeeper.ChannelKeeper, app.ibcKeeper.PortKeeper,
 		app.AccountKeeper, scopedICAHostKeeper, app.MsgServiceRouter(),
+		govAuthority,
 	)
 	app.ICAHostKeeper.WithQueryRouter(app.GRPCQueryRouter())
 	app.ICAControllerKeeper = icacontrollerkeeper.NewKeeper(
 		appCodec, keys[icacontrollertypes.StoreKey], app.GetSubspace(icacontrollertypes.SubModuleName),
-		app.ibcFeeKeeper, app.ibcKeeper.ChannelKeeper, &app.ibcKeeper.PortKeeper,
+		app.ibcFeeKeeper, app.ibcKeeper.ChannelKeeper, app.ibcKeeper.PortKeeper,
 		scopedICAControllerKeeper, app.MsgServiceRouter(),
+		govAuthority,
 	)
 
-	evidenceKeeper := evidencekeeper.NewKeeper(appCodec, keys[evidencetypes.StoreKey], app.stakingKeeper, app.slashingKeeper)
+	evidenceKeeper := evidencekeeper.NewKeeper(
+		appCodec,
+		runtime.NewKVStoreService(keys[evidencetypes.StoreKey]),
+		app.stakingKeeper,
+		app.slashingKeeper,
+		app.AccountKeeper.AddressCodec(),
+		runtime.ProvideCometInfoService(),
+	)
 	app.evidenceKeeper = *evidenceKeeper
 
 	app.RnsKeeper = *rnsmodulekeeper.NewKeeper(
@@ -491,59 +545,61 @@ func NewJackalApp(
 		panic(fmt.Sprintf("error while reading wasm config: %s", err))
 	}
 
-	supportedFeatures := "iterator,staking,stargate,cosmwasm_1_1,cosmwasm_1_2"
 	wasmOpts = append(owasm.RegisterCustomPlugins(&app.FileTreeKeeper, &app.StorageKeeper, &app.NotificationsKeeper), wasmOpts...)
 
 	app.wasmKeeper = wasmkeeper.NewKeeper(
 		appCodec,
-		keys[wasmtypes.StoreKey],
+		runtime.NewKVStoreService(keys[wasmtypes.StoreKey]),
 		app.AccountKeeper,
 		app.BankKeeper,
 		app.stakingKeeper,
 		distrkeeper.NewQuerier(app.distrKeeper),
 		app.ibcFeeKeeper,
 		app.ibcKeeper.ChannelKeeper,
-		&app.ibcKeeper.PortKeeper,
+		app.ibcKeeper.PortKeeper,
 		scopedWasmKeeper,
 		app.transferKeeper,
 		app.MsgServiceRouter(),
 		app.GRPCQueryRouter(),
 		wasmDir,
 		wasmConfig,
-		supportedFeatures,
+		wasmkeeper.BuiltInCapabilities(),
 		govAuthority,
 		wasmOpts...,
 	)
 
 	govConfig := govtypes.DefaultConfig()
 	govKeeper := govkeeper.NewKeeper(
-		appCodec, keys[govtypes.StoreKey], app.AccountKeeper, app.BankKeeper,
-		app.stakingKeeper, app.MsgServiceRouter(), govConfig, govAuthority,
+		appCodec,
+		runtime.NewKVStoreService(keys[govtypes.StoreKey]),
+		app.AccountKeeper,
+		app.BankKeeper,
+		app.stakingKeeper,
+		app.distrKeeper,
+		app.MsgServiceRouter(),
+		govConfig,
+		govAuthority,
 	)
 	app.govKeeper = *govKeeper.SetHooks(govtypes.NewMultiGovHooks())
-	if len(enabledProposals) != 0 {
-		govRouter.AddRoute(wasmtypes.RouterKey, wasmkeeper.NewLegacyWasmProposalHandler(app.wasmKeeper, enabledProposals))
-	}
-	app.govKeeper.SetLegacyRouter(govRouter)
 
-	var transferStack ibcporttypes.IBCModule
+	var transferStack porttypes.IBCModule
 	transferStack = transfer.NewIBCModule(app.transferKeeper)
 	transferStack = ibcfee.NewIBCMiddleware(transferStack, app.ibcFeeKeeper)
 
-	var wasmStack ibcporttypes.IBCModule
+	var wasmStack porttypes.IBCModule
 	wasmStack = wasm.NewIBCHandler(app.wasmKeeper, app.ibcKeeper.ChannelKeeper, app.ibcFeeKeeper)
 	wasmStack = ibcfee.NewIBCMiddleware(wasmStack, app.ibcFeeKeeper)
 
-	var icaControllerStack ibcporttypes.IBCModule
-	var noAuthzModule ibcporttypes.IBCModule
+	var icaControllerStack porttypes.IBCModule
+	var noAuthzModule porttypes.IBCModule
 	icaControllerStack = icacontroller.NewIBCMiddleware(noAuthzModule, app.ICAControllerKeeper)
 	icaControllerStack = ibcfee.NewIBCMiddleware(icaControllerStack, app.ibcFeeKeeper)
 
-	var icaHostStack ibcporttypes.IBCModule
+	var icaHostStack porttypes.IBCModule
 	icaHostStack = icahost.NewIBCModule(app.ICAHostKeeper)
 	icaHostStack = ibcfee.NewIBCMiddleware(icaHostStack, app.ibcFeeKeeper)
 
-	ibcRouter := ibcporttypes.NewRouter().
+	ibcRouter := porttypes.NewRouter().
 		AddRoute(ibctransfertypes.ModuleName, transferStack).
 		AddRoute(wasmtypes.ModuleName, wasmStack).
 		AddRoute(icacontrollertypes.SubModuleName, icaControllerStack).
@@ -555,7 +611,7 @@ func NewJackalApp(
 	skipGenesisInvariants := cast.ToBool(appOpts.Get(crisis.FlagSkipGenesisInvariants))
 
 	app.mm = module.NewManager(
-		genutil.NewAppModule(app.AccountKeeper, app.stakingKeeper, app.DeliverTx, txConfig),
+		genutil.NewAppModule(app.AccountKeeper, app.stakingKeeper, app, txConfig),
 		auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts, app.GetSubspace(authtypes.ModuleName)),
 		vesting.NewAppModule(app.AccountKeeper, app.BankKeeper),
 		bank.NewAppModule(appCodec, app.BankKeeper, app.AccountKeeper, app.GetSubspace(banktypes.ModuleName)),
@@ -563,14 +619,15 @@ func NewJackalApp(
 		feegrantmodule.NewAppModule(appCodec, app.AccountKeeper, app.BankKeeper, app.feeGrantKeeper, app.InterfaceRegistry),
 		gov.NewAppModule(appCodec, &app.govKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(govtypes.ModuleName)),
 		mintModule,
-		slashing.NewAppModule(appCodec, app.slashingKeeper, app.AccountKeeper, app.BankKeeper, app.stakingKeeper, app.GetSubspace(slashingtypes.ModuleName)),
+		slashing.NewAppModule(appCodec, app.slashingKeeper, app.AccountKeeper, app.BankKeeper, app.stakingKeeper, app.GetSubspace(slashingtypes.ModuleName), app.InterfaceRegistry),
 		distr.NewAppModule(appCodec, app.distrKeeper, app.AccountKeeper, app.BankKeeper, app.stakingKeeper, app.GetSubspace(distrtypes.ModuleName)),
 		staking.NewAppModule(appCodec, app.stakingKeeper, app.AccountKeeper, app.BankKeeper, app.GetSubspace(stakingtypes.ModuleName)),
-		upgrade.NewAppModule(app.upgradeKeeper),
+		upgrade.NewAppModule(app.upgradeKeeper, app.AccountKeeper.AddressCodec()),
 		evidence.NewAppModule(app.evidenceKeeper),
 		params.NewAppModule(app.paramsKeeper),
 		authzmodule.NewAppModule(appCodec, app.authzKeeper, app.AccountKeeper, app.BankKeeper, app.InterfaceRegistry),
 		consensus.NewAppModule(appCodec, app.ConsensusParamsKeeper),
+		circuit.NewAppModule(appCodec, app.circuitKeeper),
 		wasm.NewAppModule(appCodec, &app.wasmKeeper, app.stakingKeeper, app.AccountKeeper, app.BankKeeper, app.MsgServiceRouter(), app.GetSubspace(wasmtypes.ModuleName)),
 		ibc.NewAppModule(app.ibcKeeper),
 		transferModule,
@@ -584,12 +641,14 @@ func NewJackalApp(
 		crisis.NewAppModule(app.crisisKeeper, skipGenesisInvariants, app.GetSubspace(crisistypes.ModuleName)),
 	)
 
+	app.mm.SetOrderPreBlockers(upgradetypes.ModuleName)
+
 	app.mm.SetOrderBeginBlockers(
 		upgradetypes.ModuleName, capabilitytypes.ModuleName, minttypes.ModuleName, distrtypes.ModuleName,
 		slashingtypes.ModuleName, evidencetypes.ModuleName, stakingtypes.ModuleName,
 		authtypes.ModuleName, banktypes.ModuleName, govtypes.ModuleName, crisistypes.ModuleName,
 		genutiltypes.ModuleName, authz.ModuleName, feegrant.ModuleName, paramstypes.ModuleName,
-		vestingtypes.ModuleName, consensusparamtypes.ModuleName,
+		vestingtypes.ModuleName, consensusparamtypes.ModuleName, circuittypes.ModuleName,
 		icatypes.ModuleName, ibctransfertypes.ModuleName, ibcexported.ModuleName, ibcfeetypes.ModuleName,
 		rnsmoduletypes.ModuleName, storagemoduletypes.ModuleName, filetreemoduletypes.ModuleName,
 		oraclemoduletypes.ModuleName, notificationsmoduletypes.ModuleName, wasmtypes.ModuleName,
@@ -600,8 +659,8 @@ func NewJackalApp(
 		authtypes.ModuleName, banktypes.ModuleName, distrtypes.ModuleName, slashingtypes.ModuleName,
 		minttypes.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName,
 		feegrant.ModuleName, paramstypes.ModuleName, vestingtypes.ModuleName, consensusparamtypes.ModuleName,
-		upgradetypes.ModuleName, icatypes.ModuleName, ibctransfertypes.ModuleName, ibcexported.ModuleName,
-		ibcfeetypes.ModuleName, rnsmoduletypes.ModuleName, storagemoduletypes.ModuleName,
+		circuittypes.ModuleName, upgradetypes.ModuleName, icatypes.ModuleName, ibctransfertypes.ModuleName,
+		ibcexported.ModuleName, ibcfeetypes.ModuleName, rnsmoduletypes.ModuleName, storagemoduletypes.ModuleName,
 		filetreemoduletypes.ModuleName, oraclemoduletypes.ModuleName, notificationsmoduletypes.ModuleName,
 		wasmtypes.ModuleName,
 	)
@@ -611,8 +670,8 @@ func NewJackalApp(
 		stakingtypes.ModuleName, slashingtypes.ModuleName, govtypes.ModuleName, minttypes.ModuleName,
 		crisistypes.ModuleName, genutiltypes.ModuleName, evidencetypes.ModuleName, authz.ModuleName,
 		feegrant.ModuleName, paramstypes.ModuleName, upgradetypes.ModuleName, vestingtypes.ModuleName,
-		consensusparamtypes.ModuleName, ibctransfertypes.ModuleName, ibcexported.ModuleName, icatypes.ModuleName,
-		ibcfeetypes.ModuleName, rnsmoduletypes.ModuleName, storagemoduletypes.ModuleName,
+		consensusparamtypes.ModuleName, circuittypes.ModuleName, ibctransfertypes.ModuleName, ibcexported.ModuleName,
+		icatypes.ModuleName, ibcfeetypes.ModuleName, rnsmoduletypes.ModuleName, storagemoduletypes.ModuleName,
 		filetreemoduletypes.ModuleName, oraclemoduletypes.ModuleName, notificationsmoduletypes.ModuleName,
 		wasmtypes.ModuleName,
 	}
@@ -621,18 +680,20 @@ func NewJackalApp(
 
 	app.mm.SetOrderMigrations(
 		authtypes.ModuleName, authz.ModuleName, banktypes.ModuleName, capabilitytypes.ModuleName,
-		distrtypes.ModuleName, evidencetypes.ModuleName, feegrant.ModuleName, genutiltypes.ModuleName,
-		govtypes.ModuleName, ibcexported.ModuleName, ibcfeetypes.ModuleName, minttypes.ModuleName,
-		slashingtypes.ModuleName, stakingtypes.ModuleName, ibctransfertypes.ModuleName, paramstypes.ModuleName,
-		upgradetypes.ModuleName, vestingtypes.ModuleName, consensusparamtypes.ModuleName, wasmtypes.ModuleName,
-		rnsmoduletypes.ModuleName, oraclemoduletypes.ModuleName, storagemoduletypes.ModuleName,
+		circuittypes.ModuleName, distrtypes.ModuleName, evidencetypes.ModuleName, feegrant.ModuleName,
+		genutiltypes.ModuleName, govtypes.ModuleName, ibcexported.ModuleName, ibcfeetypes.ModuleName,
+		minttypes.ModuleName, slashingtypes.ModuleName, stakingtypes.ModuleName, ibctransfertypes.ModuleName,
+		paramstypes.ModuleName, upgradetypes.ModuleName, vestingtypes.ModuleName, consensusparamtypes.ModuleName,
+		wasmtypes.ModuleName, rnsmoduletypes.ModuleName, oraclemoduletypes.ModuleName, storagemoduletypes.ModuleName,
 		filetreemoduletypes.ModuleName, notificationsmoduletypes.ModuleName, icatypes.ModuleName,
 		crisistypes.ModuleName,
 	)
 
 	app.mm.RegisterInvariants(app.crisisKeeper)
 	app.configurator = module.NewConfigurator(app.appCodec, app.MsgServiceRouter(), app.GRPCQueryRouter())
-	app.mm.RegisterServices(app.configurator)
+	if err := app.mm.RegisterServices(app.configurator); err != nil {
+		panic(err)
+	}
 
 	app.registerTestnetUpgradeHandlers()
 	app.registerMainnetUpgradeHandlers()
@@ -658,6 +719,7 @@ func NewJackalApp(
 	app.setPostHandler()
 
 	app.SetInitChainer(app.InitChainer)
+	app.SetPreBlocker(app.PreBlocker)
 	app.SetBeginBlocker(app.BeginBlocker)
 	app.SetEndBlocker(app.EndBlocker)
 
@@ -665,7 +727,7 @@ func NewJackalApp(
 		if err := manager.RegisterExtensions(
 			wasmkeeper.NewWasmSnapshotter(app.CommitMultiStore(), &app.wasmKeeper),
 		); err != nil {
-			panic(fmt.Errorf("failed to register snapshot extension: %s", err))
+			panic(fmt.Errorf("failed to register snapshot extension: %w", err))
 		}
 	}
 
@@ -677,18 +739,18 @@ func NewJackalApp(
 
 	if loadLatest {
 		if err := app.LoadLatestVersion(); err != nil {
-			tmos.Exit(fmt.Sprintf("failed to load latest version: %s", err))
+			panic(fmt.Errorf("failed to load latest version: %w", err))
 		}
 		ctx := app.NewUncachedContext(true, tmproto.Header{})
 		if err := app.wasmKeeper.InitializePinnedCodes(ctx); err != nil {
-			tmos.Exit(fmt.Sprintf("failed initialize pinned codes %s", err))
+			panic(fmt.Errorf("failed initialize pinned codes: %w", err))
 		}
 	}
 
 	return app
 }
 
-func (app *JackalApp) setAnteHandler(txConfig client.TxConfig, wasmConfig wasmtypes.WasmConfig, txCounterStoreKey storetypes.StoreKey) {
+func (app *JackalApp) setAnteHandler(txConfig client.TxConfig, wasmConfig wasmtypes.WasmConfig, txCounterStoreKey *storetypes.KVStoreKey) {
 	anteHandler, err := NewAnteHandler(HandlerOptions{
 		HandlerOptions: ante.HandlerOptions{
 			AccountKeeper:   app.AccountKeeper,
@@ -696,14 +758,16 @@ func (app *JackalApp) setAnteHandler(txConfig client.TxConfig, wasmConfig wasmty
 			FeegrantKeeper:  app.feeGrantKeeper,
 			SignModeHandler: txConfig.SignModeHandler(),
 			SigGasConsumer:  ante.DefaultSigVerificationGasConsumer,
+			TxFeeChecker:    JackalTxFeeChecker,
 		},
-		IBCKeeper:         app.ibcKeeper,
-		WasmKeeper:        &app.wasmKeeper,
-		WasmConfig:        &wasmConfig,
-		TXCounterStoreKey: txCounterStoreKey,
+		IBCKeeper:             app.ibcKeeper,
+		WasmKeeper:            &app.wasmKeeper,
+		WasmConfig:            &wasmConfig,
+		TXCounterStoreService: runtime.NewKVStoreService(txCounterStoreKey),
+		CircuitKeeper:         &app.circuitKeeper,
 	})
 	if err != nil {
-		panic(fmt.Errorf("failed to create AnteHandler: %s", err))
+		panic(fmt.Errorf("failed to create AnteHandler: %w", err))
 	}
 	app.SetAnteHandler(anteHandler)
 }
@@ -718,20 +782,26 @@ func (app *JackalApp) setPostHandler() {
 
 func (app *JackalApp) Name() string { return app.BaseApp.Name() }
 
-func (app *JackalApp) BeginBlocker(ctx sdk.Context, req abci.RequestBeginBlock) abci.ResponseBeginBlock {
-	return app.mm.BeginBlock(ctx, req)
+func (app *JackalApp) PreBlocker(ctx sdk.Context, _ *abci.RequestFinalizeBlock) (*sdk.ResponsePreBlock, error) {
+	return app.mm.PreBlock(ctx)
 }
 
-func (app *JackalApp) EndBlocker(ctx sdk.Context, req abci.RequestEndBlock) abci.ResponseEndBlock {
-	return app.mm.EndBlock(ctx, req)
+func (app *JackalApp) BeginBlocker(ctx sdk.Context) (sdk.BeginBlock, error) {
+	return app.mm.BeginBlock(ctx)
 }
 
-func (app *JackalApp) InitChainer(ctx sdk.Context, req abci.RequestInitChain) abci.ResponseInitChain {
+func (app *JackalApp) EndBlocker(ctx sdk.Context) (sdk.EndBlock, error) {
+	return app.mm.EndBlock(ctx)
+}
+
+func (app *JackalApp) InitChainer(ctx sdk.Context, req *abci.RequestInitChain) (*abci.ResponseInitChain, error) {
 	var genesisState GenesisState
 	if err := json.Unmarshal(req.AppStateBytes, &genesisState); err != nil {
 		panic(err)
 	}
-	app.upgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap())
+	if err := app.upgradeKeeper.SetModuleVersionMap(ctx, app.mm.GetVersionMap()); err != nil {
+		panic(err)
+	}
 	return app.mm.InitGenesis(ctx, app.appCodec, genesisState)
 }
 
@@ -747,6 +817,10 @@ func (app *JackalApp) AppCodec() codec.Codec {
 	return app.appCodec
 }
 
+func (app *JackalApp) TxConfig() client.TxConfig {
+	return app.txConfig
+}
+
 func (app *JackalApp) GetSubspace(moduleName string) paramstypes.Subspace {
 	subspace, _ := app.paramsKeeper.GetSubspace(moduleName)
 	return subspace
@@ -759,7 +833,7 @@ func (app *JackalApp) SimulationManager() *module.SimulationManager {
 func (app *JackalApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.APIConfig) {
 	clientCtx := apiSvr.ClientCtx
 	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
-	tmservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+	cmtservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 	nodeservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
@@ -774,11 +848,11 @@ func (app *JackalApp) RegisterTxService(clientCtx client.Context) {
 }
 
 func (app *JackalApp) RegisterTendermintService(clientCtx client.Context) {
-	tmservice.RegisterTendermintService(clientCtx, app.GRPCQueryRouter(), app.InterfaceRegistry, app.Query)
+	cmtservice.RegisterTendermintService(clientCtx, app.GRPCQueryRouter(), app.InterfaceRegistry, app.Query)
 }
 
-func (app *JackalApp) RegisterNodeService(clientCtx client.Context) {
-	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter())
+func (app *JackalApp) RegisterNodeService(clientCtx client.Context, cfg config.Config) {
+	nodeservice.RegisterNodeService(clientCtx, app.GRPCQueryRouter(), cfg)
 }
 
 func GetMaccPerms() map[string][]string {

@@ -1,14 +1,14 @@
 package v121
 
 import (
+	"context"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/jackalLabs/canine-chain/v5/app/upgrades"
 )
 
 import (
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	storetypes "cosmossdk.io/store/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 )
 
 var _ upgrades.Upgrade = &Upgrade{}
@@ -34,7 +34,7 @@ func (u *Upgrade) Name() string {
 
 // Handler implements upgrades.Upgrade
 func (u *Upgrade) Handler() upgradetypes.UpgradeHandler {
-	return func(_ sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+	return func(_ context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
 		return fromVM, nil
 	}
 }

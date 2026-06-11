@@ -1,9 +1,10 @@
 package keeper
 
 import (
+	storetypes "cosmossdk.io/store/types"
 	"fmt"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/jackalLabs/canine-chain/v5/x/storage/types"
 )
@@ -85,7 +86,7 @@ func (k Keeper) RemoveProofWithBuiltKey(
 // GetAllProofs returns all File
 func (k Keeper) GetAllProofs(ctx sdk.Context) (list []types.FileProof) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ProofKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 
@@ -102,7 +103,7 @@ func (k Keeper) GetAllProofs(ctx sdk.Context) (list []types.FileProof) {
 func (k Keeper) GetAllProofsForProver(ctx sdk.Context, prover string) ([]types.FileProof, error) {
 	store := ctx.KVStore(k.storeKey)
 	proofStore := prefix.NewStore(store, types.ProofPrefix(prover))
-	iterator := sdk.KVStorePrefixIterator(proofStore, nil)
+	iterator := storetypes.KVStorePrefixIterator(proofStore, nil)
 	var proofs []types.FileProof
 
 	defer iterator.Close()
@@ -122,7 +123,7 @@ func (k Keeper) GetAllProofsForProver(ctx sdk.Context, prover string) ([]types.F
 func (k Keeper) GetOneProofForProver(ctx sdk.Context, prover string) (types.FileProof, error) {
 	store := ctx.KVStore(k.storeKey)
 	proofStore := prefix.NewStore(store, types.ProofPrefix(prover))
-	iterator := sdk.KVStorePrefixIterator(proofStore, nil)
+	iterator := storetypes.KVStorePrefixIterator(proofStore, nil)
 
 	defer iterator.Close()
 

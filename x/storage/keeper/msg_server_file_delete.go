@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/hex"
 
+	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -15,16 +16,16 @@ func (k msgServer) DeleteFile(goCtx context.Context, msg *types.MsgDeleteFile) (
 
 	file, found := k.GetFile(ctx, msg.Merkle, msg.Creator, msg.Start)
 	if !found {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, "file not found")
+		return nil, errorsmod.Wrap(sdkerrors.ErrKeyNotFound, "file not found")
 	}
 
 	if file.Expires != 0 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "can not delete files before they expire")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "can not delete files before they expire")
 	}
 
 	paymentInfo, found := k.GetStoragePaymentInfo(ctx, msg.Creator) // needs payment info if they're gonna delete a file
 	if !found {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrKeyNotFound, "payment info not found")
+		return nil, errorsmod.Wrap(sdkerrors.ErrKeyNotFound, "payment info not found")
 	}
 
 	paymentInfo.SpaceUsed -= file.FileSize // remove usage from payment info

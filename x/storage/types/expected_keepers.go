@@ -1,34 +1,34 @@
 package types
 
 import (
+	"context"
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/cosmos/cosmos-sdk/x/auth/types"
 	oracletypes "github.com/jackalLabs/canine-chain/v5/x/oracle/types"
 )
 
 // AccountKeeper defines the expected account keeper used for simulations (noalias)
 type AccountKeeper interface {
-	GetAccount(ctx sdk.Context, addr sdk.AccAddress) types.AccountI
+	GetAccount(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 	GetModuleAddress(moduleName string) sdk.AccAddress
 
-	HasAccount(ctx sdk.Context, addr sdk.AccAddress) bool
-	SetAccount(ctx sdk.Context, acc types.AccountI)
-	NewAccountWithAddress(ctx sdk.Context, addr sdk.AccAddress) types.AccountI
+	HasAccount(ctx context.Context, addr sdk.AccAddress) bool
+	SetAccount(ctx context.Context, acc sdk.AccountI)
+	NewAccountWithAddress(ctx context.Context, addr sdk.AccAddress) sdk.AccountI
 
 	// Methods imported from account should be defined here
 }
 
 // BankKeeper defines the expected interface needed to retrieve account balances.
 type BankKeeper interface {
-	SpendableCoins(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
-	MintCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
-	BurnCoins(ctx sdk.Context, moduleName string, amt sdk.Coins) error
-	SendCoinsFromModuleToModule(ctx sdk.Context, senderModule string, recipientModule string, amt sdk.Coins) error
-	SendCoinsFromModuleToAccount(ctx sdk.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
-	SendCoinsFromAccountToModule(ctx sdk.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
+	SpendableCoins(ctx context.Context, addr sdk.AccAddress) sdk.Coins
+	MintCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
+	BurnCoins(ctx context.Context, moduleName string, amt sdk.Coins) error
+	SendCoinsFromModuleToModule(ctx context.Context, senderModule string, recipientModule string, amt sdk.Coins) error
+	SendCoinsFromModuleToAccount(ctx context.Context, senderModule string, recipientAddr sdk.AccAddress, amt sdk.Coins) error
+	SendCoinsFromAccountToModule(ctx context.Context, senderAddr sdk.AccAddress, recipientModule string, amt sdk.Coins) error
 
-	GetBalance(ctx sdk.Context, addrr sdk.AccAddress, denom string) sdk.Coin
-	GetAllBalances(ctx sdk.Context, addr sdk.AccAddress) sdk.Coins
+	GetBalance(ctx context.Context, addrr sdk.AccAddress, denom string) sdk.Coin
+	GetAllBalances(ctx context.Context, addr sdk.AccAddress) sdk.Coins
 	// Methods imported from bank should be defined here
 }
 

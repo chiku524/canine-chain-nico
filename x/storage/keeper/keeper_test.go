@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	gocontext "context"
 	"testing"
 	"time"
@@ -48,7 +49,7 @@ func (suite *KeeperTestSuite) reset() {
 
 	// accountKeeper.EXPECT().GetModuleAccount(gomock.Any(), types.ModuleName).Return(authtypes.NewEmptyModuleAccount(types.ModuleName)).AnyTimes()
 
-	coins := sdk.NewCoins(sdk.NewCoin("stake", sdk.NewInt(1000000000)))
+	coins := sdk.NewCoins(sdk.NewCoin("stake", sdkmath.NewInt(1000000000)))
 	err := bankKeeper.MintCoins(ctx, minttypes.ModuleName, coins)
 	suite.NoError(err)
 	err = bankKeeper.SendCoinsFromModuleToModule(ctx, minttypes.ModuleName, types.ModuleName, coins)

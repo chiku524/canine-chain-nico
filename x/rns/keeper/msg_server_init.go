@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -16,7 +17,7 @@ func (k msgServer) Init(goCtx context.Context, msg *types.MsgInit) (*types.MsgIn
 
 	_, found := k.GetInit(ctx, msg.Creator)
 	if found {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "cannot initialize more than once")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "cannot initialize more than once")
 	}
 
 	i := types.Init{
@@ -31,18 +32,18 @@ func (k msgServer) Init(goCtx context.Context, msg *types.MsgInit) (*types.MsgIn
 	name := types.MakeName(int(bh), bh)
 
 	if strings.Contains(name, ".") {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "name cannot contain '.'")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "name cannot contain '.'")
 	}
 
 	if len(name) < 6 {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "name cannot be less than 6 characters")
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "name cannot be less than 6 characters")
 	}
 
 	whois, isFound := k.GetNames(ctx, name, "jkl")
 
 	if isFound {
 		if bh < whois.Expires {
-			return nil, sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Name already registered")
+			return nil, errorsmod.Wrap(sdkerrors.ErrUnauthorized, "Name already registered")
 		}
 	}
 

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
 	"github.com/jackalLabs/canine-chain/v5/x/notifications/types"
 )
 
@@ -15,7 +15,7 @@ func (k msgServer) BlockSenders(goCtx context.Context, msg *types.MsgBlockSender
 
 		address, err := k.rns.Resolve(ctx, toBlock)
 		if err != nil {
-			return nil, sdkerrors.Wrapf(err, "cannot parse address %s from message", toBlock)
+			return nil, errorsmod.Wrapf(err, "cannot parse address %s from message", toBlock)
 		}
 
 		b := types.Block{

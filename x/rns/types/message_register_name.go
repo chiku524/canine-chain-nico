@@ -2,6 +2,7 @@ package types
 
 import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 )
 
@@ -43,14 +44,14 @@ func (msg *MsgRegisterName) GetSignBytes() []byte {
 func (msg *MsgRegisterName) ValidateBasic() error {
 	_, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidAddress, "invalid creator address (%s)", err)
 	}
 	name, _, err := GetNameAndTLD(msg.Name)
 	if err != nil {
-		return sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "invalid name/tld (%s)", err)
+		return errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "invalid name/tld (%s)", err)
 	}
 	if !IsValidName(name) {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "invalid name")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "invalid name")
 	}
 
 	return nil

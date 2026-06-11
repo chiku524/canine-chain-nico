@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/jackalLabs/canine-chain/v5/testutil"
 	types2 "github.com/jackalLabs/canine-chain/v5/types"
@@ -78,7 +79,7 @@ func (suite *KeeperTestSuite) TestMsgRegister() {
 	addr, err := types2.GetPOLAccount()
 	suite.Require().NoError(err)
 
-	coin := sdk.NewCoin("ujkl", sdk.NewInt(10000000000))
+	coin := sdk.NewCoin("ujkl", sdkmath.NewInt(10000000000))
 	coins := sdk.NewCoins(coin)
 
 	err = suite.bankKeeper.SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, user, coins)
@@ -166,7 +167,7 @@ func (suite *KeeperTestSuite) TestMsgTrasnfer() {
 
 	successfulName := "BiPhan.jkl"
 
-	coin := sdk.NewCoin("ujkl", sdk.NewInt(10000000000))
+	coin := sdk.NewCoin("ujkl", sdkmath.NewInt(10000000000))
 	coins := sdk.NewCoins(coin)
 
 	err = suite.bankKeeper.SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, owner, coins)
@@ -272,7 +273,7 @@ func (suite *KeeperTestSuite) TestMsgUpdate() {
 
 	successfulName := "BiPhan.jkl"
 
-	coin := sdk.NewCoin("ujkl", sdk.NewInt(10000000000))
+	coin := sdk.NewCoin("ujkl", sdkmath.NewInt(10000000000))
 	coins := sdk.NewCoins(coin)
 
 	err = suite.bankKeeper.SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, owner, coins)

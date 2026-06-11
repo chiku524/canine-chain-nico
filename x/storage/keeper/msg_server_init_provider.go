@@ -7,7 +7,7 @@ import (
 	types2 "github.com/jackalLabs/canine-chain/v5/x/filetree/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
 	"github.com/jackalLabs/canine-chain/v5/x/storage/types"
 )
 
@@ -31,7 +31,7 @@ func (k msgServer) InitProvider(goCtx context.Context, msg *types.MsgInitProvide
 
 	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, account, types.CollateralCollectorName, coins) // TODO: change naming convention
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "%s does not have %s", account, coin.String())
+		return nil, errorsmod.Wrapf(err, "%s does not have %s", account, coin.String())
 	}
 
 	collat := types.Collateral{

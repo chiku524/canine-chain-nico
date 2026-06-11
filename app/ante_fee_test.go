@@ -6,6 +6,7 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	storagetypes "github.com/jackalLabs/canine-chain/v5/x/storage/types"
 	"github.com/stretchr/testify/require"
+	protov2 "google.golang.org/protobuf/proto"
 )
 
 type mockTx struct {
@@ -13,7 +14,7 @@ type mockTx struct {
 }
 
 func (m mockTx) GetMsgs() []sdk.Msg            { return m.msgs }
-func (m mockTx) GetMsgsV2() ([]sdk.Msg, error) { return m.msgs, nil }
+func (m mockTx) GetMsgsV2() ([]protov2.Message, error) { return nil, nil }
 func (m mockTx) ValidateBasic() error          { return nil }
 
 func TestIsFreeStorageTx(t *testing.T) {

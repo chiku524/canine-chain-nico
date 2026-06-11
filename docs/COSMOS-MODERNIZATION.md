@@ -4,12 +4,27 @@ Living roadmap and checklist for bringing **canine-chain** in line with the supp
 
 | Field | Value |
 |-------|-------|
-| **Last updated** | 2026-06-11 |
-| **Active branch** | `master` (post Phase 1 merge) |
-| **Current phase** | Phase 1 — SDK 0.47 (`v600`) |
+| **Last updated** | 2026-06-08 |
+| **Active branch** | `feat/cosmos-modernization-phase2` |
+| **Current phase** | Phase 2 — SDK 0.50 (`v610`) ready for merge |
 | **North-star target** | [2026.1 release family](https://docs.cosmos.network/sdk/latest/release-family) (SDK **0.54.x**, not 0.55) |
+| **Validation strategy** | Fork-only: code + CI + sim until **0.54**; defer Jackal testnet/mainnet until then |
 
 ---
+
+## Fork-only path to 0.54 (active)
+
+Jackal public testnet/mainnet are **deferred** until the fork reaches SDK **0.54** with green CI. Each phase lands on a feature branch, merges when build + unit tests + sim pass in Docker/Linux CI.
+
+| Phase | On-chain name | SDK | wasmd | wasmvm | ibc-go | Branch |
+|-------|---------------|-----|-------|--------|--------|--------|
+| 1 ✓ | `v600` | 0.47 | 0.45 | 1.5.x | v7 | `master` |
+| 2 → | `v610` | 0.50 | 0.53.3 | 2.1.x | v8 | `feat/cosmos-modernization-phase2` |
+| 3 | `v620` | 0.53 | 0.60.1 | 2.x | v10 | `feat/cosmos-modernization-phase3` |
+| 4 | `v630` | 0.54 | 0.70 | 3.x | v11 | `feat/cosmos-modernization-phase4` |
+
+After Phase 4: private testnet (`jackal-nico-1`) → optional Jackal public testnet → mainnet governance.
+
 
 ## How to keep this document updated
 
@@ -79,8 +94,9 @@ Chronological notes; append new entries at the top.
 
 | Date | Phase | Notes |
 |------|-------|-------|
-| 2026-06-10 | Phase 0 | Mainnet inventory captured (5 wasm codes, 157 IBC channels); fixed `capture-chain-inventory.sh` for Windows; added `init-nico-testnet.sh` + `submit-v600-upgrade-proposal.sh`. |
-| 2026-06-11 | Phase 1 | CI green on fork (`test-unit`, golangci-lint, proto-gen, build); storage/jklmint integration test fixes; merged to `master`. |
+| 2026-06-08 | Phase 2 | SDK 0.50.9 / wasmd 0.53.3 / wasmvm v2.1.4 / ibc-go v8; `v610` handler; build + `make test-unit` green in Docker; CI wasmvm v2. |
+| 2026-06-11 | Phase 2 | Started fork-only path to 0.54; branch `feat/cosmos-modernization-phase2`; target wasmd 0.53.3 / SDK 0.50.9 / ibc-go v8. |
+| 2026-06-11 | Phase 1 | Sim CI green (seeds 2,17,18,20); lint fixes; merged to `master`. |
 | 2026-06-10 | Phase 0–1 | `make proto-gen` via `ghcr.io/cosmos/proto-builder:0.13.1`; regenerated `.pb.go` with `cosmos/gogoproto`; Phase 0 inventory + v600 testnet/mainnet playbooks; `scripts/smoke-v600-testnet.sh`; proto-gen CI workflow; `v600` upgrade unit test. |
 | 2026-06-09 | Phase 1 | Pushed `feat/cosmos-modernization-phase1`; `go mod tidy`; sim tests migrated off `simapp` → `testutil/sims`; storage `mulStorageCharge` overflow guard; CI: CGO + wasmvm 1.5.9 on Linux; README install section updated. |
 | 2026-06-08 | Phase 1 | Branch `feat/cosmos-modernization-phase1`: `go.mod` → 0.47 stack; `app/app.go` wasmd 0.45 rewrite; `v600` handler; free post-proof ante in `app/ante_fee.go`; build green; filetree keeper tests fixed (keyring codec). |

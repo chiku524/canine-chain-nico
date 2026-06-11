@@ -3,6 +3,7 @@ package keeper_test
 // testing msg server files for: bid, accept_bid, cancel_bid
 
 import (
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/jackalLabs/canine-chain/v5/testutil"
 	"github.com/jackalLabs/canine-chain/v5/x/rns/types"
@@ -23,7 +24,7 @@ func (suite *KeeperTestSuite) TestMsgAddBid() {
 	bidder, err := sdk.AccAddressFromBech32(testAddresses[1])
 	suite.Require().NoError(err)
 
-	coin := sdk.NewCoin("ujkl", sdk.NewInt(10000000000))
+	coin := sdk.NewCoin("ujkl", sdkmath.NewInt(10000000000))
 	coins := sdk.NewCoins(coin)
 
 	err = suite.bankKeeper.SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, nameOwner, coins)
@@ -35,7 +36,7 @@ func (suite *KeeperTestSuite) TestMsgAddBid() {
 
 	_, _ = msgSrvr.List(sdk.WrapSDKContext(suite.ctx), &types.MsgList{Creator: nameOwner.String(), Name: nuggieName, Price: sdk.NewInt64Coin("ujkl", 200)})
 
-	coin = sdk.NewCoin("ujkl", sdk.NewInt(10000))
+	coin = sdk.NewCoin("ujkl", sdkmath.NewInt(10000))
 	coins = sdk.NewCoins(coin)
 
 	err = suite.bankKeeper.SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, bidder, coins)
@@ -102,7 +103,7 @@ func (suite *KeeperTestSuite) TestMsgAcceptOneBid() {
 	bidder, err := sdk.AccAddressFromBech32(testAddresses[1])
 	suite.Require().NoError(err)
 
-	coin := sdk.NewCoin("ujkl", sdk.NewInt(10000000000))
+	coin := sdk.NewCoin("ujkl", sdkmath.NewInt(10000000000))
 	coins := sdk.NewCoins(coin)
 
 	err = suite.bankKeeper.SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, nameOwner, coins)
@@ -201,7 +202,7 @@ func (suite *KeeperTestSuite) TestMsgCancelOneBid() {
 	bidder, err := sdk.AccAddressFromBech32(testAddresses[1])
 	suite.Require().NoError(err)
 
-	coin := sdk.NewCoin("ujkl", sdk.NewInt(10000000000))
+	coin := sdk.NewCoin("ujkl", sdkmath.NewInt(10000000000))
 	coins := sdk.NewCoins(coin)
 
 	err = suite.bankKeeper.SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, nameOwner, coins)

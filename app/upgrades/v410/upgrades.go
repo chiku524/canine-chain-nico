@@ -1,12 +1,13 @@
 package v410
 
 import (
+	"context"
 	_ "embed"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/jackalLabs/canine-chain/v5/app/upgrades"
 	storageKeeper "github.com/jackalLabs/canine-chain/v5/x/storage/keeper"
 )
@@ -38,8 +39,10 @@ func (u *Upgrade) Name() string {
 
 // Handler implements upgrades.Upgrade
 func (u *Upgrade) Handler() upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		err := upgrades.RecoverFiles(ctx, u.sk, UpgradeData, plan.Height, "v4.1.0")
+	return func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+		err := upgrades.RecoverFiles(sdkCtx, u.sk, UpgradeData, plan.Height, "v4.1.0")
 		if err != nil {
 			return nil, err
 		}

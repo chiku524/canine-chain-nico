@@ -6,6 +6,7 @@ import (
 	types2 "github.com/jackalLabs/canine-chain/v5/x/filetree/types"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/jackalLabs/canine-chain/v5/x/storage/types"
 )
@@ -25,7 +26,7 @@ func (k msgServer) AddProviderClaimer(goCtx context.Context, msg *types.MsgAddCl
 
 	for _, claimer := range provider.AuthClaimers {
 		if claimer == msg.ClaimAddress {
-			return nil, sdkerrors.Wrapf(sdkerrors.ErrConflict, "cannot add the same claimer twice")
+			return nil, errorsmod.Wrapf(sdkerrors.ErrConflict, "cannot add the same claimer twice")
 		}
 	}
 
@@ -61,7 +62,7 @@ func (k msgServer) RemoveProviderClaimer(goCtx context.Context, msg *types.MsgRe
 	}
 	p := len(authClaimers)
 	if p == 0 {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrConflict, "provider has no claimer addresses")
+		return nil, errorsmod.Wrapf(sdkerrors.ErrConflict, "provider has no claimer addresses")
 	}
 
 	newClaim := []string{}
@@ -74,7 +75,7 @@ func (k msgServer) RemoveProviderClaimer(goCtx context.Context, msg *types.MsgRe
 	provider.AuthClaimers = newClaim
 
 	if p == len(provider.AuthClaimers) {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrKeyNotFound, "this address is not a claimer")
+		return nil, errorsmod.Wrapf(sdkerrors.ErrKeyNotFound, "this address is not a claimer")
 	}
 
 	k.SetProviders(ctx, provider)

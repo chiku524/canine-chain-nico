@@ -1,9 +1,10 @@
 package wasmbinding
 
 import (
-	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	notificationskeeper "github.com/jackalLabs/canine-chain/v5/x/notifications/keeper"
@@ -16,7 +17,7 @@ func PerformCreateNotification(s *notificationskeeper.Keeper, ctx sdk.Context, c
 	}
 
 	if createNotification.Creator != contractAddr.String() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
 	}
 
 	if err := createNotification.ValidateBasic(); err != nil {
@@ -26,7 +27,7 @@ func PerformCreateNotification(s *notificationskeeper.Keeper, ctx sdk.Context, c
 	msgServer := notificationskeeper.NewMsgServerImpl(*s)
 	_, err := msgServer.CreateNotification(sdk.WrapSDKContext(ctx), createNotification)
 	if err != nil {
-		return sdkerrors.Wrap(err, "create notification error from message")
+		return errorsmod.Wrap(err, "create notification error from message")
 	}
 
 	return nil
@@ -38,7 +39,7 @@ func PerformDeleteNotification(s *notificationskeeper.Keeper, ctx sdk.Context, c
 	}
 
 	if deleteNotification.Creator != contractAddr.String() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
 	}
 
 	if err := deleteNotification.ValidateBasic(); err != nil {
@@ -48,7 +49,7 @@ func PerformDeleteNotification(s *notificationskeeper.Keeper, ctx sdk.Context, c
 	msgServer := notificationskeeper.NewMsgServerImpl(*s)
 	_, err := msgServer.DeleteNotification(sdk.WrapSDKContext(ctx), deleteNotification)
 	if err != nil {
-		return sdkerrors.Wrap(err, "delete notification error from message")
+		return errorsmod.Wrap(err, "delete notification error from message")
 	}
 
 	return nil
@@ -60,7 +61,7 @@ func PerformBlockSenders(s *notificationskeeper.Keeper, ctx sdk.Context, contrac
 	}
 
 	if blockSenders.Creator != contractAddr.String() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
 	}
 
 	if err := blockSenders.ValidateBasic(); err != nil {
@@ -70,7 +71,7 @@ func PerformBlockSenders(s *notificationskeeper.Keeper, ctx sdk.Context, contrac
 	msgServer := notificationskeeper.NewMsgServerImpl(*s)
 	_, err := msgServer.BlockSenders(sdk.WrapSDKContext(ctx), blockSenders)
 	if err != nil {
-		return sdkerrors.Wrap(err, "block senders error from message")
+		return errorsmod.Wrap(err, "block senders error from message")
 	}
 
 	return nil

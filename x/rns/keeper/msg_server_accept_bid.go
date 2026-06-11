@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -28,25 +29,25 @@ func (k Keeper) AcceptOneBid(ctx sdk.Context, sender string, name string, bidder
 	blockHeight := ctx.BlockHeight()
 
 	if !isFound {
-		return sdkerrors.Wrap(sdkerrors.ErrNotFound, "Name does not exist or has expired.")
+		return errorsmod.Wrap(sdkerrors.ErrNotFound, "Name does not exist or has expired.")
 	}
 
 	if blockHeight > whois.Expires {
-		return sdkerrors.Wrap(sdkerrors.ErrNotFound, "Name does not exist or has expired.")
+		return errorsmod.Wrap(sdkerrors.ErrNotFound, "Name does not exist or has expired.")
 	}
 
 	if whois.Value != owner.String() {
-		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "You are not the owner of that name.")
+		return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "You are not the owner of that name.")
 	}
 
 	if whois.Locked > blockHeight {
-		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "cannot transfer free name")
+		return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "cannot transfer free name")
 	}
 
 	bid, bidFound := k.GetBids(ctx, fmt.Sprintf("%s%s", bidder, name))
 
 	if !bidFound {
-		return sdkerrors.Wrap(sdkerrors.ErrNotFound, "Bid does not exist or has expired.")
+		return errorsmod.Wrap(sdkerrors.ErrNotFound, "Bid does not exist or has expired.")
 	}
 
 	price, err := sdk.ParseCoinsNormalized(bid.Price)

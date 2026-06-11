@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"time"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,17 +14,17 @@ import (
 func (suite *KeeperTestSuite) TestDecimals() {
 	suite.SetupSuite()
 
-	denom, err := sdk.NewDecFromStr("260040000")
+	denom, err := sdkmath.LegacyNewDecFromStr("260040000")
 	suite.Require().NoError(err)
 
-	nom, err := sdk.NewDecFromStr("10300000")
+	nom, err := sdkmath.LegacyNewDecFromStr("10300000")
 	suite.Require().NoError(err)
 
 	res := nom.Quo(denom)
 
-	coins := sdk.NewCoin("ujkl", sdk.NewInt(6000000))
+	coins := sdk.NewCoin("ujkl", sdkmath.NewInt(6000000))
 
-	res = res.Mul(sdk.NewDecFromInt(coins.Amount))
+	res = res.Mul(sdkmath.LegacyNewDecFromInt(coins.Amount))
 
 	suite.Require().Equal(int64(237655), res.TruncateInt64())
 }
@@ -47,7 +48,7 @@ func (suite *KeeperTestSuite) TestEmptyReward() {
 		Address:        signer,
 	})
 
-	coins := sdk.NewCoins(sdk.NewCoin("ujkl", sdk.NewInt(6000000)))
+	coins := sdk.NewCoins(sdk.NewCoin("ujkl", sdkmath.NewInt(6000000)))
 
 	gauge := suite.storageKeeper.NewGauge(suite.ctx, coins, t)
 	gaugeAccount, err := types.GetGaugeAccount(gauge)
@@ -118,7 +119,7 @@ func (suite *KeeperTestSuite) TestReward() {
 		Address:        signer,
 	})
 
-	coins := sdk.NewCoins(sdk.NewCoin("ujkl", sdk.NewInt(6000000)))
+	coins := sdk.NewCoins(sdk.NewCoin("ujkl", sdkmath.NewInt(6000000)))
 
 	gauge := suite.storageKeeper.NewGauge(suite.ctx, coins, t)
 	gaugeAccount, err := types.GetGaugeAccount(gauge)
@@ -210,7 +211,7 @@ func (suite *KeeperTestSuite) TestLongTermReward() {
 			Address:        signer,
 		})
 
-		coins := sdk.NewCoins(sdk.NewCoin("ujkl", sdk.NewInt(6000000)))
+		coins := sdk.NewCoins(sdk.NewCoin("ujkl", sdkmath.NewInt(6000000)))
 
 		gauge := suite.storageKeeper.NewGauge(suite.ctx, coins, t)
 		gaugeAccount, err := types.GetGaugeAccount(gauge)
@@ -307,7 +308,7 @@ func (suite *KeeperTestSuite) TestLongTermRewardWithWindows() {
 			Address:        signer,
 		})
 
-		coins := sdk.NewCoins(sdk.NewCoin("ujkl", sdk.NewInt(6000000)))
+		coins := sdk.NewCoins(sdk.NewCoin("ujkl", sdkmath.NewInt(6000000)))
 
 		gauge := suite.storageKeeper.NewGauge(suite.ctx, coins, t)
 		gaugeAccount, err := types.GetGaugeAccount(gauge)

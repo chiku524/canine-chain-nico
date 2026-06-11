@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -26,7 +27,7 @@ func (suite *KeeperTestSuite) TestMsgAcceptBid() {
 	nameAddress, err := sdk.AccAddressFromBech32(nameAddr)
 	suite.Require().NoError(err)
 
-	coin := sdk.NewCoin("ujkl", sdk.NewInt(10000000000))
+	coin := sdk.NewCoin("ujkl", sdkmath.NewInt(10000000000))
 	coins := sdk.NewCoins(coin)
 
 	err = suite.bankKeeper.SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, address, coins)
@@ -84,7 +85,7 @@ func (suite *KeeperTestSuite) TestMsgMakeBid() {
 	address, err := sdk.AccAddressFromBech32(addr)
 	suite.Require().NoError(err)
 
-	coin := sdk.NewCoin("ujkl", sdk.NewInt(100000))
+	coin := sdk.NewCoin("ujkl", sdkmath.NewInt(100000))
 	coins := sdk.NewCoins(coin)
 
 	err = suite.bankKeeper.SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, address, coins)
@@ -122,7 +123,7 @@ func (suite *KeeperTestSuite) TestMsgCancelBid() {
 	address, err := sdk.AccAddressFromBech32(addr)
 	suite.Require().NoError(err)
 
-	coin := sdk.NewCoin("ujkl", sdk.NewInt(100000))
+	coin := sdk.NewCoin("ujkl", sdkmath.NewInt(100000))
 	coins := sdk.NewCoins(coin)
 
 	err = suite.bankKeeper.SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, address, coins)

@@ -3,7 +3,7 @@ package keeper
 import (
 	"context"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
 	"github.com/cometbft/cometbft/libs/rand"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -13,7 +13,7 @@ import (
 func (k Keeper) Attest(ctx sdk.Context, prover string, merkle []byte, owner string, start int64, creator string) error {
 	form, found := k.GetAttestationForm(ctx, prover, merkle, owner, start)
 	if !found {
-		return sdkerrors.Wrapf(types.ErrAttestInvalid, "cannot find this attestation")
+		return errorsmod.Wrapf(types.ErrAttestInvalid, "cannot find this attestation")
 	}
 
 	done := false
@@ -33,7 +33,7 @@ func (k Keeper) Attest(ctx sdk.Context, prover string, merkle []byte, owner stri
 	}
 
 	if !done {
-		return sdkerrors.Wrapf(types.ErrAttestInvalid, "you cannot attest to this deal")
+		return errorsmod.Wrapf(types.ErrAttestInvalid, "you cannot attest to this deal")
 	}
 
 	if count < k.GetParams(ctx).AttestMinToPass {
@@ -45,12 +45,12 @@ func (k Keeper) Attest(ctx sdk.Context, prover string, merkle []byte, owner stri
 	deal, found := k.GetFile(ctx, form.Merkle, form.Owner, form.Start)
 
 	if !found {
-		return sdkerrors.Wrapf(types.ErrDealNotFound, "cannot find active deal from form")
+		return errorsmod.Wrapf(types.ErrDealNotFound, "cannot find active deal from form")
 	}
 
 	proof, err := deal.GetProver(ctx, k, form.Prover)
 	if err != nil {
-		return sdkerrors.Wrapf(err, "can't find proof for attestation")
+		return errorsmod.Wrapf(err, "can't find proof for attestation")
 	}
 
 	proof.LastProven = ctx.BlockHeight()
@@ -90,29 +90,29 @@ func (k msgServer) Attest(goCtx context.Context, msg *types.MsgAttest) (*types.M
 func (k Keeper) RequestAttestation(ctx sdk.Context, merkle []byte, owner string, start int64, creator string) ([]string, error) {
 	deal, found := k.GetFile(ctx, merkle, owner, start)
 	if !found {
-		return nil, sdkerrors.Wrapf(types.ErrDealNotFound, "cannot find active deal for attestation form")
+		return nil, errorsmod.Wrapf(types.ErrDealNotFound, "cannot find active deal for attestation form")
 	}
 
 	_, err := deal.GetProver(ctx, k, creator)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "you are not a prover for this file")
+		return nil, errorsmod.Wrapf(err, "you are not a prover for this file")
 	}
 
 	_, found = k.GetAttestationForm(ctx, creator, merkle, owner, start)
 	if found {
-		return nil, sdkerrors.Wrapf(types.ErrAttestAlreadyExists, "attestation form already exists")
+		return nil, errorsmod.Wrapf(types.ErrAttestAlreadyExists, "attestation form already exists")
 	}
 
 	provider, found := k.GetProviders(ctx, creator)
 	if !found {
-		return nil, sdkerrors.Wrapf(types.ErrProviderNotFound, "cannot find provider matching deal")
+		return nil, errorsmod.Wrapf(types.ErrProviderNotFound, "cannot find provider matching deal")
 	}
 
 	providers := k.GetActiveProviders(ctx, provider.Ip) // get a random list of active providers
 	params := k.GetParams(ctx)
 
 	if len(providers) < int(params.AttestFormSize) {
-		return nil, sdkerrors.Wrapf(types.ErrInvalidLengthQuery, "not enough providers online")
+		return nil, errorsmod.Wrapf(types.ErrInvalidLengthQuery, "not enough providers online")
 	}
 
 	rand.Seed(ctx.BlockHeight())

@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
+	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/jackalLabs/canine-chain/v5/x/rns/types"
 )
@@ -21,7 +22,7 @@ func (k Keeper) CancelOneBid(ctx sdk.Context, sender string, name string) error 
 	bid, bidFound := k.GetBids(ctx, fmt.Sprintf("%s%s", sender, name))
 
 	if !bidFound {
-		return sdkerrors.Wrap(sdkerrors.ErrNotFound, "Bid does not exist or has expired.")
+		return errorsmod.Wrap(sdkerrors.ErrNotFound, "Bid does not exist or has expired.")
 	}
 
 	price, err := sdk.ParseCoinsNormalized(bid.Price)

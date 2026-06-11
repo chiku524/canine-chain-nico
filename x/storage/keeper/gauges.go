@@ -1,11 +1,12 @@
 package keeper
 
 import (
+	storetypes "cosmossdk.io/store/types"
 	"crypto/sha256"
 	"fmt"
 	"time"
 
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/jackalLabs/canine-chain/v5/x/storage/types"
 )
@@ -34,7 +35,7 @@ func (k Keeper) NewGauge(ctx sdk.Context, coins sdk.Coins, end time.Time) types.
 // IterateGauges iterates and runs `fn` for every gauge
 func (k Keeper) IterateGauges(ctx sdk.Context, fn func(pg types.PaymentGauge)) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PaymentGaugeKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 
@@ -69,7 +70,7 @@ func (k Keeper) SetPaymentGauge(ctx sdk.Context, gauge types.PaymentGauge) {
 // GetAllPaymentGauges returns all payment gauges
 func (k Keeper) GetAllPaymentGauges(ctx sdk.Context) (list []types.PaymentGauge) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.PaymentGaugeKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 

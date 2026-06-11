@@ -1,3 +1,5 @@
+//go:build simulation
+
 package rns
 
 import (
@@ -19,7 +21,7 @@ func (AppModule) ProposalContents(_ module.SimulationState) []simtypes.WeightedP
 }
 
 // RegisterStoreDecoder registers a decoder
-func (AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
+func (AppModule) RegisterStoreDecoder(_ simtypes.StoreDecoderRegistry) {}
 
 // WeightedOperations returns the all the rns module operations with their respective weights.
 func (AppModule) WeightedOperations(_ module.SimulationState) []simtypes.WeightedOperation {

@@ -4,6 +4,7 @@ import (
 	"context"
 	"strconv"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/jackalLabs/canine-chain/v5/x/storage/types"
 	"google.golang.org/grpc/codes"
@@ -105,8 +106,8 @@ func (k Keeper) StorageStats(c context.Context, req *types.QueryStorageStats) (*
 		return false
 	})
 
-	decSpent := sdk.NewDec(spacePurchased)
-	decUsed := sdk.NewDec(spaceUsed)
+	decSpent := sdkmath.LegacyNewDec(spacePurchased)
+	decUsed := sdkmath.LegacyNewDec(spaceUsed)
 
 	ratio := decUsed.Quo(decSpent).MulInt64(100)
 

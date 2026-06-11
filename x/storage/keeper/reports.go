@@ -1,7 +1,8 @@
 package keeper
 
 import (
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/jackalLabs/canine-chain/v5/x/storage/types"
 )
@@ -62,7 +63,7 @@ func (k Keeper) RemoveReport(
 // GetAllReport returns all reports
 func (k Keeper) GetAllReport(ctx sdk.Context) (list []types.ReportForm) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.ReportKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 

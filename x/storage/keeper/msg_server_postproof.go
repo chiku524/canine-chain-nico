@@ -6,7 +6,7 @@ import (
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
 	"github.com/jackalLabs/canine-chain/v5/x/storage/types"
 )
 
@@ -61,14 +61,14 @@ func (k Keeper) postProof(ctx sdk.Context,
 		var err error
 		proof, err = file.GetProver(ctx, k, prover)
 		if err != nil {
-			return sdkerrors.Wrap(err, "this is not your file")
+			return errorsmod.Wrap(err, "this is not your file")
 		}
 	} else {
 		if file.ContainsProver(prover) {
 			var err error
 			proof, err = file.GetProver(ctx, k, prover)
 			if err != nil {
-				return sdkerrors.Wrap(err, "you were supposed to have a proof but don't")
+				return errorsmod.Wrap(err, "you were supposed to have a proof but don't")
 			}
 		} else {
 			proof = file.AddProver(ctx, k, prover)
@@ -89,7 +89,7 @@ func (k Keeper) postProof(ctx sdk.Context,
 
 	err := file.Prove(ctx, proof, hashList, item, chunkSize, f.ProofType)
 	if err != nil {
-		e := sdkerrors.Wrapf(err, "cannot verify %x", file.Merkle)
+		e := errorsmod.Wrapf(err, "cannot verify %x", file.Merkle)
 		ctx.Logger().Info(e.Error())
 		return e
 	}

@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 
-	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
+	errorsmod "cosmossdk.io/errors"
 
 	"github.com/jackalLabs/canine-chain/v5/x/filetree/types"
 )
@@ -17,7 +17,7 @@ func HasViewingAccess(file types.Files, user string) (bool, error) {
 	jvacc := make(map[string]string)
 	err := json.Unmarshal([]byte(pvacc), &jvacc)
 	if err != nil {
-		return false, sdkerrors.Wrapf(err, "cannot unmarshal viewers: %s", pvacc)
+		return false, errorsmod.Wrapf(err, "cannot unmarshal viewers: %s", pvacc)
 	}
 
 	h := sha256.New()
@@ -39,7 +39,7 @@ func HasEditAccess(file types.Files, user string) (bool, error) {
 
 	err := json.Unmarshal([]byte(peacc), &jeacc)
 	if err != nil {
-		return false, sdkerrors.Wrapf(err, "cannot unmarshal editors: %s", peacc)
+		return false, errorsmod.Wrapf(err, "cannot unmarshal editors: %s", peacc)
 	}
 
 	h := sha256.New()

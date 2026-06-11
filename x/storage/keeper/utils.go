@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/bech32"
 	"github.com/jackalLabs/canine-chain/v5/x/storage/types"
@@ -59,14 +60,14 @@ func (k Keeper) GetProviderUsing(ctx sdk.Context, provider string) int64 {
 
 // GetStorageCostKbs calculates storage cost in ujkl
 // Uses kilobytes and months to calculate how much user has to pay
-func (k Keeper) GetStorageCostKbs(ctx sdk.Context, kbs int64, hours int64) sdk.Int {
+func (k Keeper) GetStorageCostKbs(ctx sdk.Context, kbs int64, hours int64) sdkmath.Int {
 	return k.GetStorageCostKbsWithPrice(ctx, kbs, hours, k.GetParams(ctx).PricePerTbPerMonth)
 }
 
 // GetStorageCostKbs calculates storage cost in ujkl
 // Uses kilobytes and months to calculate how much user has to pay
-func (k Keeper) GetStorageCostKbsWithPrice(ctx sdk.Context, kbs int64, hours int64, pricePerTBMonth int64) sdk.Int {
-	pricePerTBPerMonth := sdk.NewDec(pricePerTBMonth)
+func (k Keeper) GetStorageCostKbsWithPrice(ctx sdk.Context, kbs int64, hours int64, pricePerTBMonth int64) sdkmath.Int {
+	pricePerTBPerMonth := sdkmath.LegacyNewDec(pricePerTBMonth)
 	quantifiedPricePerTBPerMonth := pricePerTBPerMonth.QuoInt64(3)
 	pricePerGbPerMonth := quantifiedPricePerTBPerMonth.QuoInt64(1000)
 	pricePerMbPerMonth := pricePerGbPerMonth.QuoInt64(1000)
@@ -90,27 +91,27 @@ func (k Keeper) GetStorageCostKbsWithPrice(ctx sdk.Context, kbs int64, hours int
 
 // GetStorageCost calculates storage cost in ujkl
 // Uses gigabytes and months to calculate how much user has to pay
-func (k Keeper) GetStorageCost(ctx sdk.Context, gbs int64, hours int64) sdk.Int {
-	basePricePerTBPerMonth := sdk.NewDec(k.GetParams(ctx).PricePerTbPerMonth)
-	basePricePerTBPerMonthYearly := basePricePerTBPerMonth.Mul(sdk.MustNewDecFromStr("12.5").QuoInt64(15)) // we only really care about the ratio in case the price changes
+func (k Keeper) GetStorageCost(ctx sdk.Context, gbs int64, hours int64) sdkmath.Int {
+	basePricePerTBPerMonth := sdkmath.LegacyNewDec(k.GetParams(ctx).PricePerTbPerMonth)
+	basePricePerTBPerMonthYearly := basePricePerTBPerMonth.Mul(sdkmath.LegacyMustNewDecFromStr("12.5").QuoInt64(15)) // we only really care about the ratio in case the price changes
 
-	var finalPricePerTbPerMonth sdk.Dec
+	var finalPricePerTbPerMonth sdkmath.LegacyDec
 
 	if hours < 365*24 { // calculating monthly
 		switch {
 		case gbs >= 20_000:
-			finalPricePerTbPerMonth = basePricePerTBPerMonth.Mul(sdk.MustNewDecFromStr("12.5").QuoInt64(15)) // we only really care about the ratio in case the price changes
+			finalPricePerTbPerMonth = basePricePerTBPerMonth.Mul(sdkmath.LegacyMustNewDecFromStr("12.5").QuoInt64(15)) // we only really care about the ratio in case the price changes
 		case gbs >= 5_000:
-			finalPricePerTbPerMonth = basePricePerTBPerMonth.Mul(sdk.NewDec(14).QuoInt64(15)) // we only really care about the ratio in case the price changes
+			finalPricePerTbPerMonth = basePricePerTBPerMonth.Mul(sdkmath.LegacyNewDec(14).QuoInt64(15)) // we only really care about the ratio in case the price changes
 		default:
 			finalPricePerTbPerMonth = basePricePerTBPerMonth
 		}
 	} else { // calculating yearly
 		switch {
 		case gbs >= 20_000:
-			finalPricePerTbPerMonth = basePricePerTBPerMonthYearly.Mul(sdk.MustNewDecFromStr("10.42").Quo(sdk.MustNewDecFromStr("12.5"))) // we only really care about the ratio in case the price changes
+			finalPricePerTbPerMonth = basePricePerTBPerMonthYearly.Mul(sdkmath.LegacyMustNewDecFromStr("10.42").Quo(sdkmath.LegacyMustNewDecFromStr("12.5"))) // we only really care about the ratio in case the price changes
 		case gbs >= 5_000:
-			finalPricePerTbPerMonth = basePricePerTBPerMonthYearly.Mul(sdk.MustNewDecFromStr("11.67").Quo(sdk.MustNewDecFromStr("12.5"))) // we only really care about the ratio in case the price changes
+			finalPricePerTbPerMonth = basePricePerTBPerMonthYearly.Mul(sdkmath.LegacyMustNewDecFromStr("11.67").Quo(sdkmath.LegacyMustNewDecFromStr("12.5"))) // we only really care about the ratio in case the price changes
 		default:
 			finalPricePerTbPerMonth = basePricePerTBPerMonthYearly
 		}
@@ -138,8 +139,8 @@ func (k Keeper) GetStorageCost(ctx sdk.Context, gbs int64, hours int64) sdk.Int 
 // GetJklPrice uses oracle module to get jkl price
 // Returns 0.20 if feed doesn't exist or failed to unmarshal data
 // Unmarshal failure is logged
-func (k Keeper) GetJklPrice(ctx sdk.Context) (price sdk.Dec) {
-	price = sdk.MustNewDecFromStr("0.20")
+func (k Keeper) GetJklPrice(ctx sdk.Context) (price sdkmath.LegacyDec) {
+	price = sdkmath.LegacyMustNewDecFromStr("0.20")
 
 	priceFeed := k.GetParams(ctx).PriceFeed
 	feed, found := k.oracleKeeper.GetFeed(ctx, priceFeed)
@@ -155,9 +156,9 @@ func (k Keeper) GetJklPrice(ctx sdk.Context) (price sdk.Dec) {
 			ctx.Logger().Debug("Failed to unmarshal Feed.Data (%s)", feed.Data)
 		}
 
-		p, err := sdk.NewDecFromStr(d.Price)
+		p, err := sdkmath.LegacyNewDecFromStr(d.Price)
 		if err != nil {
-			ctx.Logger().Debug("Failed to convert Feed.Data.Price to sdk.Dec (%s)", d.Price)
+			ctx.Logger().Debug("Failed to convert Feed.Data.Price to sdkmath.LegacyDec (%s)", d.Price)
 		} else {
 			price = p
 		}

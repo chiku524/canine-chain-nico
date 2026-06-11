@@ -8,13 +8,14 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/client"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	eciesgo "github.com/ecies/go/v2"
 	filetypes "github.com/jackalLabs/canine-chain/v5/x/filetree/types"
 	"github.com/spf13/cobra"
 )
 
 func MakePrivateKey(clientCtx client.Context) (*eciesgo.PrivateKey, error) {
-	signed, _, err := clientCtx.Keyring.Sign(clientCtx.GetFromName(), []byte("jackal_init"))
+	signed, _, err := clientCtx.Keyring.Sign(clientCtx.GetFromName(), []byte("jackal_init"), signing.SignMode_SIGN_MODE_DIRECT)
 	if err != nil {
 		return nil, err
 	}

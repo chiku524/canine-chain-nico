@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 
+	sdkmath "cosmossdk.io/math"
+	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	allTypes "github.com/jackalLabs/canine-chain/v5/types"
 
@@ -16,25 +18,25 @@ import (
 func (k msgServer) PostFile(goCtx context.Context, msg *types.MsgPostFile) (*types.MsgPostFileResponse, error) {
 	ctx := sdk.UnwrapSDKContext(goCtx)
 	if msg.Merkle == nil {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "merkle cannot be null")
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "merkle cannot be null")
 	}
 
 	if msg.Expires < 0 {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "expires cannot be less than 0")
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "expires cannot be less than 0")
 	}
 
 	if msg.FileSize < 0 {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "size cannot be less than 0")
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "size cannot be less than 0")
 	}
 
 	if msg.MaxProofs < 1 {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrInvalidRequest, "max proofs cannot be less than 1")
+		return nil, errorsmod.Wrapf(sdkerrors.ErrInvalidRequest, "max proofs cannot be less than 1")
 	}
 
 	params := k.GetParams(ctx)
 
 	if !json.Valid([]byte(msg.Note)) {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrJSONUnmarshal, "note is not valid json `%s`", msg.Note)
+		return nil, errorsmod.Wrapf(sdkerrors.ErrJSONUnmarshal, "note is not valid json `%s`", msg.Note)
 	}
 
 	window := k.GetParams(ctx).ProofWindow
@@ -88,7 +90,7 @@ func (k msgServer) PostFile(goCtx context.Context, msg *types.MsgPostFile) (*typ
 
 	totalSize, err := mulStorageCharge(msg.FileSize, msg.MaxProofs)
 	if err != nil {
-		return nil, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
+		return nil, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, err.Error())
 	}
 	if msg.Expires > 0 { // if the file is posted as a one-time payment
 		kbs := totalSize / 1000
@@ -110,20 +112,20 @@ func (k msgServer) PostFile(goCtx context.Context, msg *types.MsgPostFile) (*typ
 
 		toPay := sdk.NewCoin("ujkl", cost)
 
-		refDec := sdk.NewDec(params.ReferralCommission).QuoInt64(100)
-		pol := sdk.NewDec(params.PolRatio).QuoInt64(100)
+		refDec := sdkmath.LegacyNewDec(params.ReferralCommission).QuoInt64(100)
+		pol := sdkmath.LegacyNewDec(params.PolRatio).QuoInt64(100)
 
-		spr := sdk.NewDec(1).Sub(refDec).Sub(pol) // whatever is left from pol and referrals
+		spr := sdkmath.LegacyNewDec(1).Sub(refDec).Sub(pol) // whatever is left from pol and referrals
 
-		storageProviderCut := sdk.NewDecFromInt(toPay.Amount).Mul(spr)
+		storageProviderCut := sdkmath.LegacyNewDecFromInt(toPay.Amount).Mul(spr)
 		spcToken := sdk.NewCoin(toPay.Denom, storageProviderCut.TruncateInt())
 		spcTokens := sdk.NewCoins(spcToken)
 
-		polCut := sdk.NewDecFromInt(toPay.Amount).Mul(pol)
+		polCut := sdkmath.LegacyNewDecFromInt(toPay.Amount).Mul(pol)
 		polToken := sdk.NewCoin(toPay.Denom, polCut.TruncateInt())
 		polTokens := sdk.NewCoins(polToken)
 
-		refCut := sdk.NewDecFromInt(toPay.Amount).Mul(refDec) // 25% to referrals
+		refCut := sdkmath.LegacyNewDecFromInt(toPay.Amount).Mul(refDec) // 25% to referrals
 		refToken := sdk.NewCoin(toPay.Denom, refCut.TruncateInt())
 		refTokens := sdk.NewCoins(refToken)
 
@@ -131,37 +133,37 @@ func (k msgServer) PostFile(goCtx context.Context, msg *types.MsgPostFile) (*typ
 		gauge := k.NewGauge(ctx, spcTokens, end) // creating new payment gauge
 		addr, err := sdk.AccAddressFromBech32(msg.Creator)
 		if err != nil {
-			return nil, sdkerrors.Wrapf(err, "cannot get address from message creator")
+			return nil, errorsmod.Wrapf(err, "cannot get address from message creator")
 		}
 
 		acc, err := types.GetGaugeAccount(gauge)
 		if err != nil {
-			return nil, sdkerrors.Wrapf(err, "cannot get gauge account")
+			return nil, errorsmod.Wrapf(err, "cannot get gauge account")
 		}
 
 		polAcc, err := allTypes.GetPOLAccount()
 		if err != nil {
-			return nil, sdkerrors.Wrapf(err, "cannot get pol account")
+			return nil, errorsmod.Wrapf(err, "cannot get pol account")
 		}
 
 		err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, addr, types.ModuleName, sdk.NewCoins(toPay)) // taking money from user
 		if err != nil {
-			return nil, sdkerrors.Wrapf(err, "cannot send tokens from %s", msg.Creator)
+			return nil, errorsmod.Wrapf(err, "cannot send tokens from %s", msg.Creator)
 		}
 
 		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, acc, spcTokens)
 		if err != nil {
-			return nil, sdkerrors.Wrapf(err, "cannot send tokens to token holder account")
+			return nil, errorsmod.Wrapf(err, "cannot send tokens to token holder account")
 		}
 
 		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, polAcc, polTokens)
 		if err != nil {
-			return nil, sdkerrors.Wrapf(err, "cannot send tokens to token holder account")
+			return nil, errorsmod.Wrapf(err, "cannot send tokens to token holder account")
 		}
 
 		err = k.AddCollectedFees(ctx, refTokens)
 		if err != nil {
-			return nil, sdkerrors.Wrapf(err, "cannot send tokens to stakers")
+			return nil, errorsmod.Wrapf(err, "cannot send tokens to stakers")
 		}
 
 		return res, nil
@@ -171,15 +173,15 @@ func (k msgServer) PostFile(goCtx context.Context, msg *types.MsgPostFile) (*typ
 
 	paymentInfo, found := k.GetStoragePaymentInfo(ctx, msg.Creator)
 	if !found {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrKeyNotFound, "storage account does not exist")
+		return nil, errorsmod.Wrapf(sdkerrors.ErrKeyNotFound, "storage account does not exist")
 	}
 	if paymentInfo.End.Before(ctx.BlockTime()) {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "storage account is expired")
+		return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "storage account is expired")
 	}
 
 	paymentInfo.SpaceUsed += totalSize
 	if paymentInfo.SpaceUsed > paymentInfo.SpaceAvailable {
-		return nil, sdkerrors.Wrapf(sdkerrors.ErrUnauthorized, "storage account does not have enough space available %d > %d", paymentInfo.SpaceUsed, paymentInfo.SpaceAvailable)
+		return nil, errorsmod.Wrapf(sdkerrors.ErrUnauthorized, "storage account does not have enough space available %d > %d", paymentInfo.SpaceUsed, paymentInfo.SpaceAvailable)
 	}
 
 	k.SetStoragePaymentInfo(ctx, paymentInfo)

@@ -1,14 +1,15 @@
 package v600
 
 import (
+	"context"
 	"github.com/cosmos/cosmos-sdk/baseapp"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	"github.com/cosmos/cosmos-sdk/x/consensus/keeper"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
 	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/jackalLabs/canine-chain/v5/app/upgrades"
 )
 
@@ -42,13 +43,15 @@ func (u *Upgrade) Name() string {
 }
 
 func (u *Upgrade) Handler() upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		ctx.Logger().Info("Upgrading Jackal Protocol to Cosmos SDK 0.47 (v600)...")
+	return func(ctx context.Context, plan upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+		sdkCtx.Logger().Info("Upgrading Jackal Protocol to Cosmos SDK 0.47 (v600)...")
 
 		baseAppLegacySS := u.paramsKeeper.Subspace(baseapp.Paramspace).WithKeyTable(paramstypes.ConsensusParamsKeyTable())
-		baseapp.MigrateParams(ctx, baseAppLegacySS, &u.consensusKeeper)
+		baseapp.MigrateParams(sdkCtx, baseAppLegacySS, u.consensusKeeper.ParamsStore)
 
-		return u.mm.RunMigrations(ctx, u.configurator, fromVM)
+		return u.mm.RunMigrations(sdkCtx, u.configurator, fromVM)
 	}
 }
 

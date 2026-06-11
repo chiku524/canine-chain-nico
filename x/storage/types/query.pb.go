@@ -6,7 +6,6 @@ package types
 import (
 	context "context"
 	fmt "fmt"
-	github_com_cosmos_cosmos_sdk_types "github.com/cosmos/cosmos-sdk/types"
 	query "github.com/cosmos/cosmos-sdk/types/query"
 	_ "github.com/cosmos/gogoproto/gogoproto"
 	grpc1 "github.com/cosmos/gogoproto/grpc"
@@ -2634,7 +2633,7 @@ var xxx_messageInfo_QueryStorageStats proto.InternalMessageInfo
 type QueryStorageStatsResponse struct {
 	Purchased   uint64                                 `protobuf:"varint,1,opt,name=purchased,proto3" json:"purchased,omitempty"`
 	Used        uint64                                 `protobuf:"varint,2,opt,name=used,proto3" json:"used,omitempty"`
-	UsedRatio   github_com_cosmos_cosmos_sdk_types.Dec `protobuf:"bytes,3,opt,name=used_ratio,json=usedRatio,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"used_ratio"`
+	UsedRatio   Dec `protobuf:"bytes,3,opt,name=used_ratio,json=usedRatio,proto3,customtype=github.com/cosmos/cosmos-sdk/types.Dec" json:"used_ratio"`
 	ActiveUsers uint64                                 `protobuf:"varint,4,opt,name=activeUsers,proto3" json:"activeUsers,omitempty"`
 	UniqueUsers uint64                                 `protobuf:"varint,5,opt,name=uniqueUsers,proto3" json:"uniqueUsers,omitempty"`
 	UsersByPlan map[int64]int64                        `protobuf:"bytes,6,rep,name=users_by_plan,json=usersByPlan,proto3" json:"users_by_plan,omitempty" protobuf_key:"varint,1,opt,name=key,proto3" protobuf_val:"varint,2,opt,name=value,proto3"`

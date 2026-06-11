@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	storetypes "cosmossdk.io/store/types"
 	"fmt"
 	"testing"
 
@@ -31,9 +32,9 @@ func setupRNSKeeper(t *testing.T) (
 	moduletestutil.TestEncodingConfig,
 	sdk.Context,
 ) {
-	key := sdk.NewKVStoreKey(types.StoreKey)
+	key := storetypes.NewKVStoreKey(types.StoreKey)
 	// memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
-	tkey := sdk.NewTransientStoreKey("transient_test")
+	tkey := storetypes.NewTransientStoreKey("transient_test")
 	testCtx := canineglobaltestutil.DefaultContextWithDB(t, tkey, key)
 	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
 

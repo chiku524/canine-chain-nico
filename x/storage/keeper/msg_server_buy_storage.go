@@ -9,6 +9,8 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/telemetry"
 
+	sdkmath "cosmossdk.io/math"
+	errorsmod "cosmossdk.io/errors"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
@@ -36,7 +38,7 @@ func validateBuy(days int64, bytesIn int64, denomIn string) (duration time.Durat
 
 	denom = denomIn
 	if denomIn != "ujkl" {
-		err = sdkerrors.Wrap(sdkerrors.ErrInvalidCoins, "cannot pay with anything other than ujkl")
+		err = errorsmod.Wrap(sdkerrors.ErrInvalidCoins, "cannot pay with anything other than ujkl")
 		return duration, bytes, gbs, denom, err
 	}
 
@@ -53,15 +55,15 @@ func (k msgServer) BuyStorage(goCtx context.Context, msg *types.MsgBuyStorage) (
 
 	forAddress, err := k.rnsKeeper.Resolve(ctx, msg.ForAddress) // converting for address into an actual bech32 using RNS
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "cannot parse RNS or address %s", msg.ForAddress)
+		return nil, errorsmod.Wrapf(err, "cannot parse RNS or address %s", msg.ForAddress)
 	}
 
 	duration, bytes, gbs, denom, err := validateBuy(msg.DurationDays, msg.Bytes, msg.PaymentDenom)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "failed to validate buy request")
+		return nil, errorsmod.Wrapf(err, "failed to validate buy request")
 	}
 
-	hours := sdk.NewDec(duration.Milliseconds()).Quo(sdk.NewDec(60 * 60 * 1000))
+	hours := sdkmath.LegacyNewDec(duration.Milliseconds()).Quo(sdkmath.LegacyNewDec(60 * 60 * 1000))
 
 	// We can calculate all the unit adjustments here. We will only consider the price adjustment when actually
 	// buying storage, if you are upgrading, you get a discount based on the price you're upgrading not the entire storage
@@ -70,7 +72,7 @@ func (k msgServer) BuyStorage(goCtx context.Context, msg *types.MsgBuyStorage) (
 
 	forAddr, err := sdk.AccAddressFromBech32(msg.ForAddress)
 	if err != nil {
-		return nil, sdkerrors.Wrap(err, "for address is not a proper bech32")
+		return nil, errorsmod.Wrap(err, "for address is not a proper bech32")
 	}
 
 	accExists := k.accountKeeper.HasAccount(ctx, forAddr)
@@ -91,7 +93,7 @@ func (k msgServer) BuyStorage(goCtx context.Context, msg *types.MsgBuyStorage) (
 		if payInfo.End.After(ctx.BlockTime()) { // should we upgrade storage instead of buy fresh?
 			toPay, err = k.UpgradeStorage(ctx, bytes, payInfo, duration, storageCost, denom)
 			if err != nil {
-				return nil, sdkerrors.Wrapf(err, "cannot upgrade storage")
+				return nil, errorsmod.Wrapf(err, "cannot upgrade storage")
 			}
 		}
 	}
@@ -102,21 +104,21 @@ func (k msgServer) BuyStorage(goCtx context.Context, msg *types.MsgBuyStorage) (
 		referred = refAcc.String() != msg.Creator
 	}
 
-	pol := sdk.NewDec(params.PolRatio).QuoInt64(100)
-	discount := sdk.NewDec(0)
+	pol := sdkmath.LegacyNewDec(params.PolRatio).QuoInt64(100)
+	discount := sdkmath.LegacyNewDec(0)
 	if referred {
 
-		p := sdk.NewDecFromInt(toPay.Amount)
+		p := sdkmath.LegacyNewDecFromInt(toPay.Amount)
 
 		var hour int64 = 1000 * 60 * 60
 		if duration.Milliseconds() > 365*24*hour {
-			p = p.Mul(sdk.MustNewDecFromStr("0.95"))
-			discount = sdk.NewDec(5).QuoInt64(100) // 5% discount
-			pol = pol.Sub(sdk.MustNewDecFromStr("0.05"))
+			p = p.Mul(sdkmath.LegacyMustNewDecFromStr("0.95"))
+			discount = sdkmath.LegacyNewDec(5).QuoInt64(100) // 5% discount
+			pol = pol.Sub(sdkmath.LegacyMustNewDecFromStr("0.05"))
 		} else {
-			p = p.Mul(sdk.MustNewDecFromStr("0.90"))
-			discount = sdk.NewDec(10).QuoInt64(100) // 10% discount
-			pol = pol.Sub(sdk.MustNewDecFromStr("0.1"))
+			p = p.Mul(sdkmath.LegacyMustNewDecFromStr("0.90"))
+			discount = sdkmath.LegacyNewDec(10).QuoInt64(100) // 10% discount
+			pol = pol.Sub(sdkmath.LegacyMustNewDecFromStr("0.1"))
 		}
 
 		toPay = sdk.NewCoin(toPay.Denom, p.TruncateInt())
@@ -132,59 +134,59 @@ func (k msgServer) BuyStorage(goCtx context.Context, msg *types.MsgBuyStorage) (
 
 	add, err := sdk.AccAddressFromBech32(msg.Creator)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "cannot parse creator address %s", msg.Creator)
+		return nil, errorsmod.Wrapf(err, "cannot parse creator address %s", msg.Creator)
 	}
 	err = k.bankKeeper.SendCoinsFromAccountToModule(ctx, add, types.ModuleName, sdk.NewCoins(toPay)) // taking money from user
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "cannot send tokens from %s", msg.Creator)
+		return nil, errorsmod.Wrapf(err, "cannot send tokens from %s", msg.Creator)
 	}
 
 	k.SetStoragePaymentInfo(ctx, spi)
 
-	refDec := sdk.NewDec(params.ReferralCommission).QuoInt64(100)
-	spr := sdk.NewDec(1).Sub(refDec).Sub(pol).Sub(discount) // whatever is left from pol and referrals
+	refDec := sdkmath.LegacyNewDec(params.ReferralCommission).QuoInt64(100)
+	spr := sdkmath.LegacyNewDec(1).Sub(refDec).Sub(pol).Sub(discount) // whatever is left from pol and referrals
 
-	storageProviderCut := sdk.NewDecFromInt(toPay.Amount).Mul(spr)
+	storageProviderCut := sdkmath.LegacyNewDecFromInt(toPay.Amount).Mul(spr)
 	spcToken := sdk.NewCoin(toPay.Denom, storageProviderCut.TruncateInt())
 	spcTokens := sdk.NewCoins(spcToken)
 
 	gauge := k.NewGauge(ctx, spcTokens, spi.End) // creating new payment gauge
 	acc, err := types.GetGaugeAccount(gauge)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "cannot get gauge holder account")
+		return nil, errorsmod.Wrapf(err, "cannot get gauge holder account")
 	}
 
 	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, acc, spcTokens)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "cannot send tokens to token holder account")
+		return nil, errorsmod.Wrapf(err, "cannot send tokens to token holder account")
 	}
 
 	polAcc, err := allTypes.GetPOLAccount()
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "cannot get pol account")
+		return nil, errorsmod.Wrapf(err, "cannot get pol account")
 	}
-	polCut := sdk.NewDecFromInt(toPay.Amount).Mul(pol) // 40,35,30% to pol
+	polCut := sdkmath.LegacyNewDecFromInt(toPay.Amount).Mul(pol) // 40,35,30% to pol
 	polToken := sdk.NewCoin(toPay.Denom, polCut.TruncateInt())
 	polTokens := sdk.NewCoins(polToken)
 
 	err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, polAcc, polTokens)
 	if err != nil {
-		return nil, sdkerrors.Wrapf(err, "cannot send tokens to pol account")
+		return nil, errorsmod.Wrapf(err, "cannot send tokens to pol account")
 	}
 
-	refCut := sdk.NewDecFromInt(toPay.Amount).Mul(refDec) // 25% to referrals
+	refCut := sdkmath.LegacyNewDecFromInt(toPay.Amount).Mul(refDec) // 25% to referrals
 	refToken := sdk.NewCoin(toPay.Denom, refCut.TruncateInt())
 	refTokens := sdk.NewCoins(refToken)
 
 	if referred {
 		err = k.bankKeeper.SendCoinsFromModuleToAccount(ctx, types.ModuleName, refAcc, refTokens)
 		if err != nil {
-			return nil, sdkerrors.Wrapf(err, "cannot send tokens to referral account")
+			return nil, errorsmod.Wrapf(err, "cannot send tokens to referral account")
 		}
 	} else { // if we have no referral then we send the tokens to stakers
 		err := k.AddCollectedFees(ctx, refTokens)
 		if err != nil {
-			return nil, sdkerrors.Wrapf(err, "cannot send tokens to stakers")
+			return nil, errorsmod.Wrapf(err, "cannot send tokens to stakers")
 		}
 	}
 
@@ -220,11 +222,11 @@ func (k Keeper) UpgradeStorage(
 	bytes int64,
 	payInfo types.StoragePaymentInfo,
 	duration time.Duration,
-	storageCost sdk.Int,
+	storageCost sdkmath.Int,
 	denom string,
 ) (sdk.Coin, error) {
 	proratedDuration := payInfo.End.Sub(ctx.BlockTime())
-	proratedDurationInHour := sdk.NewDec(proratedDuration.Milliseconds()).Quo(sdk.NewDec(60 * 60 * 1000))
+	proratedDurationInHour := sdkmath.LegacyNewDec(proratedDuration.Milliseconds()).Quo(sdkmath.LegacyNewDec(60 * 60 * 1000))
 
 	currentBytes := payInfo.SpaceAvailable
 	currentGbs := currentBytes / gb
@@ -232,19 +234,19 @@ func (k Keeper) UpgradeStorage(
 	oldCost := k.GetStorageCost(ctx, currentGbs, proratedDurationInHour.TruncateInt64())
 
 	if duration.Truncate(timeMonth) <= 0 {
-		return sdk.Coin{}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "duration can't be less than 1 month")
+		return sdk.Coin{}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "duration can't be less than 1 month")
 	}
 
 	if bytes < payInfo.SpaceUsed {
-		return sdk.Coin{}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "cannot downgrade below current usage")
+		return sdk.Coin{}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "cannot downgrade below current usage")
 	}
 
 	newCost := storageCost
 
 	price := newCost.Sub(oldCost)
 
-	if price.LTE(sdk.ZeroInt()) {
-		return sdk.Coin{}, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "cannot downgrade until current plan expires")
+	if price.LTE(sdkmath.ZeroInt()) {
+		return sdk.Coin{}, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "cannot downgrade until current plan expires")
 	}
 
 	priceTokens := sdk.NewCoin(denom, price)

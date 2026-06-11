@@ -6,6 +6,7 @@ import (
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/client"
+	confixcmd "cosmossdk.io/tools/confix/cmd"
 	"github.com/cosmos/cosmos-sdk/client/config"
 	"github.com/cosmos/cosmos-sdk/client/debug"
 	"github.com/cosmos/cosmos-sdk/client/flags"
@@ -26,8 +27,8 @@ import (
 	"github.com/spf13/cobra"
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	tmcfg "github.com/cometbft/cometbft/config"
-	"github.com/cometbft/cometbft/libs/log"
-	dbm "github.com/cometbft/cometbft-db"
+	dbm "github.com/cosmos/cosmos-db"
+	"cosmossdk.io/log"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -100,7 +101,7 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 		genesisCommand(encodingConfig),
 		tmcli.NewCompletionCmd(rootCmd, true),
 		debug.Cmd(),
-		config.Cmd(),
+		confixcmd.ConfigCommand(),
 		AddressGenerationCommand(),
 		storage.CmdProvider(),
 	)
@@ -112,10 +113,10 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 
 	// add keybase, auxiliary RPC, query, and tx child commands
 	rootCmd.AddCommand(
-		rpc.StatusCommand(),
+		server.StatusCommand(),
 		queryCommand(),
 		txCommand(),
-		keys.Commands(app.DefaultNodeHome),
+		keys.Commands(),
 	)
 }
 
@@ -135,11 +136,13 @@ func queryCommand() *cobra.Command {
 	}
 
 	cmd.AddCommand(
-		authcmd.GetAccountCmd(),
+		rpc.QueryEventForTxCmd(),
+		server.QueryBlockCmd(),
 		rpc.ValidatorCommand(),
-		rpc.BlockCommand(),
+		server.QueryBlocksCmd(),
 		authcmd.QueryTxsByEventsCmd(),
 		authcmd.QueryTxCmd(),
+		server.QueryBlockResultsCmd(),
 	)
 
 	app.ModuleBasics.AddQueryCommands(cmd)

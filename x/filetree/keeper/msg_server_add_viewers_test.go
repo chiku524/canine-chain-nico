@@ -12,6 +12,7 @@ import (
 	"github.com/cosmos/cosmos-sdk/crypto/keyring"
 	"github.com/cosmos/cosmos-sdk/crypto/keys/secp256k1"
 	sdkTypes "github.com/cosmos/cosmos-sdk/types"
+	"github.com/cosmos/cosmos-sdk/types/tx/signing"
 	eciesgo "github.com/ecies/go/v2"
 	"github.com/jackalLabs/canine-chain/v5/app"
 	"github.com/jackalLabs/canine-chain/v5/testutil"
@@ -44,7 +45,7 @@ func (suite *KeeperTestSuite) TestMsgAddViewers() {
 	_, _, err = ctx.Keyring.NewMnemonic(ctx.FromName, keyring.English, sdkTypes.FullFundraiserPath, keyring.DefaultBIP39Passphrase, algo)
 	suite.Require().NoError(err)
 
-	signed, _, err := ctx.Keyring.Sign(ctx.FromName, []byte("jackal_init"))
+	signed, _, err := ctx.Keyring.Sign(ctx.FromName, []byte("jackal_init"), signing.SignMode_SIGN_MODE_DIRECT)
 	suite.Require().NoError(err)
 
 	k := secp256k1.GenPrivKeyFromSecret(signed)
@@ -189,7 +190,7 @@ func (suite *KeeperTestSuite) TestMsgAddViewers() {
 				// Just as bob used his keyring to sign and create a private-public key pair to post on chain,
 				// He will use his keyring to sign again
 
-				signed, _, err := ctx.Keyring.Sign(ctx.FromName, []byte("jackal_init"))
+				signed, _, err := ctx.Keyring.Sign(ctx.FromName, []byte("jackal_init"), signing.SignMode_SIGN_MODE_DIRECT)
 				suite.Require().NoError(err)
 
 				k := secp256k1.GenPrivKeyFromSecret(signed)

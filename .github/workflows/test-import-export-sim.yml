@@ -3,17 +3,24 @@ name: Simulation Test
 on:
   pull_request:
   push:
-    branches: ["master"]
+    branches: ["master", "feat/**"]
 
 jobs:
   io-sim:
     name: Import Export Sim Test
     runs-on: ubuntu-latest
+    env:
+      CGO_ENABLED: 1
     steps:
       - uses: actions/checkout@v4.2.2
       - uses: actions/setup-go@v5
         with:
-          go-version: 1.23 # The Go version to download (if necessary) and use.
+          go-version: 1.23
+      - name: Install wasmvm shared library
+        run: |
+          WASMVM_VERSION=$(go list -m -f '{{.Version}}' github.com/CosmWasm/wasmvm/v2 2>/dev/null || go list -m -f '{{.Version}}' github.com/CosmWasm/wasmvm)
+          sudo wget -q "https://github.com/CosmWasm/wasmvm/releases/download/${WASMVM_VERSION}/libwasmvm.x86_64.so" \
+            -O /usr/lib/libwasmvm.x86_64.so
       - name: Simulation
         shell: bash
         run: make test-sim-import-export

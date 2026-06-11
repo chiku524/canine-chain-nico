@@ -1,10 +1,11 @@
 package alpha11
 
 import (
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"context"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
+	upgradetypes "cosmossdk.io/x/upgrade/types"
 	"github.com/jackalLabs/canine-chain/v5/app/upgrades"
 	"github.com/jackalLabs/canine-chain/v5/types"
 	oraclekeeper "github.com/jackalLabs/canine-chain/v5/x/oracle/keeper"
@@ -36,11 +37,13 @@ func (u *Upgrade) Name() string {
 
 // Handler implements upgrades.Upgrade
 func (u *Upgrade) Handler() upgradetypes.UpgradeHandler {
-	return func(ctx sdk.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
-		if types.IsTestnet(ctx.ChainID()) {
+	return func(ctx context.Context, _ upgradetypes.Plan, fromVM module.VersionMap) (module.VersionMap, error) {
+		sdkCtx := sdk.UnwrapSDKContext(ctx)
+
+		if types.IsTestnet(sdkCtx.ChainID()) {
 			fromVM[oraclemoduletypes.ModuleName] = 1
 
-			newVM, err := u.mm.RunMigrations(ctx, u.configurator, fromVM)
+			newVM, err := u.mm.RunMigrations(sdkCtx, u.configurator, fromVM)
 			if err != nil {
 				return newVM, err
 			}

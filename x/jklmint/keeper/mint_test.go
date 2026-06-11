@@ -1,7 +1,7 @@
 package keeper_test
 
 import (
-	sdk "github.com/cosmos/cosmos-sdk/types"
+	sdkmath "cosmossdk.io/math"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
 )
 
@@ -17,9 +17,9 @@ func (suite *MintTestSuite) TestBlockMint() {
 	k.BlockMint(ctx)
 
 	feeBalanceAfter := app.BankKeeper.GetBalance(ctx, feeAccount.GetAddress(), denom)
-	suite.Require().Equal(sdk.NewInt(3360000), feeBalanceAfter.Amount.Sub(feeBalanceBefore.Amount))
+	suite.Require().Equal(sdkmath.NewInt(3360000), feeBalanceAfter.Amount.Sub(feeBalanceBefore.Amount))
 	supplyAfter := app.BankKeeper.GetSupply(ctx, denom)
-	suite.Require().Equal(sdk.NewInt(4_200_000), supplyAfter.Amount.Sub(supplyBefore.Amount))
+	suite.Require().Equal(sdkmath.NewInt(4_200_000), supplyAfter.Amount.Sub(supplyBefore.Amount))
 	// After BlockMint we now have exactly 3.6JKL in the fee collector account
 }
 
@@ -46,18 +46,18 @@ func (suite *MintTestSuite) TestNoProviderBlockMint() {
 	feeBalanceAfter := app.BankKeeper.GetBalance(ctx, feeAccount.GetAddress(), denom)
 
 	suite.T().Log(params.TokensPerBlock)
-	suite.Require().Equal(sdk.NewInt(3360000), feeBalanceAfter.Amount.Sub(feeBalanceBefore.Amount))
+	suite.Require().Equal(sdkmath.NewInt(3360000), feeBalanceAfter.Amount.Sub(feeBalanceBefore.Amount))
 	supplyAfter := app.BankKeeper.GetSupply(ctx, denom)
-	suite.Require().Equal(sdk.NewInt(4_200_000), supplyAfter.Amount.Sub(supplyBefore.Amount))
+	suite.Require().Equal(sdkmath.NewInt(4_200_000), supplyAfter.Amount.Sub(supplyBefore.Amount))
 	// After BlockMint we now have exactly 3.6JKL in the fee collector account
 }
 
 func (suite *MintTestSuite) TestDecRatios() {
 	suite.SetupTest()
 
-	stakerRatio := sdk.NewDec(80).QuoInt64(100)
+	stakerRatio := sdkmath.LegacyNewDec(80).QuoInt64(100)
 
-	s, err := sdk.NewDecFromStr("0.8")
+	s, err := sdkmath.LegacyNewDecFromStr("0.8")
 	suite.Require().NoError(err)
 
 	suite.Require().Equal(s, stakerRatio)

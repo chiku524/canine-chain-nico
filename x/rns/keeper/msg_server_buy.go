@@ -4,6 +4,7 @@ import (
 	"context"
 	"strings"
 
+	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -21,7 +22,7 @@ func (k Keeper) BuyName(ctx sdk.Context, sender string, nm string) error {
 	sale, found := k.GetForsale(ctx, nm)
 
 	if !found {
-		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Name not for sale.")
+		return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "Name not for sale.")
 	}
 
 	n, tld, err := GetNameAndTLD(nm)
@@ -31,24 +32,24 @@ func (k Keeper) BuyName(ctx sdk.Context, sender string, nm string) error {
 	name, nfound := k.GetNames(ctx, n, tld)
 
 	if !nfound {
-		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "Name does not exist or has expired.")
+		return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "Name does not exist or has expired.")
 	}
 
 	blockHeight := ctx.BlockHeight()
 
 	if blockHeight > name.Expires {
-		return sdkerrors.Wrap(sdkerrors.ErrNotFound, "Name does not exist or has expired.")
+		return errorsmod.Wrap(sdkerrors.ErrNotFound, "Name does not exist or has expired.")
 	}
 
 	if name.Value == sender {
-		return sdkerrors.Wrap(sdkerrors.ErrUnauthorized, "You cannot buy your own name.")
+		return errorsmod.Wrap(sdkerrors.ErrUnauthorized, "You cannot buy your own name.")
 	}
 
 	seller, _ := sdk.AccAddressFromBech32(sale.Owner)
 
 	price, err := sdk.ParseCoinNormalized(sale.Price)
 	if err != nil {
-		return sdkerrors.Wrap(err, "Price is not a valid coin.")
+		return errorsmod.Wrap(err, "Price is not a valid coin.")
 	}
 
 	coins := sdk.NewCoins(price)

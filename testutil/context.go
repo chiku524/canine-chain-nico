@@ -3,27 +3,29 @@ package testutil
 import (
 	"testing"
 
-	"github.com/cometbft/cometbft/libs/log"
 	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
-	dbm "github.com/cometbft/cometbft-db"
+	dbm "github.com/cosmos/cosmos-db"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/cosmos/cosmos-sdk/store"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	"cosmossdk.io/log"
+	"cosmossdk.io/store"
+	storemetrics "cosmossdk.io/store/metrics"
+	storetypes "cosmossdk.io/store/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 )
 
 // DefaultContext creates a sdk.Context with a fresh MemDB that can be used in tests.
 func DefaultContext(key storetypes.StoreKey, tkey storetypes.StoreKey) sdk.Context {
 	db := dbm.NewMemDB()
-	cms := store.NewCommitMultiStore(db)
+	logger := log.NewNopLogger()
+	cms := store.NewCommitMultiStore(db, logger, storemetrics.NewNoOpMetrics())
 	cms.MountStoreWithDB(key, storetypes.StoreTypeIAVL, db)
 	cms.MountStoreWithDB(tkey, storetypes.StoreTypeTransient, db)
 	err := cms.LoadLatestVersion()
 	if err != nil {
 		panic(err)
 	}
-	ctx := sdk.NewContext(cms, tmproto.Header{}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(cms, tmproto.Header{}, false, logger)
 
 	return ctx
 }
@@ -36,7 +38,8 @@ type TestContext struct {
 
 func DefaultContextWithDB(t *testing.T, tkey storetypes.StoreKey, key ...storetypes.StoreKey) TestContext {
 	db := dbm.NewMemDB()
-	cms := store.NewCommitMultiStore(db)
+	logger := log.NewNopLogger()
+	cms := store.NewCommitMultiStore(db, logger, storemetrics.NewNoOpMetrics())
 	for _, storeKey := range key {
 		cms.MountStoreWithDB(storeKey, storetypes.StoreTypeIAVL, db)
 	}
@@ -44,7 +47,7 @@ func DefaultContextWithDB(t *testing.T, tkey storetypes.StoreKey, key ...storety
 	err := cms.LoadLatestVersion()
 	assert.NoError(t, err)
 
-	ctx := sdk.NewContext(cms, tmproto.Header{}, false, log.NewNopLogger())
+	ctx := sdk.NewContext(cms, tmproto.Header{}, false, logger)
 
 	return TestContext{ctx, db, cms}
 }

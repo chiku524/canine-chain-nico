@@ -1,6 +1,7 @@
 package v430_test
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -13,7 +14,7 @@ import (
 	storagetestutil "github.com/jackalLabs/canine-chain/v5/x/storage/testutil"
 	storagemoduletypes "github.com/jackalLabs/canine-chain/v5/x/storage/types"
 
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
+	storetypes "cosmossdk.io/store/types"
 	typesparams "github.com/cosmos/cosmos-sdk/x/params/types"
 	canineglobaltestutil "github.com/jackalLabs/canine-chain/v5/testutil"
 	moduletestutil "github.com/jackalLabs/canine-chain/v5/types/module/testutil" // when importing from sdk,'go mod tidy' keeps trying to import from v0.46.
@@ -40,9 +41,9 @@ func SetupStorageKeeper(t *testing.T) (
 	moduletestutil.TestEncodingConfig,
 	sdk.Context,
 ) {
-	key := sdk.NewKVStoreKey(storagemoduletypes.StoreKey)
+	key := storetypes.NewKVStoreKey(storagemoduletypes.StoreKey)
 	// memStoreKey := storetypes.NewMemoryStoreKey(storagemoduletypes.MemStoreKey)
-	tkey := sdk.NewTransientStoreKey("transient_test")
+	tkey := storetypes.NewTransientStoreKey("transient_test")
 	testCtx := canineglobaltestutil.DefaultContextWithDB(t, tkey, key)
 	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
 
@@ -97,11 +98,11 @@ func SetUpKeepers(t *testing.T) (
 	moduletestutil.TestEncodingConfig,
 	sdk.Context,
 ) {
-	skey := sdk.NewKVStoreKey(storagemoduletypes.StoreKey)
-	fkey := sdk.NewKVStoreKey(types.StoreKey)
+	skey := storetypes.NewKVStoreKey(storagemoduletypes.StoreKey)
+	fkey := storetypes.NewKVStoreKey(types.StoreKey)
 
 	// memStoreKey := storetypes.NewMemoryStoreKey(storagemoduletypes.MemStoreKey)
-	tkey := sdk.NewTransientStoreKey("transient_test")
+	tkey := storetypes.NewTransientStoreKey("transient_test")
 	testCtx := canineglobaltestutil.DefaultContextWithDB(t, tkey, skey, fkey)
 	ctx := testCtx.Ctx.WithBlockHeader(tmproto.Header{Time: tmtime.Now()})
 
@@ -209,7 +210,7 @@ func trackMockBalances(bankKeeper *storagetestutil.MockBankKeeper) {
 
 	// We don't track module account balances.
 	bankKeeper.EXPECT().MintCoins(gomock.Any(), minttypes.ModuleName, gomock.Any()).AnyTimes()
-	bankKeeper.EXPECT().BurnCoins(gomock.Any(), types.ModuleName, gomock.Any()).DoAndReturn(func(_ sdk.Context, _ string, coins sdk.Coins) error {
+	bankKeeper.EXPECT().BurnCoins(gomock.Any(), types.ModuleName, gomock.Any()).DoAndReturn(func(_ context.Context, _ string, coins sdk.Coins) error {
 		newBalance, negative := balances[modAccount.String()].SafeSub(coins...)
 		if negative {
 			return fmt.Errorf("not enough balance")
@@ -220,7 +221,7 @@ func trackMockBalances(bankKeeper *storagetestutil.MockBankKeeper) {
 	bankKeeper.EXPECT().SendCoinsFromModuleToModule(gomock.Any(), minttypes.ModuleName, types.ModuleName, gomock.Any()).AnyTimes()
 
 	// But we do track normal account balances.
-	bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(_ sdk.Context, sender sdk.AccAddress, _ string, coins sdk.Coins) error {
+	bankKeeper.EXPECT().SendCoinsFromAccountToModule(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, sender sdk.AccAddress, _ string, coins sdk.Coins) error {
 		newBalance, negative := balances[sender.String()].SafeSub(coins...) // in v0.46, this method is variadic
 		if negative {
 			return fmt.Errorf("not enough balance")
@@ -228,14 +229,14 @@ func trackMockBalances(bankKeeper *storagetestutil.MockBankKeeper) {
 		balances[sender.String()] = newBalance
 		return nil
 	}).AnyTimes()
-	bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(_ sdk.Context, _ string, rcpt sdk.AccAddress, coins sdk.Coins) error {
+	bankKeeper.EXPECT().SendCoinsFromModuleToAccount(gomock.Any(), gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, _ string, rcpt sdk.AccAddress, coins sdk.Coins) error {
 		balances[rcpt.String()] = balances[rcpt.String()].Add(coins...)
 		return nil
 	}).AnyTimes()
-	bankKeeper.EXPECT().GetAllBalances(gomock.Any(), gomock.Any()).DoAndReturn(func(_ sdk.Context, addr sdk.AccAddress) sdk.Coins {
+	bankKeeper.EXPECT().GetAllBalances(gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, addr sdk.AccAddress) sdk.Coins {
 		return balances[addr.String()]
 	}).AnyTimes()
-	bankKeeper.EXPECT().GetBalance(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(_ sdk.Context, addr sdk.AccAddress, denom string) sdk.Coin {
+	bankKeeper.EXPECT().GetBalance(gomock.Any(), gomock.Any(), gomock.Any()).DoAndReturn(func(_ context.Context, addr sdk.AccAddress, denom string) sdk.Coin {
 		amt := balances[addr.String()].AmountOf(denom)
 		return sdk.NewCoin(denom, amt)
 	}).AnyTimes()

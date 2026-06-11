@@ -10,7 +10,6 @@ import (
 	"github.com/jackalLabs/canine-chain/v5/testutil"
 	"github.com/jackalLabs/canine-chain/v5/x/jklmint/types"
 	"github.com/stretchr/testify/suite"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 )
 
 type MintTestSuite struct {
@@ -26,7 +25,7 @@ func (suite *MintTestSuite) SetupTest() {
 		suite.T().Skip("integration tests require CGO for wasmvm")
 	}
 	app := setup(suite.T())
-	ctx := app.NewContext(false, tmproto.Header{})
+	ctx := app.NewContext(false)
 
 	queryHelper := baseapp.NewQueryServerTestHelper(ctx, app.InterfaceRegistry)
 	types.RegisterQueryServer(queryHelper, app.MintKeeper)

@@ -1,9 +1,10 @@
 package wasmbinding
 
 import (
-	wasmvmtypes "github.com/CosmWasm/wasmvm/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
+	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 
 	filetreekeeper "github.com/jackalLabs/canine-chain/v5/x/filetree/keeper"
@@ -16,7 +17,7 @@ func PerformPostFileTree(s *filetreekeeper.Keeper, ctx sdk.Context, contractAddr
 	}
 
 	if postFileTree.Creator != contractAddr.String() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
 	}
 
 	if err := postFileTree.ValidateBasic(); err != nil {
@@ -26,7 +27,7 @@ func PerformPostFileTree(s *filetreekeeper.Keeper, ctx sdk.Context, contractAddr
 	msgServer := filetreekeeper.NewMsgServerImpl(*s)
 	_, err := msgServer.PostFile(sdk.WrapSDKContext(ctx), postFileTree)
 	if err != nil {
-		return sdkerrors.Wrap(err, "post file tree error from message")
+		return errorsmod.Wrap(err, "post file tree error from message")
 	}
 
 	return nil
@@ -38,7 +39,7 @@ func PerformAddViewers(s *filetreekeeper.Keeper, ctx sdk.Context, contractAddr s
 	}
 
 	if addViewers.Creator != contractAddr.String() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
 	}
 
 	if err := addViewers.ValidateBasic(); err != nil {
@@ -48,7 +49,7 @@ func PerformAddViewers(s *filetreekeeper.Keeper, ctx sdk.Context, contractAddr s
 	msgServer := filetreekeeper.NewMsgServerImpl(*s)
 	_, err := msgServer.AddViewers(sdk.WrapSDKContext(ctx), addViewers)
 	if err != nil {
-		return sdkerrors.Wrap(err, "add viewers error from message")
+		return errorsmod.Wrap(err, "add viewers error from message")
 	}
 
 	return nil
@@ -60,7 +61,7 @@ func PerformPostKey(s *filetreekeeper.Keeper, ctx sdk.Context, contractAddr sdk.
 	}
 
 	if postKey.Creator != contractAddr.String() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
 	}
 
 	if err := postKey.ValidateBasic(); err != nil {
@@ -70,7 +71,7 @@ func PerformPostKey(s *filetreekeeper.Keeper, ctx sdk.Context, contractAddr sdk.
 	msgServer := filetreekeeper.NewMsgServerImpl(*s)
 	_, err := msgServer.PostKey(sdk.WrapSDKContext(ctx), postKey)
 	if err != nil {
-		return sdkerrors.Wrap(err, "post key error from message")
+		return errorsmod.Wrap(err, "post key error from message")
 	}
 
 	return nil
@@ -82,7 +83,7 @@ func PerformDeleteFileTree(s *filetreekeeper.Keeper, ctx sdk.Context, contractAd
 	}
 
 	if deleteFileTree.Creator != contractAddr.String() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
 	}
 
 	if err := deleteFileTree.ValidateBasic(); err != nil {
@@ -92,7 +93,7 @@ func PerformDeleteFileTree(s *filetreekeeper.Keeper, ctx sdk.Context, contractAd
 	msgServer := filetreekeeper.NewMsgServerImpl(*s)
 	_, err := msgServer.DeleteFile(sdk.WrapSDKContext(ctx), deleteFileTree)
 	if err != nil {
-		return sdkerrors.Wrap(err, "delete file tree error from message")
+		return errorsmod.Wrap(err, "delete file tree error from message")
 	}
 
 	return nil
@@ -104,7 +105,7 @@ func PerformRemoveViewers(s *filetreekeeper.Keeper, ctx sdk.Context, contractAdd
 	}
 
 	if removeViewers.Creator != contractAddr.String() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
 	}
 
 	if err := removeViewers.ValidateBasic(); err != nil {
@@ -114,7 +115,7 @@ func PerformRemoveViewers(s *filetreekeeper.Keeper, ctx sdk.Context, contractAdd
 	msgServer := filetreekeeper.NewMsgServerImpl(*s)
 	_, err := msgServer.RemoveViewers(sdk.WrapSDKContext(ctx), removeViewers)
 	if err != nil {
-		return sdkerrors.Wrap(err, "remove viewers error from message")
+		return errorsmod.Wrap(err, "remove viewers error from message")
 	}
 
 	return nil
@@ -126,7 +127,7 @@ func PerformProvisionFileTree(s *filetreekeeper.Keeper, ctx sdk.Context, contrac
 	}
 
 	if provisionFileTree.Creator != contractAddr.String() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
 	}
 
 	if err := provisionFileTree.ValidateBasic(); err != nil {
@@ -136,7 +137,7 @@ func PerformProvisionFileTree(s *filetreekeeper.Keeper, ctx sdk.Context, contrac
 	msgServer := filetreekeeper.NewMsgServerImpl(*s)
 	_, err := msgServer.ProvisionFileTree(sdk.WrapSDKContext(ctx), provisionFileTree)
 	if err != nil {
-		return sdkerrors.Wrap(err, "provision file tree error from message")
+		return errorsmod.Wrap(err, "provision file tree error from message")
 	}
 
 	return nil
@@ -148,7 +149,7 @@ func PerformAddEditors(s *filetreekeeper.Keeper, ctx sdk.Context, contractAddr s
 	}
 
 	if addEditors.Creator != contractAddr.String() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
 	}
 
 	if err := addEditors.ValidateBasic(); err != nil {
@@ -158,7 +159,7 @@ func PerformAddEditors(s *filetreekeeper.Keeper, ctx sdk.Context, contractAddr s
 	msgServer := filetreekeeper.NewMsgServerImpl(*s)
 	_, err := msgServer.AddEditors(sdk.WrapSDKContext(ctx), addEditors)
 	if err != nil {
-		return sdkerrors.Wrap(err, "add editors error from message")
+		return errorsmod.Wrap(err, "add editors error from message")
 	}
 
 	return nil
@@ -170,7 +171,7 @@ func PerformRemoveEditors(s *filetreekeeper.Keeper, ctx sdk.Context, contractAdd
 	}
 
 	if removeEditors.Creator != contractAddr.String() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
 	}
 
 	if err := removeEditors.ValidateBasic(); err != nil {
@@ -180,7 +181,7 @@ func PerformRemoveEditors(s *filetreekeeper.Keeper, ctx sdk.Context, contractAdd
 	msgServer := filetreekeeper.NewMsgServerImpl(*s)
 	_, err := msgServer.RemoveEditors(sdk.WrapSDKContext(ctx), removeEditors)
 	if err != nil {
-		return sdkerrors.Wrap(err, "remove editors error from message")
+		return errorsmod.Wrap(err, "remove editors error from message")
 	}
 
 	return nil
@@ -192,7 +193,7 @@ func PerformResetEditors(s *filetreekeeper.Keeper, ctx sdk.Context, contractAddr
 	}
 
 	if resetEditors.Creator != contractAddr.String() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
 	}
 
 	if err := resetEditors.ValidateBasic(); err != nil {
@@ -202,7 +203,7 @@ func PerformResetEditors(s *filetreekeeper.Keeper, ctx sdk.Context, contractAddr
 	msgServer := filetreekeeper.NewMsgServerImpl(*s)
 	_, err := msgServer.ResetEditors(sdk.WrapSDKContext(ctx), resetEditors)
 	if err != nil {
-		return sdkerrors.Wrap(err, "reset editors error from message")
+		return errorsmod.Wrap(err, "reset editors error from message")
 	}
 
 	return nil
@@ -214,7 +215,7 @@ func PerformResetViewers(s *filetreekeeper.Keeper, ctx sdk.Context, contractAddr
 	}
 
 	if resetViewers.Creator != contractAddr.String() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
 	}
 
 	if err := resetViewers.ValidateBasic(); err != nil {
@@ -224,7 +225,7 @@ func PerformResetViewers(s *filetreekeeper.Keeper, ctx sdk.Context, contractAddr
 	msgServer := filetreekeeper.NewMsgServerImpl(*s)
 	_, err := msgServer.ResetViewers(sdk.WrapSDKContext(ctx), resetViewers)
 	if err != nil {
-		return sdkerrors.Wrap(err, "reset viewers error from message")
+		return errorsmod.Wrap(err, "reset viewers error from message")
 	}
 
 	return nil
@@ -236,7 +237,7 @@ func PerformChangeOwner(s *filetreekeeper.Keeper, ctx sdk.Context, contractAddr 
 	}
 
 	if changeOwner.Creator != contractAddr.String() {
-		return sdkerrors.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
+		return errorsmod.Wrap(sdkerrors.ErrInvalidAddress, "creator of bindings is not bindings contract address")
 	}
 
 	if err := changeOwner.ValidateBasic(); err != nil {
@@ -246,7 +247,7 @@ func PerformChangeOwner(s *filetreekeeper.Keeper, ctx sdk.Context, contractAddr 
 	msgServer := filetreekeeper.NewMsgServerImpl(*s)
 	_, err := msgServer.ChangeOwner(sdk.WrapSDKContext(ctx), changeOwner)
 	if err != nil {
-		return sdkerrors.Wrap(err, "change owner error from message")
+		return errorsmod.Wrap(err, "change owner error from message")
 	}
 
 	return nil

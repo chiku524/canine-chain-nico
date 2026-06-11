@@ -1,3 +1,5 @@
+//go:build simulation
+
 package simulation
 
 import (
@@ -35,7 +37,7 @@ func SimulateMsgBuyStorage(
 
 		var t int64 = 30
 
-		hours := sdk.NewDec(t * 24)
+		hours := sdkmath.LegacyNewDec(t * 24)
 		cost := k.GetStorageCost(ctx, int64(size), hours.TruncateInt64())
 
 		msg.Bytes = int64(size)

@@ -1,9 +1,11 @@
 package utils
 
-import sdk "github.com/cosmos/cosmos-sdk/types"
+import (
+	sdkmath "cosmossdk.io/math"
+)
 
-func int64ToDec(i int64) sdk.Dec {
-	return sdk.NewDecFromInt(sdk.NewInt(i))
+func int64ToDec(i int64) sdkmath.LegacyDec {
+	return sdkmath.LegacyNewDecFromInt(sdkmath.NewInt(i))
 }
 
 func GetMintForBlock(mintedLastBlock int64, blocksPerYear int64, mintDecrease int64) int64 {

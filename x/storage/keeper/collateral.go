@@ -1,7 +1,8 @@
 package keeper
 
 import (
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/jackalLabs/canine-chain/v5/x/storage/types"
 )
@@ -47,7 +48,7 @@ func (k Keeper) RemoveCollateral(
 // GetAllCollateral returns all collaterals
 func (k Keeper) GetAllCollateral(ctx sdk.Context) (list []types.Collateral) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.CollateralKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 

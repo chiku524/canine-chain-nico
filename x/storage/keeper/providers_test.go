@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"fmt"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -51,7 +52,7 @@ func (suite *KeeperTestSuite) TestInitProviders() {
 
 	user := testAddresses[0]
 
-	deposit := sdk.NewCoin("ujkl", sdk.NewInt(10_000_000_000))
+	deposit := sdk.NewCoin("ujkl", sdkmath.NewInt(10_000_000_000))
 
 	coins := sdk.NewCoins(deposit) // Send some coins to their account
 	userAcc, _ := sdk.AccAddressFromBech32(user)

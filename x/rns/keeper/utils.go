@@ -3,6 +3,7 @@ package keeper
 import (
 	"strings"
 
+	errorsmod "cosmossdk.io/errors"
 	sdkerrors "github.com/cosmos/cosmos-sdk/types/errors"
 	"github.com/jackalLabs/canine-chain/v5/x/rns/types"
 )
@@ -53,7 +54,7 @@ func GetCostOfName(name string, tld string) (int64, error) {
 	chars := len(name)
 	switch chars {
 	case 0:
-		return 0, sdkerrors.Wrap(sdkerrors.ErrInvalidRequest, "Must be 1 or more characters.")
+		return 0, errorsmod.Wrap(sdkerrors.ErrInvalidRequest, "Must be 1 or more characters.")
 	case 1:
 		cost = baseCost * 24
 	case 2:

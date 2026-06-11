@@ -1,6 +1,7 @@
 package keeper_test
 
 import (
+	sdkmath "cosmossdk.io/math"
 	"context"
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -20,7 +21,7 @@ func (suite *KeeperTestSuite) TestFindFile() {
 	providerAccount := testAddresses[2]
 	dummyProvider := testAddresses[3]
 
-	coins := sdk.NewCoins(sdk.NewCoin("ujkl", sdk.NewInt(100000000000))) // Send some coins to their account
+	coins := sdk.NewCoins(sdk.NewCoin("ujkl", sdkmath.NewInt(100000000000))) // Send some coins to their account
 	testAcc, _ := sdk.AccAddressFromBech32(testAccount)
 	err = suite.bankKeeper.SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, testAcc, coins)
 	suite.Require().NoError(err)

@@ -1,7 +1,8 @@
 package keeper
 
 import (
-	"github.com/cosmos/cosmos-sdk/store/prefix"
+	storetypes "cosmossdk.io/store/types"
+	"cosmossdk.io/store/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/jackalLabs/canine-chain/v5/x/oracle/types"
 )
@@ -43,7 +44,7 @@ func (k Keeper) RemoveFeed(
 // GetAllFeeds returns all Feed
 func (k Keeper) GetAllFeeds(ctx sdk.Context) (list []types.Feed) {
 	store := prefix.NewStore(ctx.KVStore(k.storeKey), types.KeyPrefix(types.FeedKeyPrefix))
-	iterator := sdk.KVStorePrefixIterator(store, []byte{})
+	iterator := storetypes.KVStorePrefixIterator(store, []byte{})
 
 	defer iterator.Close()
 
