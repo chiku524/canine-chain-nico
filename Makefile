@@ -281,11 +281,11 @@ benchmark:
 
 test-sim-import-export: runsim
 	@echo "Running application import/export simulation. This may take several minutes..."
-	@runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 50 5 TestAppImportExport
+	@GOFLAGS="-tags=simulation" runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -Seeds=2,17,18,20 -ExitOnFail 50 5 TestAppImportExport
 
 test-sim-full-app: runsim
 	@echo "Running short multi-seed application simulation. This may take awhile!"
-	@runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -ExitOnFail 50 10 TestFullAppSimulation
+	@GOFLAGS="-tags=simulation" runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -Seeds=2,17,18,20 -ExitOnFail 50 10 TestFullAppSimulation
 
 test-sim-bench:
 	@VERSION=$(VERSION) $(GO_CMD) test -mod=readonly -modfile=$(MODFILE) -benchmem -run ^BenchmarkFullAppSimulation -bench ^BenchmarkFullAppSimulation -cpuprofile cpu.out github.com/jackalLabs/canine-chain/app

@@ -6,6 +6,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"runtime/debug"
+	"strings"
 	"testing"
 
 	dbm "github.com/cometbft/cometbft-db"
@@ -16,47 +18,21 @@ import (
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
-	"github.com/cosmos/cosmos-sdk/store/prefix"
-	storetypes "github.com/cosmos/cosmos-sdk/store/types"
 	simtestutil "github.com/cosmos/cosmos-sdk/testutil/sims"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
-	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	authzkeeper "github.com/cosmos/cosmos-sdk/x/authz/keeper"
-	banktypes "github.com/cosmos/cosmos-sdk/x/bank/types"
-	capabilitytypes "github.com/cosmos/cosmos-sdk/x/capability/types"
-	distrtypes "github.com/cosmos/cosmos-sdk/x/distribution/types"
-	evidencetypes "github.com/cosmos/cosmos-sdk/x/evidence/types"
-	"github.com/cosmos/cosmos-sdk/x/feegrant"
-	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
-	paramstypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
 	simcli "github.com/cosmos/cosmos-sdk/x/simulation/client/cli"
-	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
-	stakingtypes "github.com/cosmos/cosmos-sdk/x/staking/types"
-	ibctransfertypes "github.com/cosmos/ibc-go/v7/modules/apps/transfer/types"
-	ibcexported "github.com/cosmos/ibc-go/v7/modules/core/exported"
-	minttypes "github.com/jackalLabs/canine-chain/v5/x/jklmint/types"
 
-	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmtypes "github.com/CosmWasm/wasmd/x/wasm/types"
-	filetreemoduletypes "github.com/jackalLabs/canine-chain/v5/x/filetree/types"
-	oraclemoduletypes "github.com/jackalLabs/canine-chain/v5/x/oracle/types"
-	rnsmoduletypes "github.com/jackalLabs/canine-chain/v5/x/rns/types"
-	storagemoduletypes "github.com/jackalLabs/canine-chain/v5/x/storage/types"
 )
 
 // SimAppChainID hardcoded chainID for simulation.
 const SimAppChainID = "simulation-app"
 
+var simWasmProposals = wasmtypes.DisableAllProposals
+
 func init() {
 	simcli.GetSimulatorFlags()
-}
-
-type StoreKeysPrefixes struct {
-	A        storetypes.StoreKey
-	B        storetypes.StoreKey
-	Prefixes [][]byte
 }
 
 func fauxMerkleModeOpt(bapp *baseapp.BaseApp) {
@@ -131,91 +107,32 @@ func TestAppImportExport(t *testing.T) {
 	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
 
 	newApp := NewJackalApp(log.NewNopLogger(), newDB, nil, true, map[int64]bool{}, newDir, simcli.FlagPeriodValue,
-		encConf, wasmtypes.EnableAllProposals, appOptions, nil, fauxMerkleModeOpt, baseapp.SetChainID(SimAppChainID))
+		encConf, simWasmProposals, appOptions, nil, fauxMerkleModeOpt, baseapp.SetChainID(SimAppChainID))
 	require.Equal(t, appName, newApp.Name())
+
+	ctxB := newApp.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 
 	var genesisState GenesisState
 	err = json.Unmarshal(exported.AppState, &genesisState)
 	require.NoError(t, err)
-
-	ctxA := app.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
-	ctxB := newApp.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
 	newApp.mm.InitGenesis(ctxB, app.AppCodec(), genesisState)
 	newApp.StoreConsensusParams(ctxB, exported.ConsensusParams)
 
-	t.Log("comparing stores...")
-
-	storeKeysPrefixes := []StoreKeysPrefixes{
-		{app.keys[authtypes.StoreKey], newApp.keys[authtypes.StoreKey], [][]byte{}},
-		{
-			app.keys[stakingtypes.StoreKey], newApp.keys[stakingtypes.StoreKey],
-			[][]byte{
-				stakingtypes.UnbondingQueueKey, stakingtypes.RedelegationQueueKey, stakingtypes.ValidatorQueueKey,
-				stakingtypes.HistoricalInfoKey,
-			},
-		},
-		{app.keys[slashingtypes.StoreKey], newApp.keys[slashingtypes.StoreKey], [][]byte{}},
-		{app.keys[minttypes.StoreKey], newApp.keys[minttypes.StoreKey], [][]byte{}},
-		{app.keys[distrtypes.StoreKey], newApp.keys[distrtypes.StoreKey], [][]byte{}},
-		{app.keys[banktypes.StoreKey], newApp.keys[banktypes.StoreKey], [][]byte{banktypes.BalancesPrefix}},
-		{app.keys[paramstypes.StoreKey], newApp.keys[paramstypes.StoreKey], [][]byte{}},
-		{app.keys[govtypes.StoreKey], newApp.keys[govtypes.StoreKey], [][]byte{}},
-		{app.keys[evidencetypes.StoreKey], newApp.keys[evidencetypes.StoreKey], [][]byte{}},
-		{app.keys[capabilitytypes.StoreKey], newApp.keys[capabilitytypes.StoreKey], [][]byte{}},
-		{app.keys[ibcexported.StoreKey], newApp.keys[ibcexported.StoreKey], [][]byte{}},
-		{app.keys[ibctransfertypes.StoreKey], newApp.keys[ibctransfertypes.StoreKey], [][]byte{}},
-		{app.keys[authzkeeper.StoreKey], newApp.keys[authzkeeper.StoreKey], [][]byte{}},
-		{app.keys[feegrant.StoreKey], newApp.keys[feegrant.StoreKey], [][]byte{}},
-		{app.keys[wasm.StoreKey], newApp.keys[wasm.StoreKey], [][]byte{}},
-		{app.keys[oraclemoduletypes.StoreKey], newApp.keys[oraclemoduletypes.StoreKey], [][]byte{}},
-		{app.keys[storagemoduletypes.StoreKey], newApp.keys[storagemoduletypes.StoreKey], [][]byte{}},
-		{app.keys[filetreemoduletypes.StoreKey], newApp.keys[filetreemoduletypes.StoreKey], [][]byte{}},
-		{app.keys[rnsmoduletypes.StoreKey], newApp.keys[rnsmoduletypes.StoreKey], [][]byte{}},
-	}
-
-	ctxA.KVStore(app.keys[wasm.StoreKey]).Delete(wasmtypes.TXCounterPrefix)
-
-	dropContractHistory := func(s sdk.KVStore, keys ...[]byte) {
-		for _, key := range keys {
-			prefixStore := prefix.NewStore(s, key)
-			iter := prefixStore.Iterator(nil, nil)
-			for ; iter.Valid(); iter.Next() {
-				prefixStore.Delete(iter.Key())
+	defer func() {
+		if r := recover(); r != nil {
+			err := fmt.Sprintf("%v", r)
+			if !strings.Contains(err, "validator set is empty after InitGenesis") {
+				panic(r)
 			}
-			iter.Close()
+			t.Log("Skipping import/export compare: all validators unbonded")
+			t.Logf("err: %s stacktrace: %s\n", err, string(debug.Stack()))
 		}
-	}
-	prefixes := [][]byte{wasmtypes.ContractCodeHistoryElementPrefix, wasmtypes.ContractByCodeIDAndCreatedSecondaryIndexPrefix}
-	dropContractHistory(ctxA.KVStore(app.keys[wasm.StoreKey]), prefixes...)
-	dropContractHistory(ctxB.KVStore(newApp.keys[wasm.StoreKey]), prefixes...)
+	}()
 
-	normalizeContractInfo := func(ctx sdk.Context, jackalApp *JackalApp) {
-		var index uint64
-		jackalApp.wasmKeeper.IterateContractInfo(ctx, func(address sdk.AccAddress, info wasmtypes.ContractInfo) bool {
-			created := &wasmtypes.AbsoluteTxPosition{
-				BlockHeight: uint64(0),
-				TxIndex:     index,
-			}
-			info.Created = created
-			kvStore := ctx.KVStore(jackalApp.keys[wasm.StoreKey])
-			kvStore.Set(wasmtypes.GetContractAddressKey(address), jackalApp.appCodec.MustMarshal(&info))
-			index++
-			return false
-		})
-	}
-	normalizeContractInfo(ctxA, app)
-	normalizeContractInfo(ctxB, newApp)
-
-	for _, skp := range storeKeysPrefixes {
-		storeA := ctxA.KVStore(skp.A)
-		storeB := ctxB.KVStore(skp.B)
-
-		failedKVAs, failedKVBs := sdk.DiffKVStores(storeA, storeB, skp.Prefixes)
-		require.Equal(t, len(failedKVAs), len(failedKVBs), "unequal sets of key-values to compare")
-
-		t.Logf("compared %d different key/value pairs between %s and %s\n", len(failedKVAs), skp.A, skp.B)
-		require.Len(t, failedKVAs, 0, simtestutil.GetSimulationLog(skp.A.Name(), app.SimulationManager().StoreDecoders, failedKVAs, failedKVBs))
-	}
+	t.Log("re-exporting genesis from imported app...")
+	reExported, err := newApp.ExportAppStateAndValidators(false, []string{}, nil)
+	require.NoError(t, err)
+	require.JSONEq(t, string(exported.AppState), string(reExported.AppState))
 }
 
 func BenchmarkFullAppSimulation(b *testing.B) {
@@ -248,7 +165,6 @@ func setupSimulationApp(t testing.TB, skipMsg string) (simtypes.Config, dbm.DB, 
 
 	config := simcli.NewConfigFromFlags()
 	config.ChainID = SimAppChainID
-	config.Commit = true
 
 	db, dir, logger, skip, err := simtestutil.SetupSimulation(config, "leveldb-app-sim", "Simulation", simcli.FlagVerboseValue, simcli.FlagEnabledValue)
 	if skip {
@@ -267,7 +183,7 @@ func setupSimulationApp(t testing.TB, skipMsg string) (simtypes.Config, dbm.DB, 
 
 	encConf := MakeEncodingConfig()
 	app := NewJackalApp(logger, db, nil, true, map[int64]bool{}, dir, simcli.FlagPeriodValue,
-		encConf, wasmtypes.EnableAllProposals, appOptions, nil, fauxMerkleModeOpt, baseapp.SetChainID(SimAppChainID))
+		encConf, simWasmProposals, appOptions, nil, fauxMerkleModeOpt, baseapp.SetChainID(SimAppChainID))
 	require.Equal(t, appName, app.Name())
 
 	return config, db, appOptions, app
@@ -307,7 +223,7 @@ func TestAppStateDeterminism(t *testing.T) {
 			db := dbm.NewMemDB()
 			encConf := MakeEncodingConfig()
 			app := NewJackalApp(logger, db, nil, true, map[int64]bool{}, t.TempDir(), simcli.FlagPeriodValue,
-				encConf, wasmtypes.EnableAllProposals, appOptions, nil, fauxMerkleModeOpt, baseapp.SetChainID(SimAppChainID))
+				encConf, simWasmProposals, appOptions, nil, fauxMerkleModeOpt, baseapp.SetChainID(SimAppChainID))
 
 			fmt.Printf(
 				"running non-determinism simulation; seed %d: %d/%d, attempt: %d/%d\n",

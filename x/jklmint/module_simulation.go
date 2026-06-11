@@ -27,10 +27,8 @@ func (AppModule) GenerateGenesisState(simState *module.SimulationState) {
 	for i, acc := range simState.Accounts {
 		accs[i] = acc.Address.String()
 	}
-	jklmintGenesis := types.GenesisState{
-		// Params: types.NewParams(sdk.DefaultBondDenom, 4, 6),
-	}
-	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(&jklmintGenesis)
+	jklmintGenesis := types.DefaultGenesis()
+	simState.GenState[types.ModuleName] = simState.Cdc.MustMarshalJSON(jklmintGenesis)
 }
 
 // ProposalContents doesn't return any content functions for governance proposals

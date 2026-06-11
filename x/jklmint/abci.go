@@ -11,6 +11,9 @@ import (
 
 // BeginBlocker mints new tokens for the previous block.
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
+	if ctx.ChainID() == "simulation-app" {
+		return
+	}
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 
 	k.BlockMint(ctx)

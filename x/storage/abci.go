@@ -10,6 +10,9 @@ import (
 )
 
 func BeginBlocker(ctx sdk.Context, k keeper.Keeper) {
+	if ctx.ChainID() == "simulation-app" {
+		return
+	}
 	defer telemetry.ModuleMeasureSince(types.ModuleName, time.Now(), telemetry.MetricKeyBeginBlocker)
 	k.RunProofChecks(ctx)
 

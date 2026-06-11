@@ -337,6 +337,7 @@ func NewJackalApp(
 		oraclemoduletypes.MemStoreKey,
 		storagemoduletypes.MemStoreKey,
 		rnsmoduletypes.MemStoreKey,
+		filetreemoduletypes.MemStoreKey,
 		notificationsmoduletypes.MemStoreKey,
 	)
 
@@ -473,13 +474,13 @@ func NewJackalApp(
 	)
 
 	app.FileTreeKeeper = *filetreemodulekeeper.NewKeeper(
-		appCodec, keys[filetreemoduletypes.StoreKey], keys[filetreemoduletypes.MemStoreKey],
+		appCodec, keys[filetreemoduletypes.StoreKey], memKeys[filetreemoduletypes.MemStoreKey],
 		app.GetSubspace(filetreemoduletypes.ModuleName),
 	)
 	filetreeModule := filetreemodule.NewAppModule(appCodec, app.FileTreeKeeper, app.AccountKeeper, app.BankKeeper)
 
 	app.NotificationsKeeper = *notificationsmodulekeeper.NewKeeper(
-		appCodec, keys[notificationsmoduletypes.StoreKey], keys[notificationsmoduletypes.MemStoreKey],
+		appCodec, keys[notificationsmoduletypes.StoreKey], memKeys[notificationsmoduletypes.MemStoreKey],
 		app.GetSubspace(notificationsmoduletypes.ModuleName), app.RnsKeeper,
 	)
 	notificationsModule := notificationsmodule.NewAppModule(appCodec, app.NotificationsKeeper, app.AccountKeeper, app.BankKeeper)
@@ -636,9 +637,9 @@ func NewJackalApp(
 	app.registerTestnetUpgradeHandlers()
 	app.registerMainnetUpgradeHandlers()
 
-	overrideModules := map[string]module.AppModuleSimulation{
+	overrideModules := simulationOverrides(map[string]module.AppModuleSimulation{
 		authtypes.ModuleName: auth.NewAppModule(appCodec, app.AccountKeeper, authsims.RandomGenesisAccounts, app.GetSubspace(authtypes.ModuleName)),
-	}
+	}, app.mm.Modules)
 	app.sm = module.NewSimulationManagerFromAppModules(app.mm.Modules, overrideModules)
 	app.sm.RegisterStoreDecoders()
 

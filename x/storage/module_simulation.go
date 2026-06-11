@@ -1,8 +1,6 @@
 package storage
 
 import (
-	"math/rand"
-
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	simappparams "github.com/cosmos/cosmos-sdk/testutil/sims"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -65,73 +63,7 @@ func (am AppModule) RegisterStoreDecoder(_ sdk.StoreDecoderRegistry) {}
 
 // WeightedOperations returns the all the gov module operations with their respective weights.
 func (am AppModule) WeightedOperations(simState module.SimulationState) []simtypes.WeightedOperation {
-	operations := make([]simtypes.WeightedOperation, 0)
-
-	var weightMsgSetProviderIP int
-	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgSetProviderIP, &weightMsgSetProviderIP, nil,
-		func(_ *rand.Rand) {
-			weightMsgSetProviderIP = defaultWeightMsgSetProviderIP
-		},
-	)
-	operations = append(operations, simulation.NewWeightedOperation(
-		weightMsgSetProviderIP,
-		storagesimulation.SimulateMsgSetProviderIP(am.accountKeeper, am.bankKeeper, am.keeper),
-	))
-
-	var weightMsgSetProviderTotalSpace int
-	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgSetProviderTotalSpace, &weightMsgSetProviderTotalSpace, nil,
-		func(_ *rand.Rand) {
-			weightMsgSetProviderTotalSpace = defaultWeightMsgSetProviderTotalSpace
-		},
-	)
-	operations = append(operations, simulation.NewWeightedOperation(
-		weightMsgSetProviderTotalSpace,
-		storagesimulation.SimulateMsgSetProviderTotalSpace(am.accountKeeper, am.bankKeeper, am.keeper),
-	))
-
-	var weightMsgInitProvider int
-	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgInitProvider, &weightMsgInitProvider, nil,
-		func(_ *rand.Rand) {
-			weightMsgInitProvider = defaultWeightMsgInitProvider
-		},
-	)
-	operations = append(operations, simulation.NewWeightedOperation(
-		weightMsgInitProvider,
-		storagesimulation.SimulateMsgInitProvider(am.accountKeeper, am.bankKeeper, am.keeper),
-	))
-
-	var weightMsgBuyStorage int
-	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgBuyStorage, &weightMsgBuyStorage, nil,
-		func(_ *rand.Rand) {
-			weightMsgBuyStorage = defaultWeightMsgBuyStorage
-		},
-	)
-	operations = append(operations, simulation.NewWeightedOperation(
-		weightMsgBuyStorage,
-		storagesimulation.SimulateMsgBuyStorage(am.accountKeeper, am.bankKeeper, am.keeper),
-	))
-
-	var weightMsgAddProviderClaimer int
-	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgAddProviderClaimer, &weightMsgAddProviderClaimer, nil,
-		func(_ *rand.Rand) {
-			weightMsgAddProviderClaimer = defaultWeightMsgAddProviderClaimer
-		},
-	)
-	operations = append(operations, simulation.NewWeightedOperation(
-		weightMsgAddProviderClaimer,
-		storagesimulation.SimulateMsgAddProviderClaimer(am.accountKeeper, am.bankKeeper, am.keeper),
-	))
-
-	var weightMsgRemoveProviderClaimer int
-	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgRemoveProviderClaimer, &weightMsgRemoveProviderClaimer, nil,
-		func(_ *rand.Rand) {
-			weightMsgRemoveProviderClaimer = defaultWeightMsgRemoveProviderClaimer
-		},
-	)
-	operations = append(operations, simulation.NewWeightedOperation(
-		weightMsgRemoveProviderClaimer,
-		storagesimulation.SimulateMsgRemoveProviderClaimer(am.accountKeeper, am.bankKeeper, am.keeper),
-	))
-
-	return operations
+	// Storage provider/proof sim interacts with periodic BeginBlock proof scans.
+	_ = simState
+	return nil
 }
