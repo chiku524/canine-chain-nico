@@ -1,7 +1,7 @@
 package wasmbinding
 
 import (
-	wasmvmtypes "github.com/CosmWasm/wasmvm/v2/types"
+	wasmvmtypes "github.com/CosmWasm/wasmvm/v3/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 
 	errorsmod "cosmossdk.io/errors"

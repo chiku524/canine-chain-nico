@@ -4,7 +4,7 @@ import (
 	"context"
 	"encoding/json"
 
-	"cosmossdk.io/store/prefix"
+	"github.com/cosmos/cosmos-sdk/store/v2/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/query"
 	"github.com/jackalLabs/canine-chain/v5/x/storage/types"

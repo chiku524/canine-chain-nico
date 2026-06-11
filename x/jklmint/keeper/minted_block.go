@@ -1,7 +1,7 @@
 package keeper
 
 import (
-	"cosmossdk.io/store/prefix"
+	"github.com/cosmos/cosmos-sdk/store/v2/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/jackalLabs/canine-chain/v5/x/jklmint/types"
 )

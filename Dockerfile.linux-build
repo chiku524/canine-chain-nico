@@ -1,6 +1,6 @@
 # Dockerfile for building canined for Linux with CGO/wasmvm support.
 # Build context: repository root (canine-chain-nico).
-FROM golang:1.23.8-bookworm
+FROM golang:1.25.9-bookworm
 
 ARG GOARCH=amd64
 ARG GOOS=linux

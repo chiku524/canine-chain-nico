@@ -1,10 +1,10 @@
 package keeper
 
 import (
-	storetypes "cosmossdk.io/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"fmt"
 
-	"cosmossdk.io/store/prefix"
+	"github.com/cosmos/cosmos-sdk/store/v2/prefix"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/jackalLabs/canine-chain/v5/x/notifications/types"
 )

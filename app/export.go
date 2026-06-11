@@ -7,7 +7,7 @@ import (
 
 	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 
-	storetypes "cosmossdk.io/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	servertypes "github.com/cosmos/cosmos-sdk/server/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	slashingtypes "github.com/cosmos/cosmos-sdk/x/slashing/types"
@@ -69,8 +69,6 @@ func (app *JackalApp) prepForZeroHeightGenesis(ctx sdk.Context, jailAllowedAddrs
 		}
 		allowedAddrsMap[addr] = true
 	}
-
-	app.crisisKeeper.AssertInvariants(ctx)
 
 	err := app.stakingKeeper.IterateValidators(ctx, func(_ int64, val stakingtypes.ValidatorI) (stop bool) {
 		valBz, err := app.stakingKeeper.ValidatorAddressCodec().StringToBytes(val.GetOperator())

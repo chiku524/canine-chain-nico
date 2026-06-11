@@ -2,7 +2,6 @@ package main
 
 import (
 	"errors"
-	"io"
 	"os"
 
 	"github.com/cosmos/cosmos-sdk/client"
@@ -19,7 +18,6 @@ import (
 	"github.com/cosmos/cosmos-sdk/version"
 	authcmd "github.com/cosmos/cosmos-sdk/x/auth/client/cli"
 	authtypes "github.com/cosmos/cosmos-sdk/x/auth/types"
-	"github.com/cosmos/cosmos-sdk/x/crisis"
 	genutilcli "github.com/cosmos/cosmos-sdk/x/genutil/client/cli"
 	storage "github.com/jackalLabs/canine-chain/v5/x/storage/client/cli"
 	"github.com/prometheus/client_golang/prometheus"
@@ -28,7 +26,7 @@ import (
 	tmcli "github.com/cometbft/cometbft/libs/cli"
 	tmcfg "github.com/cometbft/cometbft/config"
 	dbm "github.com/cosmos/cosmos-db"
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 
 	"github.com/CosmWasm/wasmd/x/wasm"
 	wasmkeeper "github.com/CosmWasm/wasmd/x/wasm/keeper"
@@ -121,7 +119,6 @@ func initRootCmd(rootCmd *cobra.Command, encodingConfig params.EncodingConfig) {
 }
 
 func addModuleInitFlags(startCmd *cobra.Command) {
-	crisis.AddModuleInitFlags(startCmd)
 	wasm.AddModuleInitFlags(startCmd)
 }
 
@@ -184,7 +181,6 @@ type appCreator struct {
 func (ac appCreator) newApp(
 	logger log.Logger,
 	db dbm.DB,
-	traceStore io.Writer,
 	appOpts servertypes.AppOptions,
 ) servertypes.Application {
 	baseappOptions := server.DefaultBaseappOptions(appOpts)
@@ -194,7 +190,7 @@ func (ac appCreator) newApp(
 		wasmOpts = append(wasmOpts, wasmkeeper.WithVMCacheMetrics(prometheus.DefaultRegisterer))
 	}
 
-	return app.NewJackalApp(logger, db, traceStore, true, map[int64]bool{},
+	return app.NewJackalApp(logger, db, nil, true, map[int64]bool{},
 		cast.ToString(appOpts.Get(flags.FlagHome)),
 		cast.ToUint(appOpts.Get(server.FlagInvCheckPeriod)),
 		ac.encCfg,
@@ -208,7 +204,6 @@ func (ac appCreator) newApp(
 func (ac appCreator) appExport(
 	logger log.Logger,
 	db dbm.DB,
-	traceStore io.Writer,
 	height int64,
 	forZeroHeight bool,
 	jailAllowedAddrs []string,
@@ -226,7 +221,7 @@ func (ac appCreator) appExport(
 	wasmApp = app.NewJackalApp(
 		logger,
 		db,
-		traceStore,
+		nil,
 		loadLatest,
 		map[int64]bool{},
 		homePath,

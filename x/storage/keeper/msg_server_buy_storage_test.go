@@ -11,33 +11,11 @@ import (
 var buystoragemerkle = []byte("lessstoragemerkle")
 
 func (suite *KeeperTestSuite) TestBuyStorage() {
-	suite.SetupSuite()
-	msgSrvr, k, ctx := setupMsgServer(suite)
-
 	testAddresses, err := testutil.CreateTestAddresses("jkl", 2)
 	suite.Require().NoError(err)
 
 	testAccount := testAddresses[0]
 	depoAccount := testAddresses[1]
-
-	coins := sdk.NewCoins(sdk.NewCoin("ujkl", sdkmath.NewInt(100000000000))) // Send some coins to their account
-	testAcc, _ := sdk.AccAddressFromBech32(testAccount)
-	err = suite.bankKeeper.SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, testAcc, coins)
-	suite.Require().NoError(err)
-
-	suite.storageKeeper.SetParams(suite.ctx, types.Params{
-		DepositAccount:         depoAccount,
-		ProofWindow:            50,
-		ChunkSize:              1024,
-		PriceFeed:              "jklprice",
-		MissesToBurn:           3,
-		MaxContractAgeInBlocks: 100,
-		PricePerTbPerMonth:     15,
-		CollateralPrice:        2,
-		CheckWindow:            11,
-		ReferralCommission:     25,
-		PolRatio:               40,
-	})
 
 	cases := []struct {
 		testName  string
@@ -57,8 +35,8 @@ func (suite *KeeperTestSuite) TestBuyStorage() {
 					SpaceUsed:      5_000_000_000,
 					Address:        testAccount,
 				}
-				k.SetStoragePaymentInfo(suite.ctx, initialPayInfo)
-				k.SetFile(suite.ctx, types.UnifiedFile{
+				suite.storageKeeper.SetStoragePaymentInfo(suite.ctx, initialPayInfo)
+				suite.storageKeeper.SetFile(suite.ctx, types.UnifiedFile{
 					Merkle:   buystoragemerkle,
 					FileSize: 5_000_000_000,
 					Owner:    testAccount,
@@ -82,8 +60,8 @@ func (suite *KeeperTestSuite) TestBuyStorage() {
 					SpaceUsed: 5_000_000_000,
 					Address:   testAccount,
 				}
-				k.SetStoragePaymentInfo(suite.ctx, initialPayInfo)
-				k.SetFile(suite.ctx, types.UnifiedFile{
+				suite.storageKeeper.SetStoragePaymentInfo(suite.ctx, initialPayInfo)
+				suite.storageKeeper.SetFile(suite.ctx, types.UnifiedFile{
 					Merkle:   buystoragemerkle,
 					FileSize: 5_000_000_000,
 					Owner:    testAccount,
@@ -109,8 +87,8 @@ func (suite *KeeperTestSuite) TestBuyStorage() {
 					SpaceUsed:      5_000_000_000,
 					Address:        testAccount,
 				}
-				k.SetStoragePaymentInfo(suite.ctx, initialPayInfo)
-				k.SetFile(suite.ctx, types.UnifiedFile{
+				suite.storageKeeper.SetStoragePaymentInfo(suite.ctx, initialPayInfo)
+				suite.storageKeeper.SetFile(suite.ctx, types.UnifiedFile{
 					Merkle:   buystoragemerkle,
 					FileSize: 5_000_000_000,
 					Owner:    testAccount,
@@ -222,7 +200,21 @@ func (suite *KeeperTestSuite) TestBuyStorage() {
 
 		suite.Run(tc.testName, func() {
 			suite.reset()
-			msgSrvr, k, ctx = setupMsgServer(suite)
+			msgSrvr, _, ctx := setupMsgServer(suite)
+
+			suite.storageKeeper.SetParams(suite.ctx, types.Params{
+				DepositAccount:         depoAccount,
+				ProofWindow:            50,
+				ChunkSize:              1024,
+				PriceFeed:              "jklprice",
+				MissesToBurn:           3,
+				MaxContractAgeInBlocks: 100,
+				PricePerTbPerMonth:     15,
+				CollateralPrice:        2,
+				CheckWindow:            11,
+				ReferralCommission:     25,
+				PolRatio:               40,
+			})
 
 			coins := sdk.NewCoins(sdk.NewCoin("ujkl", sdkmath.NewInt(100000000000)))
 			testAcc, _ := sdk.AccAddressFromBech32(testAccount)
@@ -255,8 +247,8 @@ func (suite *KeeperTestSuite) TestBuyStorage() {
 				suite.Require().Equal(tc.tokens, diff)
 			}
 
-			k.RemoveStoragePaymentInfo(suite.ctx, testAccount)
-			k.RemoveFile(suite.ctx, buystoragemerkle, testAccount, 0)
+			suite.storageKeeper.RemoveStoragePaymentInfo(suite.ctx, testAccount)
+			suite.storageKeeper.RemoveFile(suite.ctx, buystoragemerkle, testAccount, 0)
 		})
 	}
 	suite.reset()

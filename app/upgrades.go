@@ -1,7 +1,7 @@
 package app
 
 import (
-	upgradetypes "cosmossdk.io/x/upgrade/types"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/jackalLabs/canine-chain/v5/app/upgrades"
 	"github.com/jackalLabs/canine-chain/v5/app/upgrades/bouncybulldog"
 	v121 "github.com/jackalLabs/canine-chain/v5/app/upgrades/testnet/121"
@@ -28,6 +28,7 @@ import (
 	v600 "github.com/jackalLabs/canine-chain/v5/app/upgrades/v600"
 	v610 "github.com/jackalLabs/canine-chain/v5/app/upgrades/v610"
 	v620 "github.com/jackalLabs/canine-chain/v5/app/upgrades/v620"
+	v630 "github.com/jackalLabs/canine-chain/v5/app/upgrades/v630"
 )
 
 func (app *JackalApp) registerTestnetUpgradeHandlers() {
@@ -60,6 +61,7 @@ func (app *JackalApp) registerMainnetUpgradeHandlers() {
 	app.registerUpgrade(v600.NewUpgrade(app.mm, app.configurator, app.paramsKeeper, app.ConsensusParamsKeeper))
 	app.registerUpgrade(v610.NewUpgrade(app.mm, app.configurator))
 	app.registerUpgrade(v620.NewUpgrade(app.mm, app.configurator))
+	app.registerUpgrade(v630.NewUpgrade(app.mm, app.configurator))
 }
 
 // registerUpgrade registers the given upgrade to be supported by the app

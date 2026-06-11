@@ -5,8 +5,8 @@ Living roadmap and checklist for bringing **canine-chain** in line with the supp
 | Field | Value |
 |-------|-------|
 | **Last updated** | 2026-06-11 |
-| **Active branch** | `feat/cosmos-modernization-phase3` |
-| **Current phase** | Phase 3 — SDK 0.53 (`v620`) in progress |
+| **Active branch** | `feat/cosmos-modernization-phase4` |
+| **Current phase** | Phase 4 — SDK 0.54 (`v630`) complete |
 | **North-star target** | [2026.1 release family](https://docs.cosmos.network/sdk/latest/release-family) (SDK **0.54.x**, not 0.55) |
 | **Validation strategy** | Fork-only: code + CI + sim until **0.54**; defer Jackal testnet/mainnet until then |
 
@@ -20,8 +20,8 @@ Jackal public testnet/mainnet are **deferred** until the fork reaches SDK **0.54
 |-------|---------------|-----|-------|--------|--------|--------|
 | 1 ✓ | `v600` | 0.47 | 0.45 | 1.5.x | v7 | `master` |
 | 2 ✓ | `v610` | 0.50 | 0.53.3 | 2.1.x | v8 | `feat/cosmos-modernization-phase2` |
-| 3 → | `v620` | 0.53 | 0.60.1 | 2.2.x | v10 | `feat/cosmos-modernization-phase3` |
-| 4 | `v630` | 0.54 | 0.70 | 3.x | v11 | `feat/cosmos-modernization-phase4` |
+| 3 ✓ | `v620` | 0.53 | 0.60.1 | 2.2.x | v10 | `feat/cosmos-modernization-phase3` |
+| 4 ✓ | `v630` | 0.54 | 0.70 | 3.x | v11 | `feat/cosmos-modernization-phase4` |
 
 After Phase 4: private testnet (`jackal-nico-1`) → optional Jackal public testnet → mainnet governance.
 
@@ -94,6 +94,7 @@ Chronological notes; append new entries at the top.
 
 | Date | Phase | Notes |
 |------|-------|-------|
+| 2026-06-11 | Phase 4 | SDK 0.54.3 / wasmd 0.70.0 / wasmvm v3.0.4 / ibc-go v11 / CometBFT 0.39.3 / store/v2; removed x/crisis + x/circuit; `v630` handler; build + `make test-unit` green in Docker (Go 1.25). |
 | 2026-06-11 | Phase 3 | SDK 0.53.5 / wasmd 0.60.1 / wasmvm v2.2.4 / ibc-go v10.5.0; removed x/capability + ibc-fee; `v620` handler; build + `make test-unit` green in Docker. |
 | 2026-06-08 | Phase 2 | SDK 0.50.9 / wasmd 0.53.3 / wasmvm v2.1.4 / ibc-go v8; `v610` handler; build + `make test-unit` green in Docker; CI wasmvm v2. |
 | 2026-06-11 | Phase 2 | Started fork-only path to 0.54; branch `feat/cosmos-modernization-phase2`; target wasmd 0.53.3 / SDK 0.50.9 / ibc-go v8. |

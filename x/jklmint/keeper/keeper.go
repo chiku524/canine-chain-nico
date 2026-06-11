@@ -5,9 +5,9 @@ import (
 	"math/big"
 
 	sdkmath "cosmossdk.io/math"
-	"cosmossdk.io/log"
+	"cosmossdk.io/log/v2"
 	"github.com/cosmos/cosmos-sdk/codec"
-	storetypes "cosmossdk.io/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	paramtypes "github.com/cosmos/cosmos-sdk/x/params/types"
 	"github.com/jackalLabs/canine-chain/v5/x/jklmint/types"

@@ -14,10 +14,10 @@ import (
 
 	notificationsmoduletypes "github.com/jackalLabs/canine-chain/v5/x/notifications/types"
 
-	storetypes "cosmossdk.io/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	upgradetypes "cosmossdk.io/x/upgrade/types"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 	"github.com/jackalLabs/canine-chain/v5/app/upgrades"
 	filetreemodulekeeper "github.com/jackalLabs/canine-chain/v5/x/filetree/keeper"
 	storagekeeper "github.com/jackalLabs/canine-chain/v5/x/storage/keeper"

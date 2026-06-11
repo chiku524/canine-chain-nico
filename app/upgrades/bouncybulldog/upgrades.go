@@ -2,7 +2,7 @@ package bouncybulldog
 
 import (
 	"context"
-	storetypes "cosmossdk.io/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/jackalLabs/canine-chain/v5/app/upgrades"
 	"github.com/jackalLabs/canine-chain/v5/types"
 	filetreemoduletypes "github.com/jackalLabs/canine-chain/v5/x/filetree/types"
@@ -14,7 +14,7 @@ import (
 
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
-	upgradetypes "cosmossdk.io/x/upgrade/types"
+	upgradetypes "github.com/cosmos/cosmos-sdk/x/upgrade/types"
 )
 
 var _ upgrades.Upgrade = &Upgrade{}

@@ -29,7 +29,7 @@
 
 ```sh
 # Linux amd64 — version from go.mod (Phase 1: v1.5.9; Phase 2+: v2.x from releases/)
-WASMVM_VERSION=$(go list -m -f '{{.Version}}' github.com/CosmWasm/wasmvm/v2 2>/dev/null \
+WASMVM_VERSION=$(go list -m -f '{{.Version}}' github.com/CosmWasm/wasmvm/v3 2>/dev/null \
   || go list -m -f '{{.Version}}' github.com/CosmWasm/wasmvm)
 sudo wget -q "https://github.com/CosmWasm/wasmvm/releases/download/${WASMVM_VERSION}/libwasmvm.x86_64.so" \
   -O /usr/lib/libwasmvm.x86_64.so
@@ -54,7 +54,7 @@ make install
 [Releases](https://github.com/JackalLabs/canine-chain/releases) — download the latest release for your network. Install the **wasmvm** shared library version that matches the release (see `go.mod` and [docs/COSMOS-MODERNIZATION.md](docs/COSMOS-MODERNIZATION.md)):
 
 ```sh
-WASMVM_VERSION=$(go list -m -f '{{.Version}}' github.com/CosmWasm/wasmvm/v2 2>/dev/null \
+WASMVM_VERSION=$(go list -m -f '{{.Version}}' github.com/CosmWasm/wasmvm/v3 2>/dev/null \
   || go list -m -f '{{.Version}}' github.com/CosmWasm/wasmvm)
 sudo wget -q "https://github.com/CosmWasm/wasmvm/releases/download/${WASMVM_VERSION}/libwasmvm.x86_64.so" \
   -O /usr/lib/libwasmvm.x86_64.so

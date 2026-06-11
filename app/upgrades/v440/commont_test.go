@@ -16,7 +16,7 @@ import (
 	storagetestutil "github.com/jackalLabs/canine-chain/v5/x/storage/testutil"
 	storagemoduletypes "github.com/jackalLabs/canine-chain/v5/x/storage/types"
 
-	storetypes "cosmossdk.io/store/types"
+	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	typesparams "github.com/cosmos/cosmos-sdk/x/params/types"
 	canineglobaltestutil "github.com/jackalLabs/canine-chain/v5/testutil"
 	moduletestutil "github.com/jackalLabs/canine-chain/v5/types/module/testutil" // when importing from sdk,'go mod tidy' keeps trying to import from v0.46.
