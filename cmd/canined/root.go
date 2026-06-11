@@ -253,7 +253,7 @@ func initTendermintConfig() *tmcfg.Config {
 func initAppConfig() (string, interface{}) {
 	type CustomAppConfig struct {
 		serverconfig.Config
-		Wasm wasmtypes.WasmConfig `mapstructure:"wasm"`
+		Wasm wasmtypes.NodeConfig `mapstructure:"wasm"`
 	}
 
 	srvCfg := serverconfig.DefaultConfig()
@@ -261,7 +261,7 @@ func initAppConfig() (string, interface{}) {
 
 	customAppConfig := CustomAppConfig{
 		Config: *srvCfg,
-		Wasm:   wasmtypes.DefaultWasmConfig(),
+		Wasm:   wasmtypes.DefaultNodeConfig(),
 	}
 
 	customAppTemplate := serverconfig.DefaultConfigTemplate + wasmtypes.DefaultConfigTemplate()

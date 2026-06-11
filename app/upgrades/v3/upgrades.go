@@ -6,7 +6,6 @@ import (
 	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	upgradetypes "cosmossdk.io/x/upgrade/types"
-	ibcfeetypes "github.com/cosmos/ibc-go/v8/modules/apps/29-fee/types"
 	"github.com/jackalLabs/canine-chain/v5/app/upgrades"
 	storagekeeper "github.com/jackalLabs/canine-chain/v5/x/storage/keeper"
 
@@ -56,7 +55,7 @@ func (u *Upgrade) Handler() upgradetypes.UpgradeHandler {
 func (u *Upgrade) StoreUpgrades() *storetypes.StoreUpgrades {
 	return &storetypes.StoreUpgrades{
 		Added: []string{
-			ibcfeetypes.StoreKey,
+			"feeibc",
 		},
 		Deleted: []string{
 			"intertx", // legacy interchain-accounts inter-tx module store

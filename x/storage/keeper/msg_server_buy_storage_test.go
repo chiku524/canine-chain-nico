@@ -221,6 +221,14 @@ func (suite *KeeperTestSuite) TestBuyStorage() {
 		tc := tcs
 
 		suite.Run(tc.testName, func() {
+			suite.reset()
+			msgSrvr, k, ctx = setupMsgServer(suite)
+
+			coins := sdk.NewCoins(sdk.NewCoin("ujkl", sdkmath.NewInt(100000000000)))
+			testAcc, _ := sdk.AccAddressFromBech32(testAccount)
+			err = suite.bankKeeper.SendCoinsFromModuleToAccount(suite.ctx, types.ModuleName, testAcc, coins)
+			suite.Require().NoError(err)
+
 			if tc.preRun != nil {
 				tc.preRun()
 			}
