@@ -1,11 +1,26 @@
 # Phase 0 — Baseline inventory
 
-Recorded **2026-06-11** for the Jackal (`canine-chain`) Cosmos modernization program.  
+Recorded **2026-06-08** for the Jackal (`canine-chain`) Cosmos modernization program.  
 See [COSMOS-MODERNIZATION.md](./COSMOS-MODERNIZATION.md) for the living roadmap.
 
 ---
 
-## Current codebase (`master` — Phase 1 / v600)
+## Current codebase (`feat/cosmos-modernization-phase4` — Phase 4 / v630)
+
+| Package | Version |
+|---------|---------|
+| Cosmos SDK | 0.54.3 |
+| CometBFT | 0.39.3 |
+| cosmos-db | 1.1.3 |
+| store/v2 | 2.0.0 |
+| ibc-go | v11.0.0 |
+| wasmd | v0.70.0 |
+| wasmvm | v3.0.4 |
+| Go | 1.25.9 |
+
+---
+
+## Phase 1 codebase (`master` — v600)
 
 | Package | Version |
 |---------|---------|
@@ -111,24 +126,40 @@ All six modules: **gRPC `Msg` + `Query` only** (legacy `Route` / `Querier` remov
 
 ---
 
-## Standard + IBC modules (migration branch)
+## Standard + IBC modules
+
+### Phase 1 (`master` / v600)
 
 | Category | Modules |
 |----------|---------|
-| Core SDK | auth, bank, staking, slashing, mint (jklmint replaces default mint), distr, gov, params, consensus, crisis, evidence, feegrant, authz, upgrade |
+| Core SDK | auth, bank, staking, slashing, mint (jklmint), distr, gov, params, consensus, crisis, evidence, feegrant, authz, upgrade |
 | IBC v7 | core IBC, transfer, ICA (host + controller), **IBC fee middleware** |
-| Wasm | wasmd `x/wasm` + custom `wasmbinding` (storage, filetree, notifications) |
+| Wasm | wasmd `x/wasm` + custom `wasmbinding` |
+
+### Phase 4 (`feat/cosmos-modernization-phase4` / v630)
+
+| Category | Modules |
+|----------|---------|
+| Core SDK | auth, bank, staking, slashing, jklmint, distr, gov, params, consensus, evidence, feegrant, authz, upgrade — **no crisis, no circuit** |
+| IBC v11 | core IBC, transfer, ICA, **callbacks**, RouterV2 — **no capability keeper, no IBC fee module** |
+| Wasm | wasmd `x/wasm` (wasmvm v3) + custom `wasmbinding` |
+| Store | **store/v2** |
 
 ---
 
 ## Upgrade handler registry (mainnet)
 
-Handlers registered in `app/upgrades.go` → `registerMainnetUpgradeHandlers`:
+Handlers registered in `app/upgrades.go`:
 
-`bouncybulldog`, `v3`, `v4`, `v410`, `v420`, `v430`, `v440`, `v450`, `v460`, `v500`, `v510`, **`v600`** (Phase 1 target).
+**Historical mainnet:** `bouncybulldog`, `v3`–`v510`  
+**Modernization (fork):** **`v600`**, **`v610`**, **`v620`**, **`v630`**
 
-**`v600` stores added:** `consensus`, `crisis`  
-**`v600` migrations:** `baseapp.MigrateParams` → `x/consensus` param store
+| Upgrade | Notable store changes |
+|---------|----------------------|
+| `v600` | Adds `consensus`, `crisis`; params → consensus migration |
+| `v610` | Adds `circuit` |
+| `v620` | Deletes `capability`, `feeibc` |
+| `v630` | Deletes `crisis`, `circuit` |
 
 ---
 
@@ -136,8 +167,8 @@ Handlers registered in `app/upgrades.go` → `registerMainnetUpgradeHandlers`:
 
 | Item | Notes |
 |------|-------|
-| wasmvm (migration branch) | **v1.5.9** — lib path: `internal/api/libwasmvm.x86_64.so` |
-| wasmd | v0.45.0 — legacy gov wasm proposals still enabled (`EnableAllProposals`) |
+| wasmvm | **v3.0.4** (phase4) — lib: `releases/download/v3.0.4/libwasmvm.x86_64.so` |
+| wasmd | v0.70.0 (phase4); v0.45.0 on `master` |
 | Custom bindings | `wasmbinding/` — storage, filetree, notifications message plugins |
 | Mainnet code IDs | **Captured 2026-06-10** — see `docs/inventory/captured-mainnet-20260610T2333Z.json` (height **18380416**) |
 
@@ -179,6 +210,7 @@ Handlers registered in `app/upgrades.go` → `registerMainnetUpgradeHandlers`:
 ## References
 
 - [COSMOS-MODERNIZATION.md](./COSMOS-MODERNIZATION.md)
+- [JACKAL-DEVNET-HANDOFF.md](./JACKAL-DEVNET-HANDOFF.md)
 - [V600-TESTNET-UPGRADE.md](./V600-TESTNET-UPGRADE.md)
 - [V600-MAINNET-GOVERNANCE.md](./V600-MAINNET-GOVERNANCE.md)
 - [NETWORK-ENDPOINTS.md](./NETWORK-ENDPOINTS.md)

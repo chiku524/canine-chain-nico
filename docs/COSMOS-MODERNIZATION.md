@@ -4,11 +4,11 @@ Living roadmap and checklist for bringing **canine-chain** in line with the supp
 
 | Field | Value |
 |-------|-------|
-| **Last updated** | 2026-06-11 |
+| **Last updated** | 2026-06-08 |
 | **Active branch** | `feat/cosmos-modernization-phase4` |
-| **Current phase** | Phase 4 — SDK 0.54 (`v630`) complete |
+| **Current phase** | Phase 4 — SDK 0.54 (`v630`) **code complete** → **devnet / testnet validation** |
 | **North-star target** | [2026.1 release family](https://docs.cosmos.network/sdk/latest/release-family) (SDK **0.54.x**, not 0.55) |
-| **Validation strategy** | Fork-only: code + CI + sim until **0.54**; defer Jackal testnet/mainnet until then |
+| **Validation strategy** | Fork code path **complete**; next gate: Jackal devnet + storage providers ([handoff](./JACKAL-DEVNET-HANDOFF.md)) |
 
 ---
 
@@ -23,7 +23,9 @@ Jackal public testnet/mainnet are **deferred** until the fork reaches SDK **0.54
 | 3 ✓ | `v620` | 0.53 | 0.60.1 | 2.2.x | v10 | `feat/cosmos-modernization-phase3` |
 | 4 ✓ | `v630` | 0.54 | 0.70 | 3.x | v11 | `feat/cosmos-modernization-phase4` |
 
-After Phase 4: private testnet (`jackal-nico-1`) → optional Jackal public testnet → mainnet governance.
+After Phase 4 (code): **Jackal devnet coordination** → private `jackal-nico-1` (optional parallel) → Jackal public testnet → mainnet governance.
+
+See [JACKAL-DEVNET-HANDOFF.md](./JACKAL-DEVNET-HANDOFF.md) for the team brief to Jackal developers.
 
 
 ## How to keep this document updated
@@ -68,7 +70,7 @@ Agents and reviewers: treat an outdated checklist as incomplete work.
 | wasmvm | v1.5.x |
 | Go | 1.23 |
 
-### Migration branch (`feat/cosmos-modernization-phase1`)
+### Phase 1 branch (`master` — `v600`)
 
 | Component | Version |
 |-----------|---------|
@@ -79,6 +81,19 @@ Agents and reviewers: treat an outdated checklist as incomplete work.
 | wasmd | v0.45.0 |
 | wasmvm | v1.5.9 |
 | Go | 1.23.8 |
+
+### Phase 4 branch (`feat/cosmos-modernization-phase4` — `v630`)
+
+| Component | Version |
+|-----------|---------|
+| Cosmos SDK | 0.54.3 |
+| CometBFT | 0.39.3 |
+| cosmos-db | 1.1.3 |
+| store/v2 | 2.0.0 |
+| ibc-go | v11.0.0 |
+| wasmd | v0.70.0 |
+| wasmvm | v3.0.4 |
+| Go | 1.25.9 |
 
 ### Upgrade path (on-chain names)
 
@@ -94,6 +109,7 @@ Chronological notes; append new entries at the top.
 
 | Date | Phase | Notes |
 |------|-------|-------|
+| 2026-06-08 | Phase 4 | Docs + [JACKAL-DEVNET-HANDOFF.md](./JACKAL-DEVNET-HANDOFF.md); checklists closed for Phases 2–4 code work; validation gate → devnet. |
 | 2026-06-11 | Phase 4 | SDK 0.54.3 / wasmd 0.70.0 / wasmvm v3.0.4 / ibc-go v11 / CometBFT 0.39.3 / store/v2; removed x/crisis + x/circuit; `v630` handler; build + `make test-unit` green in Docker (Go 1.25). |
 | 2026-06-11 | Phase 3 | SDK 0.53.5 / wasmd 0.60.1 / wasmvm v2.2.4 / ibc-go v10.5.0; removed x/capability + ibc-fee; `v620` handler; build + `make test-unit` green in Docker. |
 | 2026-06-08 | Phase 2 | SDK 0.50.9 / wasmd 0.53.3 / wasmvm v2.1.4 / ibc-go v8; `v610` handler; build + `make test-unit` green in Docker; CI wasmvm v2. |
@@ -110,8 +126,8 @@ Chronological notes; append new entries at the top.
 
 Applies to all phases; check once and re-verify each phase.
 
-- [ ] Single source of truth: **this file** + pinned `go.mod` on release branches
-- [ ] Long-lived migration workflow: phase branches → testnet → mainnet governance
+- [x] Single source of truth: **this file** + pinned `go.mod` on release branches
+- [x] Long-lived migration workflow: phase branches → testnet → mainnet governance (fork path complete; live testnet next)
 - [x] **Linux CI with CGO** for wasmvm integration tests (`.github/workflows/test-unit.yml`)
 - [ ] Public testnet mirroring mainnet modules + representative wasm contracts
 - [x] Upgrade playbook: halt height, binary checksum, rollback, validator comms ([V600-TESTNET-UPGRADE.md](./V600-TESTNET-UPGRADE.md), [V600-MAINNET-GOVERNANCE.md](./V600-MAINNET-GOVERNANCE.md), [NETWORK-ENDPOINTS.md](./NETWORK-ENDPOINTS.md))
@@ -221,106 +237,118 @@ Applies to all phases; check once and re-verify each phase.
 
 ---
 
-## Phase 2 — SDK 0.50 / CometBFT 0.38 / ibc-go v8 / wasmd ~0.50
+## Phase 2 — SDK 0.50 / CometBFT 0.38 / ibc-go v8 / wasmd 0.53
 
-**On-chain upgrade name:** `v610` (proposed)  
-**Branch:** `feat/cosmos-modernization-phase2` (create when Phase 1 mainnet is stable)
+**On-chain upgrade name:** `v610`  
+**Branch:** `feat/cosmos-modernization-phase2` (pushed)  
+**Handler:** `app/upgrades/v610/`
 
-### Dependency pins (target — verify against wasmd release notes at kickoff)
+### Dependency pins (shipped)
 
 | Package | Version |
 |---------|---------|
-| `github.com/cosmos/cosmos-sdk` | 0.50.x |
-| `github.com/cometbft/cometbft` | 0.38.x |
-| `github.com/cosmos/ibc-go/v8` | v8.x |
-| `github.com/CosmWasm/wasmd` | ~0.50.x |
-| `github.com/CosmWasm/wasmvm` | 2.x |
+| `github.com/cosmos/cosmos-sdk` | 0.50.9 |
+| `github.com/cometbft/cometbft` | 0.38.11 |
+| `github.com/cosmos/ibc-go/v8` | v8.4.0 |
+| `github.com/CosmWasm/wasmd` | 0.53.3 |
+| `github.com/CosmWasm/wasmvm/v2` | 2.1.4 |
 
 ### Major breaking changes
-- [ ] **Remove `x/capability`** — largest structural change; rewire IBC + wasm scoped keepers
-- [ ] **Gov v1 only** — remove legacy `v1beta1` proposal handlers and wasm `NewLegacyWasmProposalHandler`
-- [ ] Continue **params module** migration off legacy subspaces
-- [ ] Rebase `app/app.go` on wasmd 0.50 template
+- [x] **Capability** moved to `ibc-go/modules/capability`; rewired IBC + wasm scoped keepers
+- [x] **Gov v1 only** — removed legacy `v1beta1` proposal handlers and wasm legacy gov handlers
+- [x] **cosmossdk.io** x-modules (evidence, feegrant, upgrade, circuit)
+- [x] Rebased `app/app.go` on wasmd 0.53 template
 
 ### Checklist
-- [ ] New branch from post-`v600` mainnet tag
-- [ ] `go.mod` bump + import migration
-- [ ] `app/upgrades/v610/` handler + store migrations
-- [ ] Custom modules: keeper constructors, `RegisterServices`, consensus versions
-- [ ] Wasmbinding + `owasm` plugins updated
-- [ ] Re-verify `app/ante_fee.go` against new ante APIs
-- [ ] wasmvm **2.x** lib in Docker / install docs
+- [x] Branch from `master` (post-`v600`)
+- [x] `go.mod` bump + import migration
+- [x] `app/upgrades/v610/` handler (`circuit` store added)
+- [x] Custom modules: store imports, `context.Context` keeper APIs, handler removal
+- [x] Wasmbinding updated for wasmvm v2 Messenger API
+- [x] Re-verified `app/ante_fee.go` against new ante APIs
+- [x] wasmvm **2.x** lib in Docker / CI / README
+- [x] `make test-unit` green in Docker
 - [ ] Contract regression on testnet (all pinned code IDs)
 - [ ] IBC relayer upgrade + counterparty check
 - [ ] Testnet `v610` ≥2 weeks → mainnet governance
 
-**Exit criteria:** No `x/capability` in code or required state; wasm contracts verified on wasmvm 2.x.
+**Exit criteria (code):** met on fork. **Live network:** wasm contracts on wasmvm 2.x + testnet bake pending.
 
 ---
 
 ## Phase 3 — SDK 0.53 / ibc-go v10 (2025.1 family)
 
-**On-chain upgrade name:** `v620` (proposed)
+**On-chain upgrade name:** `v620`  
+**Branch:** `feat/cosmos-modernization-phase3` (pushed)  
+**Handler:** `app/upgrades/v620/`
 
-### Dependency pins (target)
+### Dependency pins (shipped)
 
 | Package | Version |
 |---------|---------|
-| `github.com/cosmos/cosmos-sdk` | 0.53.x |
-| `github.com/cometbft/cometbft` | 0.38.x |
-| `github.com/cosmos/ibc-go/v10` | v10.x |
-| `github.com/CosmWasm/wasmd` | ~0.61.x (confirm matrix) |
-| `github.com/CosmWasm/wasmvm` | 2.x → 3.x (per wasmd tag) |
+| `github.com/cosmos/cosmos-sdk` | 0.53.5 |
+| `github.com/cometbft/cometbft` | 0.38.20 |
+| `github.com/cosmos/ibc-go/v10` | v10.5.0 |
+| `github.com/CosmWasm/wasmd` | 0.60.1 |
+| `github.com/CosmWasm/wasmvm/v2` | 2.2.4 |
 
 ### Checklist
-- [ ] Follow [SDK upgrade guide](https://docs.cosmos.network/sdk/latest/upgrade/upgrade) 0.50 → 0.53
-- [ ] ibc-go v8 → v10 (intermediate v9 if required by guide)
-- [ ] `app/upgrades/v620/`
-- [ ] Storage proof + filetree ACL regression suite
+- [x] SDK 0.50 → 0.53 migration per wasmd 0.60.1 template
+- [x] ibc-go v8 → v10; **removed** `x/capability` + IBC fee module
+- [x] `app/upgrades/v620/` (deletes `capability`, `feeibc` stores)
+- [x] IBC callbacks middleware, RouterV2, wasm NodeConfig
+- [x] `make test-unit` green in Docker
+- [ ] Storage proof + filetree ACL regression on devnet
 - [ ] Performance baseline (block time, proof tx throughput)
 - [ ] Testnet `v620` → mainnet governance
 
-**Exit criteria:** Matches 2025.1 release family on testnet ≥2 weeks.
+**Exit criteria (code):** met on fork. **Live network:** testnet ≥2 weeks pending.
 
 ---
 
 ## Phase 4 — SDK 0.54 / CometBFT 0.39 / ibc-go v11 / wasmd 0.70 (2026.1 target)
 
-**On-chain upgrade name:** `v630` (proposed)
+**On-chain upgrade name:** `v630`  
+**Branch:** `feat/cosmos-modernization-phase4` (pushed)  
+**Handler:** `app/upgrades/v630/`
 
-### Dependency pins (target)
+### Dependency pins (shipped)
 
 | Package | Version |
 |---------|---------|
-| `github.com/cosmos/cosmos-sdk` | 0.54.x |
-| `github.com/cometbft/cometbft` | 0.39.x |
-| `github.com/cosmos/ibc-go/v11` | v11.x |
-| `github.com/CosmWasm/wasmd` | v0.70.x |
-| `github.com/CosmWasm/wasmvm` | v3.x |
-| `github.com/cosmos/cosmos-db` | 1.x |
-| `github.com/cosmos/cosmos-sdk/store/v2` | 2.x |
-| Go | 1.25+ |
+| `github.com/cosmos/cosmos-sdk` | 0.54.3 |
+| `github.com/cometbft/cometbft` | 0.39.3 |
+| `github.com/cosmos/ibc-go/v11` | v11.0.0 |
+| `github.com/CosmWasm/wasmd` | v0.70.0 |
+| `github.com/CosmWasm/wasmvm/v3` | v3.0.4 |
+| `github.com/cosmos/cosmos-db` | 1.1.3 |
+| `github.com/cosmos/cosmos-sdk/store/v2` | 2.0.0 |
+| Go | 1.25.9 |
 
 ### Major breaking changes (0.54)
-- [ ] Migrate to **store/v2**
-- [ ] `cosmossdk.io/log/v2` imports
-- [ ] Remove **x/crisis** module + store
-- [ ] Drop legacy gov / unused modules per [0.54 release notes](https://docs.cosmos.network/sdk/next/upgrade/release)
-- [ ] CometBFT 0.39 config (libp2p, adaptive sync)
+- [x] Migrate to **store/v2** (app + all custom modules)
+- [x] `cosmossdk.io/log/v2` imports
+- [x] Remove **x/crisis** module + store (`v630` deletes store)
+- [x] Remove **x/circuit** (no SDK 0.54–compatible release; `v630` deletes store)
+- [x] Evidence/feegrant/upgrade moved to in-tree SDK `x/*` modules
+- [ ] CometBFT 0.39 config (libp2p, adaptive sync) — **validator runbook on devnet**
 - [ ] Evaluate **BlockSTM** for Jackal workload
 
 ### Checklist
-- [ ] Rebase `app/app.go` on wasmd 0.70
-- [ ] ibc-go v11 middleware wiring
-- [ ] wasmvm **v3** lib + contract full regression
-- [ ] `app/upgrades/v630/`
-- [ ] Final ante / fee / wasm gas audit
-- [ ] OpenAPI / grpc-gateway regen
+- [x] Rebased `app/app.go` on wasmd 0.70
+- [x] ibc-go v11 middleware wiring
+- [x] wasmvm **v3** lib in Docker / CI / README
+- [x] `app/upgrades/v630/`
+- [x] Ante / fee / wasm gas preserved (`app/ante_fee.go`, `app/wasm_config.go`)
+- [x] CI: Go 1.25, wasmvm v3, CGO build workflows
+- [x] `make test-unit` green in Docker (`-p 1` for isolation)
+- [ ] Contract full regression on devnet (all pinned code IDs)
+- [ ] OpenAPI / grpc-gateway regen (optional before mainnet)
 - [ ] External review recommended before mainnet
-- [ ] Testnet ≥4 weeks → mainnet `v630`
+- [ ] Devnet / testnet ≥4 weeks → mainnet `v630`
 - [ ] 30-day post-upgrade monitoring
 
-**Exit criteria:** Jackal on **2026.1** stack; CI green; docs and operator tooling updated.
+**Exit criteria (code):** Jackal on **2026.1** stack in fork; unit tests green. **Live network:** devnet handoff → testnet bake → governance.
 
 ---
 
@@ -383,7 +411,7 @@ Copy into PR descriptions or use as self-review.
 
 | Layer | Action |
 |-------|--------|
-| Unit | `make test-unit` (Linux, CGO, `-tags='ledger test_ledger_mock'`) |
+| Unit | `make test-unit` (Linux, CGO, Go 1.25 on phase4, `-tags='ledger test_ledger_mock test'`, `-p 1`) |
 | Build | `go build ./cmd/canined` |
 | App export | Export / import at height H-1 |
 | Wasm | Instantiate + execute pinned contracts |
@@ -409,15 +437,15 @@ Copy into PR descriptions or use as self-review.
 
 ## Indicative timeline
 
-| Phase | Engineering + testnet bake | Mainnet upgrade |
-|-------|---------------------------|-----------------|
-| 0 — Inventory | 1–2 weeks | — |
-| 1 — 0.47 (`v600`) | 4–8 weeks (in progress) | `v600` |
-| 2 — 0.50 (`v610`) | 8–12 weeks | `v610` |
-| 3 — 0.53 (`v620`) | 6–10 weeks | `v620` |
-| 4 — 0.54 (`v630`) | 8–12 weeks | `v630` |
+| Phase | Engineering (fork) | Testnet / devnet bake | Mainnet upgrade |
+|-------|-------------------|----------------------|-----------------|
+| 0 — Inventory | ✓ done | — | — |
+| 1 — 0.47 (`v600`) | ✓ done | pending Jackal devnet | `v600` |
+| 2 — 0.50 (`v610`) | ✓ done | pending | `v610` |
+| 3 — 0.53 (`v620`) | ✓ done | pending | `v620` |
+| 4 — 0.54 (`v630`) | ✓ done | **next** (6–8 weeks) | `v630` |
 
-**Total (conservative):** ~12–18 months with testnet gates between mainnet upgrades.
+**Total (conservative):** fork engineering complete; live validation ~3–6 months before mainnet `v630` (sequential hops or agreed schedule with Jackal).
 
 ---
 

@@ -6,15 +6,16 @@ Use this fork as a **separate chain** from Jackal public testnet/mainnet. No han
 |-------|-----------------|
 | Chain ID | `jackal-nico-1` |
 | Bech32 prefix | `jkl` (same as Jackal — or change in `app/app.go` if you want isolation) |
-| Upgrade name for SDK 0.47 | `v600` |
-| Purpose | Validate modernization before upstream merge |
+| **Binary branch** | `feat/cosmos-modernization-phase4` (SDK 0.54 / `v630`) |
+| Upgrade ladder | `v600` → `v610` → `v620` → `v630` (sequential; see [COSMOS-MODERNIZATION.md](./COSMOS-MODERNIZATION.md)) |
+| Purpose | Validate modernization before upstream merge / Jackal devnet coordination |
 
 ---
 
 ## Why a private testnet?
 
-- Jackal public testnet is operated by the core team; your fork can ship **`v600` immediately** on infrastructure you control.
-- Proves export/import, wasm, storage proofs, and upgrade handler without waiting for governance on `jackal-1`.
+- Jackal public testnet is operated by the core team; your fork can run **`v630` (0.54)** on infrastructure you control while coordinating with Jackal devnet ([handoff](./JACKAL-DEVNET-HANDOFF.md)).
+- Proves export/import, wasmvm v3 contracts, storage proofs, and sequential upgrade handlers without waiting for governance on `jackal-1`.
 - Becomes the evidence package when you open a PR to [JackalLabs/canine-chain](https://github.com/JackalLabs/canine-chain).
 
 ---
@@ -24,7 +25,8 @@ Use this fork as a **separate chain** from Jackal public testnet/mainnet. No han
 Three-validator net on one machine:
 
 ```bash
-# WSL, after bootstrap-wsl-dev.sh and make install
+# WSL or Linux — Go 1.25+, CGO, wasmvm v3 (see README)
+git checkout feat/cosmos-modernization-phase4
 make install
 ./scripts/multinode-local-testnet.sh
 ```
@@ -48,7 +50,9 @@ Or init and start together:
 START=1 ./scripts/init-nico-testnet.sh
 ```
 
-Submit a **`v600`** upgrade proposal once the node is running:
+For a **full migration rehearsal**, schedule upgrades in order: `v600` → `v610` → `v620` → `v630` (handlers in `app/upgrades/`). For **0.54-only smoke**, start directly on the phase4 binary and test module behavior without historical state.
+
+`v600` proposal helper (if starting from 0.47 genesis path):
 
 ```bash
 ./scripts/submit-v600-upgrade-proposal.sh
@@ -81,7 +85,7 @@ canined start --home $HOME_DIR
 ## Option C — Cloud VPS testnet (multi-validator)
 
 1. Provision 3+ Linux VPS (Ubuntu 22.04, 4 vCPU, 200 GB disk).
-2. On each: run `scripts/bootstrap-wsl-dev.sh` equivalent (apt + wasmvm + build).
+2. On each: run `scripts/bootstrap-wsl-dev.sh` equivalent (apt + **wasmvm v3** + Go **1.25** + build).
 3. Build once: `make build-linux` → distribute `canined-linux-amd64` + checksum.
 4. Validator 1: `init` + `gentx` + `collect-gentxs` → share `genesis.json`.
 5. Validators 2–3: `init` + `gentx` → merge via `collect-gentxs` on validator 1.
@@ -111,4 +115,4 @@ Manual matrix: `docs/V600-TESTNET-UPGRADE.md` §5.
 | Jackal public testnet | Jackal team | Optional cross-check after private bake |
 | **`jackal-nico-1`** | **You** | Primary modernization testbed |
 
-After ≥2 weeks stable on `jackal-nico-1`, use results to support upstream PR and eventual Jackal mainnet governance.
+After ≥2 weeks stable on `jackal-nico-1` (or Jackal devnet), use results in [JACKAL-DEVNET-HANDOFF.md](./JACKAL-DEVNET-HANDOFF.md) to support upstream PR and eventual Jackal mainnet governance.

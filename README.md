@@ -11,18 +11,19 @@
 1. [Modules](x/README.md)
 2. [Tokens](TOKENS.md)
 3. [Storage Providers](cmd/canined/README.md)
-4. [**Cosmos stack modernization**](docs/COSMOS-MODERNIZATION.md) — living roadmap & checklist (SDK 0.47 → 0.54)
-5. [Phase 0 inventory](docs/PHASE0-INVENTORY.md)
-6. [v600 testnet upgrade playbook](docs/V600-TESTNET-UPGRADE.md)
-7. [v600 mainnet governance template](docs/V600-MAINNET-GOVERNANCE.md)
-8. [Public network endpoints](docs/NETWORK-ENDPOINTS.md)
-9. [Windows dev setup (WSL / Docker)](docs/WINDOWS-DEV.md)
-10. [Private testnet (fork-owned)](docs/PRIVATE-TESTNET.md)
+4. [**Cosmos stack modernization**](docs/COSMOS-MODERNIZATION.md) — living roadmap (Phases 1–4 **code complete**)
+5. [**Jackal devnet handoff**](docs/JACKAL-DEVNET-HANDOFF.md) — team brief for Jackal developer coordination
+6. [Phase 0 inventory](docs/PHASE0-INVENTORY.md)
+7. [v600 testnet upgrade playbook](docs/V600-TESTNET-UPGRADE.md)
+8. [v600 mainnet governance template](docs/V600-MAINNET-GOVERNANCE.md)
+9. [Public network endpoints](docs/NETWORK-ENDPOINTS.md)
+10. [Windows dev setup (WSL / Docker)](docs/WINDOWS-DEV.md)
+11. [Private testnet (fork-owned)](docs/PRIVATE-TESTNET.md)
 
 
 ## Installing the Canine CLI
 ### Prerequisites
-* **Go 1.23.8** on `master` (Phase 1 / v600; see `go.mod`; north-star 0.54 stack: Go 1.25+)
+* **Go 1.25.9** on `feat/cosmos-modernization-phase4` (SDK 0.54); **Go 1.23.8** on `master` (Phase 1 / v600)
 * GNU Make and a C toolchain (`build-essential` on Debian/Ubuntu)
 * **CGO enabled** for `canined` and wasm tests (`CGO_ENABLED=1`)
 * **wasmvm shared library** matching `go.mod`:
