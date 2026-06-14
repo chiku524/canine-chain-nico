@@ -200,7 +200,8 @@ func (suite *KeeperTestSuite) TestBuyStorage() {
 
 		suite.Run(tc.testName, func() {
 			suite.reset()
-			msgSrvr, _, ctx := setupMsgServer(suite)
+			msgSrvr := suite.msgSrvr
+			ctx := sdk.WrapSDKContext(suite.ctx)
 
 			suite.storageKeeper.SetParams(suite.ctx, types.Params{
 				DepositAccount:         depoAccount,

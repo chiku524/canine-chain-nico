@@ -14,11 +14,15 @@
 4. [**Cosmos stack modernization**](docs/COSMOS-MODERNIZATION.md) — living roadmap (Phases 1–4 **code complete**)
 5. [**Jackal devnet handoff**](docs/JACKAL-DEVNET-HANDOFF.md) — team brief for Jackal developer coordination
 6. [Phase 0 inventory](docs/PHASE0-INVENTORY.md)
-7. [v600 testnet upgrade playbook](docs/V600-TESTNET-UPGRADE.md)
-8. [v600 mainnet governance template](docs/V600-MAINNET-GOVERNANCE.md)
-9. [Public network endpoints](docs/NETWORK-ENDPOINTS.md)
-10. [Windows dev setup (WSL / Docker)](docs/WINDOWS-DEV.md)
-11. [Private testnet (fork-owned)](docs/PRIVATE-TESTNET.md)
+7. [v630 testnet upgrade playbook](docs/V630-TESTNET-UPGRADE.md) — SDK 0.54 devnet validation
+8. [v610 / v620 upgrade notes](docs/V610-V620-UPGRADE-NOTES.md)
+9. [CometBFT 0.39 validator guide](docs/COMETBFT-039-VALIDATOR.md)
+10. [Cosmovisor upgrade ladder](docs/COSMOVISOR-LADDER.md)
+11. [v600 testnet upgrade playbook](docs/V600-TESTNET-UPGRADE.md)
+12. [v600 mainnet governance template](docs/V600-MAINNET-GOVERNANCE.md)
+13. [Public network endpoints](docs/NETWORK-ENDPOINTS.md)
+14. [Windows dev setup (WSL / Docker)](docs/WINDOWS-DEV.md)
+15. [Private testnet (fork-owned)](docs/PRIVATE-TESTNET.md)
 
 
 ## Installing the Canine CLI
@@ -69,13 +73,18 @@ You may also need to run `sudo chmod +x canined` inside the executables director
 make test
 ```
 
-### v600 candidate verification (Linux + CGO)
+### v630 candidate verification (Linux + CGO, phase4 branch)
 
 ```shell
-./scripts/verify-v600-candidate.sh
+git checkout feat/cosmos-modernization-phase4
+./scripts/verify-v630-candidate.sh            # SKIP_SIM=1 for faster run
 ./scripts/capture-chain-inventory.sh          # mainnet wasm + IBC snapshot
-NETWORK=testnet ./scripts/capture-chain-inventory.sh
+RESET=1 ./scripts/init-nico-testnet.sh      # private jackal-nico-1
+CHAIN_ID=jackal-nico-1 NODE=http://127.0.0.1:26657 KEY=validator \
+  ./scripts/smoke-v630-testnet.sh
 ```
+
+Phase 1 (`master`): `./scripts/verify-v600-candidate.sh`
 
 ## Version Map
 

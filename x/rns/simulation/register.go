@@ -5,6 +5,7 @@ package simulation
 import (
 	"math/rand"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	appparams "github.com/jackalLabs/canine-chain/v5/app/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -43,7 +44,7 @@ func SimulateMsgRegister(
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "Could not grab the cost of name"), nil, err
 		}
 
-		price := sdk.NewInt(domainCost * int64(numYears))
+		price := sdkmath.NewInt(domainCost * int64(numYears))
 
 		// ensuring the account has enough coins to buy the domain
 		jBalance := bk.GetBalance(ctx, simAccount.Address, "ujkl")
@@ -90,7 +91,6 @@ func SimulateMsgRegister(
 			TxGen:         appparams.MakeEncodingConfig().TxConfig,
 			Cdc:           nil,
 			Msg:           msg,
-			MsgType:       msg.Type(),
 			Context:       ctx,
 			SimAccount:    simAccount,
 			AccountKeeper: ak,

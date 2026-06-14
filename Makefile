@@ -268,7 +268,7 @@ test-all: test-race test-cover
 test-sim: test-sim-import-export test-sim-full-app
 
 test-unit:
-	@VERSION=$(VERSION) $(GO_CMD) test -short -p 1 -mod=readonly -modfile=$(MODFILE) -tags='ledger test_ledger_mock test' ./...
+	@VERSION=$(VERSION) $(GO_CMD) test -short -p 1 -count=1 -shuffle=off -mod=readonly -modfile=$(MODFILE) -tags='ledger test_ledger_mock test' ./...
 
 test-race:
 	@VERSION=$(VERSION) $(GO_CMD) test -mod=readonly -modfile=$(MODFILE) -race -tags='ledger test_ledger_mock test' ./...
@@ -281,17 +281,18 @@ benchmark:
 
 test-sim-import-export: runsim
 	@echo "Running application import/export simulation. This may take several minutes..."
-	@GOFLAGS="-tags=simulation" runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -Seeds=2,17,18,20 -ExitOnFail 50 5 TestAppImportExport
+	@GOFLAGS="-tags=simulation" $(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -Seeds=2,17,18,20 -ExitOnFail 50 5 TestAppImportExport
 
 test-sim-full-app: runsim
 	@echo "Running short multi-seed application simulation. This may take awhile!"
-	@GOFLAGS="-tags=simulation" runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -Seeds=2,17,18,20 -ExitOnFail 50 10 TestFullAppSimulation
+	@GOFLAGS="-tags=simulation" $(BINDIR)/runsim -Jobs=4 -SimAppPkg=$(SIMAPP) -Seeds=2,17,18,20 -ExitOnFail 50 10 TestFullAppSimulation
 
 test-sim-bench:
 	@VERSION=$(VERSION) $(GO_CMD) test -mod=readonly -modfile=$(MODFILE) -benchmem -run ^BenchmarkFullAppSimulation -bench ^BenchmarkFullAppSimulation -cpuprofile cpu.out github.com/jackalLabs/canine-chain/app
 
 runsim:
-	$(GO_CMD) install github.com/cosmos/tools/cmd/runsim@latest
+	@mkdir -p $(BINDIR)
+	GOBIN=$(BINDIR) $(GO_CMD) install github.com/cosmos/tools/cmd/runsim@latest
 
 ########################################
 ###             Linting              ###

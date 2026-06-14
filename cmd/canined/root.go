@@ -38,14 +38,14 @@ import (
 // NewRootCmd creates a new root command for wasmd. It is called once in the
 // main function.
 func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
-	encodingConfig := app.MakeEncodingConfig()
-
 	cfg := sdk.GetConfig()
 	cfg.SetBech32PrefixForAccount(app.Bech32PrefixAccAddr, app.Bech32PrefixAccPub)
 	cfg.SetBech32PrefixForValidator(app.Bech32PrefixValAddr, app.Bech32PrefixValPub)
 	cfg.SetBech32PrefixForConsensusNode(app.Bech32PrefixConsAddr, app.Bech32PrefixConsPub)
 	cfg.SetAddressVerifier(wasmtypes.VerifyAddressLen())
 	cfg.Seal()
+
+	encodingConfig := app.MakeEncodingConfig()
 
 	initClientCtx := client.Context{}.
 		WithCodec(encodingConfig.Marshaler).

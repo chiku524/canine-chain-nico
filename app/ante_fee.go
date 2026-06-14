@@ -177,8 +177,8 @@ func (dfd JackalDeductFeeDecorator) checkDeductFee(ctx sdk.Context, sdkTx sdk.Tx
 	}
 
 	if !fee.IsZero() && !isFreeStorageTx(sdkTx) {
-		if err := ante.DeductFees(dfd.bankKeeper, ctx, deductFeesFromAcc, fee); err != nil {
-			return err
+		if err := dfd.bankKeeper.SendCoinsFromAccountToModule(ctx, deductFeesFromAcc.GetAddress(), authtypes.FeeCollectorName, fee); err != nil {
+			return errorsmod.Wrapf(sdkerrors.ErrInsufficientFunds, "%s", err.Error())
 		}
 	}
 

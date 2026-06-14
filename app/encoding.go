@@ -8,7 +8,7 @@ import (
 
 // MakeEncodingConfig creates a new EncodingConfig with all modules registered
 func MakeEncodingConfig() params.EncodingConfig {
-	encodingConfig := params.MakeEncodingConfig()
+	encodingConfig := params.MakeEncodingConfigWithBech32(Bech32Prefix, Bech32PrefixValAddr)
 	std.RegisterLegacyAminoCodec(encodingConfig.Amino)
 	std.RegisterInterfaces(encodingConfig.InterfaceRegistry)
 	ModuleBasics.RegisterLegacyAminoCodec(encodingConfig.Amino)

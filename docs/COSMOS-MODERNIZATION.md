@@ -109,6 +109,7 @@ Chronological notes; append new entries at the top.
 
 | Date | Phase | Notes |
 |------|-------|-------|
+| 2026-06-08 | Pre-devnet | v630 verify/smoke scripts, upgrade playbooks, CometBFT 0.39 guide, Cosmovisor ladder, merkletree audit, mainnet v5.1 go.mod archive, runsim PATH fix. |
 | 2026-06-08 | Phase 4 | Docs + [JACKAL-DEVNET-HANDOFF.md](./JACKAL-DEVNET-HANDOFF.md); checklists closed for Phases 2–4 code work; validation gate → devnet. |
 | 2026-06-11 | Phase 4 | SDK 0.54.3 / wasmd 0.70.0 / wasmvm v3.0.4 / ibc-go v11 / CometBFT 0.39.3 / store/v2; removed x/crisis + x/circuit; `v630` handler; build + `make test-unit` green in Docker (Go 1.25). |
 | 2026-06-11 | Phase 3 | SDK 0.53.5 / wasmd 0.60.1 / wasmvm v2.2.4 / ibc-go v10.5.0; removed x/capability + ibc-fee; `v620` handler; build + `make test-unit` green in Docker. |
@@ -129,12 +130,12 @@ Applies to all phases; check once and re-verify each phase.
 - [x] Single source of truth: **this file** + pinned `go.mod` on release branches
 - [x] Long-lived migration workflow: phase branches → testnet → mainnet governance (fork path complete; live testnet next)
 - [x] **Linux CI with CGO** for wasmvm integration tests (`.github/workflows/test-unit.yml`)
-- [ ] Public testnet mirroring mainnet modules + representative wasm contracts
+- [ ] Public testnet mirroring mainnet modules + representative wasm contracts (Jackal devnet — [JACKAL-DEVNET-HANDOFF.md](./JACKAL-DEVNET-HANDOFF.md))
 - [x] Upgrade playbook: halt height, binary checksum, rollback, validator comms ([V600-TESTNET-UPGRADE.md](./V600-TESTNET-UPGRADE.md), [V600-MAINNET-GOVERNANCE.md](./V600-MAINNET-GOVERNANCE.md), [NETWORK-ENDPOINTS.md](./NETWORK-ENDPOINTS.md))
 - [ ] Remove unnecessary forks:
   - [x] Free post-proof ante → `app/ante_fee.go` (no SDK fork)
   - [x] CometBFT fork → upstream CometBFT (Phase 1)
-  - [ ] Audit `TheMarstonConnell/go-merkletree/v2` replace (storage proofs)
+  - [x] Audit `TheMarstonConnell/go-merkletree/v2` replace — [inventory/MERKLETREE-AUDIT.md](./inventory/MERKLETREE-AUDIT.md) (devnet proof regression pending)
 - [x] Proto pipeline: `make proto-gen` on Linux (`proto-builder:0.13.1`); generated code uses `cosmos/gogoproto`; CI in `.github/workflows/proto-gen.yml`
 - [x] Go version ladder documented per phase (see version matrix + [PHASE0-INVENTORY.md](./PHASE0-INVENTORY.md))
 
@@ -146,7 +147,7 @@ Applies to all phases; check once and re-verify each phase.
 **On-chain upgrade:** none
 
 ### Code & dependencies
-- [ ] Tag and record mainnet release binary (`v5.1.x`) `go.mod` + all `replace` directives
+- [x] Tag and record mainnet release binary (`v5.1.x`) `go.mod` + all `replace` directives — [inventory/mainnet-v510-gomod.txt](./inventory/mainnet-v510-gomod.txt)
 - [x] List Jackal-only patches (historical SDK fork, CometBFT fork, custom ante, wasm gas) — [PHASE0-INVENTORY.md](./PHASE0-INVENTORY.md)
 - [x] Inventory custom modules: `storage`, `filetree`, `rns`, `oracle`, `jklmint`, `notifications`
 - [x] Inventory IBC: transfer, ICA, fee middleware, wasm IBC handler
@@ -154,7 +155,8 @@ Applies to all phases; check once and re-verify each phase.
 - [x] Document connected IBC chains (mainnet capture; relayer version still TBD)
 
 ### Operations
-- [ ] Test state export at current mainnet height (`canined export --height <H>`; app round-trip: `TestWasmdExport`)
+- [x] App export/import round-trip in CI (`TestWasmdExport` via `scripts/verify-v630-candidate.sh`)
+- [ ] Test state export at current mainnet height (`canined export --height <H>`) — devnet / Jackal export
 - [x] Validator / provider communication plan for upgrade windows — [V600-MAINNET-GOVERNANCE.md](./V600-MAINNET-GOVERNANCE.md)
 
 **Exit criteria:** Inventory complete; export tested; team agrees on phased plan.
@@ -331,8 +333,19 @@ Applies to all phases; check once and re-verify each phase.
 - [x] Remove **x/crisis** module + store (`v630` deletes store)
 - [x] Remove **x/circuit** (no SDK 0.54–compatible release; `v630` deletes store)
 - [x] Evidence/feegrant/upgrade moved to in-tree SDK `x/*` modules
-- [ ] CometBFT 0.39 config (libp2p, adaptive sync) — **validator runbook on devnet**
+- [x] CometBFT 0.39 config guide — [COMETBFT-039-VALIDATOR.md](./COMETBFT-039-VALIDATOR.md) (validate on devnet)
 - [ ] Evaluate **BlockSTM** for Jackal workload
+
+### Pre-devnet tooling (fork)
+- [x] `scripts/verify-v630-candidate.sh`
+- [x] `scripts/smoke-v630-testnet.sh`
+- [x] `scripts/submit-upgrade-proposal.sh` (generic `v600`–`v630`)
+- [x] [V630-TESTNET-UPGRADE.md](./V630-TESTNET-UPGRADE.md), [V610-V620-UPGRADE-NOTES.md](./V610-V620-UPGRADE-NOTES.md)
+- [x] [COSMOVISOR-LADDER.md](./COSMOVISOR-LADDER.md)
+- [x] Simulation `sdkmath` migration (`x/rns/simulation/*`)
+- [x] `make runsim` installs to `$(BINDIR)/runsim` (CI/Docker path fix)
+- [x] Simulation builds on phase4 (SDK 0.54 `OperationInput`, `GetOrGenerate`, `sim_test.go`)
+- [x] Simulation CI green on phase4 (`make test-sim-*` runtime; address codec + fee collector + gov legacy router)
 
 ### Checklist
 - [x] Rebased `app/app.go` on wasmd 0.70

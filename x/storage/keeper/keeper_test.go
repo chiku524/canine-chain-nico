@@ -3,6 +3,7 @@ package keeper_test
 import (
 	sdkmath "cosmossdk.io/math"
 	gocontext "context"
+	"os"
 	"testing"
 	"time"
 
@@ -89,6 +90,11 @@ func setupMsgServer(suite *KeeperTestSuite) (types.MsgServer, keeper.Keeper, goc
 	})
 
 	return keeper.NewMsgServerImpl(*k), *k, ctx
+}
+
+func TestMain(m *testing.M) {
+	jklapp.SetBech32ForTest()
+	os.Exit(m.Run())
 }
 
 func TestStorageTestSuite(t *testing.T) {

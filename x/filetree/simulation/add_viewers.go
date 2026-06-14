@@ -77,7 +77,6 @@ func SimulateMsgAddViewers(
 			TxGen:         appparams.MakeEncodingConfig().TxConfig,
 			Cdc:           nil,
 			Msg:           msg,
-			MsgType:       msg.Type(),
 			Context:       ctx,
 			SimAccount:    simAccount,
 			AccountKeeper: ak,

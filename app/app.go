@@ -79,6 +79,7 @@ import (
 	govkeeper "github.com/cosmos/cosmos-sdk/x/gov/keeper"
 	govtypes "github.com/cosmos/cosmos-sdk/x/gov/types"
 	govv1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1"
+	govv1beta1 "github.com/cosmos/cosmos-sdk/x/gov/types/v1beta1"
 	"github.com/cosmos/cosmos-sdk/x/params"
 	paramsclient "github.com/cosmos/cosmos-sdk/x/params/client"
 	paramskeeper "github.com/cosmos/cosmos-sdk/x/params/keeper"
@@ -531,6 +532,11 @@ func NewJackalApp(
 		govAuthority,
 		govkeeper.NewDefaultCalculateVoteResultsAndVotingPower(app.stakingKeeper),
 	)
+
+	govRouter := govv1beta1.NewRouter()
+	govRouter.AddRoute(govtypes.RouterKey, govv1beta1.ProposalHandler)
+	govKeeper.SetLegacyRouter(govRouter)
+
 	app.govKeeper = *govKeeper.SetHooks(govtypes.NewMultiGovHooks())
 
 	wasmStackIBCHandler := wasm.NewIBCHandler(app.wasmKeeper, app.ibcKeeper.ChannelKeeper, app.transferKeeper, app.ibcKeeper.ChannelKeeper)

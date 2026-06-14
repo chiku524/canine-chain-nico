@@ -35,6 +35,17 @@ func setupStorageKeeper(t *testing.T) (
 	moduletestutil.TestEncodingConfig,
 	sdk.Context,
 ) {
+	ctrl := gomock.NewController(t)
+	return setupStorageKeeperWithCtrl(t, ctrl)
+}
+
+func setupStorageKeeperWithCtrl(t *testing.T, ctrl *gomock.Controller) (
+	*keeper.Keeper,
+	*storagetestutil.MockBankKeeper,
+	*storagetestutil.MockAccountKeeper,
+	moduletestutil.TestEncodingConfig,
+	sdk.Context,
+) {
 	key := storetypes.NewKVStoreKey(types.StoreKey)
 	// memStoreKey := storetypes.NewMemoryStoreKey(types.MemStoreKey)
 	tkey := storetypes.NewTransientStoreKey("transient_test")
@@ -49,8 +60,6 @@ func setupStorageKeeper(t *testing.T) (
 	// Create MsgServiceRouter, but don't populate it before creating the storage keeper.
 	msr := baseapp.NewMsgServiceRouter()
 
-	// gomock initializations
-	ctrl := gomock.NewController(t)
 	bankKeeper := storagetestutil.NewMockBankKeeper(ctrl)
 	accountKeeper := storagetestutil.NewMockAccountKeeper(ctrl)
 	oracleKeeper := storagetestutil.NewMockOracleKeeper(ctrl)

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Initialize a single-validator private net (jackal-nico-1) for v600 testing.
+# Initialize a single-validator private net (jackal-nico-1) for modernization testing.
+# Default binary: feat/cosmos-modernization-phase4 (SDK 0.54 / v630).
 #
 # Prerequisites: canined on PATH (WSL: make install after bootstrap-wsl-dev.sh)
 #   or CANINED=/path/to/canined

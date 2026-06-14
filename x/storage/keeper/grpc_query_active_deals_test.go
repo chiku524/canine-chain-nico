@@ -23,7 +23,7 @@ func setup(t *testing.T) *jklapp.JackalApp {
 	return jklapp.SetupTestingAppWithGenesis(t)
 }
 
-func (suite *KeeperTestSuite) SetupTest() {
+func (suite *KeeperTestSuite) setupIntegrationQueryClient() {
 	if !testutil.CgoEnabled() {
 		suite.T().Skip("integration tests require CGO for wasmvm")
 	}
@@ -35,7 +35,6 @@ func (suite *KeeperTestSuite) SetupTest() {
 	queryClient := types.NewQueryClient(queryHelper)
 
 	suite.ctx = ctx
-
 	suite.queryClient = queryClient
 }
 

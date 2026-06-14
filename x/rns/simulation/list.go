@@ -5,6 +5,7 @@ package simulation
 import (
 	"math/rand"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	appparams "github.com/jackalLabs/canine-chain/v5/app/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -77,7 +78,7 @@ func SimulateMsgList(
 		}
 
 		// generating the fees
-		price := sdk.NewInt(0) // listing is free?
+		price := sdkmath.ZeroInt() // listing is free?
 		spendable := bk.SpendableCoins(ctx, simAccount.Address)
 		coins, hasNeg := spendable.SafeSub(sdk.NewCoin("ujkl", price))
 
@@ -100,7 +101,6 @@ func SimulateMsgList(
 			TxGen:         appparams.MakeEncodingConfig().TxConfig,
 			Cdc:           nil,
 			Msg:           msg,
-			MsgType:       msg.Type(),
 			Context:       ctx,
 			SimAccount:    simAccount,
 			AccountKeeper: ak,

@@ -5,6 +5,7 @@ package simulation
 import (
 	"math/rand"
 
+	sdkmath "cosmossdk.io/math"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	appparams "github.com/jackalLabs/canine-chain/v5/app/params"
 	sdk "github.com/cosmos/cosmos-sdk/types"
@@ -47,7 +48,7 @@ func SimulateMsgBid(
 			return simtypes.NoOpMsg(types.ModuleName, msg.Type(), "Unable to parse price"), nil, err
 		}
 		// calculating the bid
-		max := sdk.NewInt(bidPrice.Amount.Int64() * 2)
+		max := sdkmath.NewInt(bidPrice.Amount.Int64() * 2)
 		sdkPrice := simtypes.RandomAmount(r, max)
 
 		// ensuring the account has enough coins to make a bid
@@ -95,7 +96,6 @@ func SimulateMsgBid(
 			TxGen:         appparams.MakeEncodingConfig().TxConfig,
 			Cdc:           nil,
 			Msg:           msg,
-			MsgType:       msg.Type(),
 			Context:       ctx,
 			SimAccount:    simAccount,
 			AccountKeeper: ak,

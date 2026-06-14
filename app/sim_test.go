@@ -10,11 +10,12 @@ import (
 	"strings"
 	"testing"
 
+	abci "github.com/cometbft/cometbft/abci/types"
+	cmtproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	dbm "github.com/cosmos/cosmos-db"
-	"github.com/cometbft/cometbft/libs/log"
-	tmproto "github.com/cometbft/cometbft/proto/tendermint/types"
 	"github.com/stretchr/testify/require"
 
+	"cosmossdk.io/log/v2"
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	"github.com/cosmos/cosmos-sdk/client/flags"
 	"github.com/cosmos/cosmos-sdk/server"
@@ -48,7 +49,7 @@ func TestFullAppSimulation(t *testing.T) {
 		app.BaseApp,
 		simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts,
-		simtestutil.SimulationOperations(app, app.AppCodec(), config),
+		simtestutil.BuildSimulationOperations(app, app.AppCodec(), config, app.TxConfig()),
 		BlockedAddresses(),
 		config,
 		app.AppCodec(),
@@ -64,7 +65,7 @@ func TestFullAppSimulation(t *testing.T) {
 }
 
 func TestAppImportExport(t *testing.T) {
-	config, db, _, app := setupSimulationApp(t, "skipping application import/export simulation")
+	config, db, appOptions, app := setupSimulationApp(t, "skipping application import/export simulation")
 
 	_, simParams, simErr := simulation.SimulateFromSeed(
 		t,
@@ -72,7 +73,7 @@ func TestAppImportExport(t *testing.T) {
 		app.BaseApp,
 		simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts,
-		simtestutil.SimulationOperations(app, app.AppCodec(), config),
+		simtestutil.BuildSimulationOperations(app, app.AppCodec(), config, app.TxConfig()),
 		BlockedAddresses(),
 		config,
 		app.AppCodec(),
@@ -93,7 +94,7 @@ func TestAppImportExport(t *testing.T) {
 
 	t.Log("importing genesis...")
 
-	newDB, newDir, _, _, err := simtestutil.SetupSimulation(config, "leveldb-app-sim-2", "Simulation-2", simcli.FlagVerboseValue, simcli.FlagEnabledValue)
+	newDB, newDir, _, _, err := simtestutil.SetupSimulation(config, "leveldb-app-sim-2", "Simulation-2", simcli.FlagVerboseValue, true)
 	require.NoError(t, err, "simulation setup failed")
 
 	defer func() {
@@ -101,33 +102,30 @@ func TestAppImportExport(t *testing.T) {
 		require.NoError(t, os.RemoveAll(newDir))
 	}()
 
-	encConf := MakeEncodingConfig()
-	appOptions := make(simtestutil.AppOptionsMap)
 	appOptions[flags.FlagHome] = newDir
-	appOptions[server.FlagInvCheckPeriod] = simcli.FlagPeriodValue
 
+	encConf := MakeEncodingConfig()
 	newApp := NewJackalApp(log.NewNopLogger(), newDB, nil, true, map[int64]bool{}, newDir, simcli.FlagPeriodValue,
 		encConf, simWasmProposals, appOptions, nil, fauxMerkleModeOpt, baseapp.SetChainID(SimAppChainID))
 	require.Equal(t, appName, newApp.Name())
 
-	ctxB := newApp.NewContext(true, tmproto.Header{Height: app.LastBlockHeight()})
+	initReq := &abci.RequestInitChain{
+		AppStateBytes: exported.AppState,
+	}
 
-	var genesisState GenesisState
-	err = json.Unmarshal(exported.AppState, &genesisState)
-	require.NoError(t, err)
-	newApp.mm.InitGenesis(ctxB, app.AppCodec(), genesisState)
-	newApp.StoreConsensusParams(ctxB, exported.ConsensusParams)
-
-	defer func() {
-		if r := recover(); r != nil {
-			err := fmt.Sprintf("%v", r)
-			if !strings.Contains(err, "validator set is empty after InitGenesis") {
-				panic(r)
-			}
+	ctxB := newApp.NewContextLegacy(true, cmtproto.Header{Height: app.LastBlockHeight()})
+	_, err = newApp.InitChainer(ctxB, initReq)
+	if err != nil {
+		if strings.Contains(err.Error(), "validator set is empty after InitGenesis") {
 			t.Log("Skipping import/export compare: all validators unbonded")
 			t.Logf("err: %s stacktrace: %s\n", err, string(debug.Stack()))
+			return
 		}
-	}()
+		require.NoError(t, err)
+	}
+
+	err = newApp.StoreConsensusParams(ctxB, exported.ConsensusParams)
+	require.NoError(t, err)
 
 	t.Log("re-exporting genesis from imported app...")
 	reExported, err := newApp.ExportAppStateAndValidators(false, []string{}, nil)
@@ -144,7 +142,7 @@ func BenchmarkFullAppSimulation(b *testing.B) {
 		app.BaseApp,
 		simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
 		simtypes.RandomAccounts,
-		simtestutil.SimulationOperations(app, app.AppCodec(), config),
+		simtestutil.BuildSimulationOperations(app, app.AppCodec(), config, app.TxConfig()),
 		BlockedAddresses(),
 		config,
 		app.AppCodec(),
@@ -215,7 +213,7 @@ func TestAppStateDeterminism(t *testing.T) {
 		for j := 0; j < numTimesToRunPerSeed; j++ {
 			var logger log.Logger
 			if simcli.FlagVerboseValue {
-				logger = log.TestingLogger()
+				logger = log.NewTestLogger(t)
 			} else {
 				logger = log.NewNopLogger()
 			}
@@ -236,7 +234,7 @@ func TestAppStateDeterminism(t *testing.T) {
 				app.BaseApp,
 				simtestutil.AppStateFn(app.AppCodec(), app.SimulationManager(), app.DefaultGenesis()),
 				simtypes.RandomAccounts,
-				simtestutil.SimulationOperations(app, app.AppCodec(), config),
+				simtestutil.BuildSimulationOperations(app, app.AppCodec(), config, app.TxConfig()),
 				BlockedAddresses(),
 				config,
 				app.AppCodec(),

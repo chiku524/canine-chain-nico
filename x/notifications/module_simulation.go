@@ -7,7 +7,6 @@ import (
 
 	"github.com/cosmos/cosmos-sdk/baseapp"
 	simappparams "github.com/cosmos/cosmos-sdk/testutil/sims"
-	sdk "github.com/cosmos/cosmos-sdk/types"
 	"github.com/cosmos/cosmos-sdk/types/module"
 	simtypes "github.com/cosmos/cosmos-sdk/types/simulation"
 	"github.com/cosmos/cosmos-sdk/x/simulation"
@@ -64,7 +63,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	operations := make([]simtypes.WeightedOperation, 0)
 
 	var weightMsgCreateNotifications int
-	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgCreateNotifications, &weightMsgCreateNotifications, nil,
+	simState.AppParams.GetOrGenerate(opWeightMsgCreateNotifications, &weightMsgCreateNotifications, simState.Rand,
 		func(_ *rand.Rand) {
 			weightMsgCreateNotifications = defaultWeightMsgCreateNotifications
 		},
@@ -75,7 +74,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	))
 
 	var weightMsgDeleteNotifications int
-	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgDeleteNotifications, &weightMsgDeleteNotifications, nil,
+	simState.AppParams.GetOrGenerate(opWeightMsgDeleteNotifications, &weightMsgDeleteNotifications, simState.Rand,
 		func(_ *rand.Rand) {
 			weightMsgDeleteNotifications = defaultWeightMsgDeleteNotifications
 		},
@@ -86,7 +85,7 @@ func (am AppModule) WeightedOperations(simState module.SimulationState) []simtyp
 	))
 
 	var weightMsgBlockSenders int
-	simState.AppParams.GetOrGenerate(simState.Cdc, opWeightMsgBlockSenders, &weightMsgBlockSenders, nil,
+	simState.AppParams.GetOrGenerate(opWeightMsgBlockSenders, &weightMsgBlockSenders, simState.Rand,
 		func(_ *rand.Rand) {
 			weightMsgBlockSenders = defaultWeightMsgBlockSenders
 		},
