@@ -1,6 +1,12 @@
 version: "2"
 run:
   tests: true
+  # Match the build tags used by `make test-unit` so linting can typecheck
+  # test-only helpers guarded by `//go:build test` (e.g. app.SetupTestingAppWithGenesis).
+  build-tags:
+    - ledger
+    - test_ledger_mock
+    - test
 linters:
   default: none
   enable:

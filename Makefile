@@ -25,7 +25,10 @@ WITH_CLEVELDB ?= false
 # Example: WITH_PEBBLEDB=true make build
 WITH_PEBBLEDB ?= false
 SDK_PACK := $(shell go list -m github.com/cosmos/cosmos-sdk | sed 's/ /\@/g')
-BINDIR ?= $(GOPATH)/bin
+# Resolve GOPATH via `go env` so BINDIR is a writable path even when GOPATH is
+# not exported into make (otherwise $(GOPATH) is empty and BINDIR becomes /bin,
+# which fails `go install` with "permission denied" in CI).
+BINDIR ?= $(shell go env GOPATH)/bin
 SIMAPP = ./app
 
 ########################################
