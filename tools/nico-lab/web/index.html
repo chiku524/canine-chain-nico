@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Nico Lab — Jackal private net</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=IBM+Plex+Mono:wght@400;500&family=Sora:wght@400;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/styles.css" />
+</head>
+<body>
+  <div class="bg" aria-hidden="true"></div>
+  <header class="hero">
+    <p class="eyebrow">jackal-nico-1 · private lab</p>
+    <h1>Nico Lab</h1>
+    <p class="lede">Click through every Jackal module against your local chain and provider.</p>
+    <div class="meta" id="meta">connecting…</div>
+  </header>
+
+  <main>
+    <section class="rail">
+      <h2>Chain</h2>
+      <div class="actions">
+        <button data-action="GET" data-url="/api/status">Status</button>
+        <button data-action="GET" data-url="/api/balance">Balance</button>
+        <button data-action="GET" data-url="/api/jklmint/params">Mint params</button>
+        <button data-action="GET" data-url="/api/ibc/clients">IBC clients</button>
+        <button data-action="GET" data-url="/api/wasm/codes">Wasm codes</button>
+      </div>
+    </section>
+
+    <section class="rail">
+      <h2>Storage</h2>
+      <div class="actions">
+        <button data-action="GET" data-url="/api/storage/params">Params</button>
+        <button data-action="GET" data-url="/api/providers">Providers</button>
+        <button data-action="GET" data-url="/api/storage/payment">Payment plan</button>
+        <button data-action="POST" data-url="/api/storage/buy" class="accent">Buy 1GB / 30d</button>
+        <button data-action="GET" data-url="/api/storage/files">On-chain files</button>
+      </div>
+      <form id="upload-form" class="upload">
+        <label>Upload text as a file</label>
+        <textarea id="upload-text" rows="3" placeholder="Type something to store on Jackal…"></textarea>
+        <div class="row">
+          <input type="file" id="upload-file" />
+          <button type="submit" class="accent">Post + upload</button>
+        </div>
+      </form>
+    </section>
+
+    <section class="rail">
+      <h2>Provider</h2>
+      <div class="actions">
+        <button data-action="GET" data-url="/api/provider/status">Status</button>
+        <button data-action="GET" data-url="/api/provider/files" data-after="renderProviderFiles">List files</button>
+      </div>
+      <div id="provider-files" class="file-list"></div>
+    </section>
+
+    <section class="rail">
+      <h2>Filetree</h2>
+      <div class="actions">
+        <button data-action="GET" data-url="/api/filetree/params">Params</button>
+        <button data-action="POST" data-url="/api/filetree/provision" class="accent">Provision root</button>
+      </div>
+    </section>
+
+    <section class="rail">
+      <h2>RNS</h2>
+      <div class="actions">
+        <button data-action="GET" data-url="/api/rns/params">Params</button>
+      </div>
+    </section>
+
+    <section class="rail">
+      <h2>Oracle</h2>
+      <div class="actions">
+        <button data-action="GET" data-url="/api/oracle/feeds">List feeds</button>
+        <button data-action="POST" data-url="/api/oracle/feed?name=jklprice" class="accent">Create jklprice</button>
+      </div>
+    </section>
+
+    <section class="output-panel">
+      <div class="output-head">
+        <h2>Output</h2>
+        <button type="button" id="clear-out" class="ghost">Clear</button>
+      </div>
+      <pre id="out">Ready. Pick an action above.</pre>
+    </section>
+  </main>
+
+  <footer>
+    <span>RPC · REST · nico-provider</span>
+    <span>local only · test keyring</span>
+  </footer>
+  <script src="/app.js"></script>
+</body>
+</html>

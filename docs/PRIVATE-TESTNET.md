@@ -147,3 +147,21 @@ canined tx storage post ./README.md $((HEIGHT+100000)) \
   --fees 5000ujkl --gas auto -y
 ```
 
+---
+
+## Nico Lab (click-to-test web UI)
+
+Local web app that exercises chain + provider actions with buttons:
+
+```bash
+# Terminal A — chain
+canined start --home ~/.canine-nico
+
+# Terminal B — provider
+./scripts/start-nico-provider.sh
+
+# Terminal C — lab UI
+./scripts/start-nico-lab.sh
+# open http://127.0.0.1:3456
+```
+
