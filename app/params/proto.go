@@ -22,16 +22,19 @@ func MakeEncodingConfig() EncodingConfig {
 // MakeEncodingConfigWithBech32 creates an EncodingConfig with explicit bech32 prefixes.
 func MakeEncodingConfigWithBech32(accountPrefix, validatorPrefix string) EncodingConfig {
 	amino := codec.NewLegacyAmino()
-	interfaceRegistry, err := types.NewInterfaceRegistryWithOptions(types.InterfaceRegistryOptions{
-		ProtoFiles: proto.HybridResolver,
-		SigningOptions: signing.Options{
-			AddressCodec: address.Bech32Codec{
-				Bech32Prefix: accountPrefix,
-			},
-			ValidatorAddressCodec: address.Bech32Codec{
-				Bech32Prefix: validatorPrefix,
-			},
+	signingOpts := signing.Options{
+		AddressCodec: address.Bech32Codec{
+			Bech32Prefix: accountPrefix,
 		},
+		ValidatorAddressCodec: address.Bech32Codec{
+			Bech32Prefix: validatorPrefix,
+		},
+	}
+	registerJackalCustomSigners(&signingOpts, accountPrefix)
+
+	interfaceRegistry, err := types.NewInterfaceRegistryWithOptions(types.InterfaceRegistryOptions{
+		ProtoFiles:     proto.HybridResolver,
+		SigningOptions: signingOpts,
 	})
 	if err != nil {
 		panic(err)

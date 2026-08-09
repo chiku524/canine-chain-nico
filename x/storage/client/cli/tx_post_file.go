@@ -16,19 +16,18 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
-	"github.com/cosmos/cosmos-sdk/client/flags"
-
-	"github.com/cosmos/cosmos-sdk/client/input"
-	sdk "github.com/cosmos/cosmos-sdk/types"
-	"github.com/spf13/pflag"
 	"github.com/cometbft/cometbft/libs/rand"
-
 	"github.com/cosmos/cosmos-sdk/client"
+	"github.com/cosmos/cosmos-sdk/client/flags"
+	"github.com/cosmos/cosmos-sdk/client/input"
 	"github.com/cosmos/cosmos-sdk/client/tx"
+	sdk "github.com/cosmos/cosmos-sdk/types"
+	authtx "github.com/cosmos/cosmos-sdk/x/auth/tx"
 	"github.com/jackalLabs/canine-chain/v5/x/storage/types"
 	"github.com/spf13/cobra"
-
+	"github.com/spf13/pflag"
 	"github.com/wealdtech/go-merkletree/v2"
 	"github.com/wealdtech/go-merkletree/v2/sha3"
 )
@@ -279,35 +278,66 @@ func postFileToChain(ctx client.Context, flags *pflag.FlagSet, merkle []byte, fi
 	if err != nil {
 		return 0, err
 	}
-	if res != nil {
-		fmt.Println(res.RawLog)
+	if res == nil {
+		return 0, errors.New("empty tx response")
 	}
 	if res.Code != 0 {
-		return 0, errors.New("tx failed")
+		return 0, fmt.Errorf("tx failed: code=%d log=%s", res.Code, res.RawLog)
+	}
+
+	// SDK 0.50+ BroadcastSync returns before commit — poll until events exist.
+	committed := res
+	if len(res.Events) == 0 && res.TxHash != "" {
+		for i := 0; i < 30; i++ {
+			time.Sleep(500 * time.Millisecond)
+			qres, qerr := authtx.QueryTx(ctx, res.TxHash)
+			if qerr != nil {
+				continue
+			}
+			committed = qres
+			if qres.Height > 0 {
+				break
+			}
+		}
+	}
+	if committed.Code != 0 {
+		return 0, fmt.Errorf("tx failed after commit: code=%d log=%s", committed.Code, committed.RawLog)
 	}
 
 	startatStr := ""
 find:
-	for _, event := range res.Events {
-		if event.Type != "post_file" {
+	for _, event := range committed.Events {
+		if event.Type != types.EventTypeSignContract {
 			continue
 		}
-
 		for _, attr := range event.Attributes {
-			if attr.Key == "start" {
-				startatStr = attr.Value
+			key := attr.Key
+			val := attr.Value
+			if key == types.AttributeKeyStart {
+				startatStr = val
 				break find
 			}
 		}
 	}
 
 	if startatStr == "" {
-		panic(errors.New("start block event attribute not found in tx response"))
+		// Fallback: query file by merkle+owner from latest height.
+		q := types.NewQueryClient(ctx)
+		files, ferr := q.AllFilesByMerkle(context.Background(), &types.QueryAllFilesByMerkle{Merkle: merkle})
+		if ferr == nil {
+			owner := ctx.GetFromAddress().String()
+			for _, f := range files.Files {
+				if f.Owner == owner {
+					return f.Start, nil
+				}
+			}
+		}
+		return 0, errors.New("start block event attribute not found in tx response")
 	}
 
 	startat, err = strconv.ParseInt(startatStr, 10, 64)
 	if err != nil {
-		panic(err)
+		return 0, err
 	}
 
 	return startat, nil

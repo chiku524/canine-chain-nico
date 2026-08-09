@@ -112,3 +112,38 @@ Manual matrix: `docs/V630-TESTNET-UPGRADE.md` §5.
 | **`jackal-nico-1`** | **You** | Primary modernization testbed |
 
 After ≥2 weeks stable on `jackal-nico-1` (or Jackal devnet), use results in [JACKAL-DEVNET-HANDOFF.md](./JACKAL-DEVNET-HANDOFF.md) to support upstream PR and eventual Jackal mainnet governance.
+
+---
+
+## Local storage provider (nico-provider)
+
+Official [Sequoia](https://github.com/JackalLabs/sequoia) still targets cosmos-sdk **0.45**, so this fork ships a lightweight Sequoia-compatible HTTP provider for private testing:
+
+```bash
+# Terminal A — chain (if not already running)
+canined start --home ~/.canine-nico
+
+# Terminal B — register + start provider on :3333
+./scripts/start-nico-provider.sh
+```
+
+Endpoints: `GET /`, `GET /version`, `POST /v2/upload`, `GET /download/{merkle}`, `GET /list`.
+
+Buy space and upload a file:
+
+```bash
+HOME=~/.canine-nico
+ADDR=$(canined keys show validator -a --home $HOME --keyring-backend test)
+# 1 GB for 30 days
+canined tx storage buy-storage $ADDR 30 1000000000 ujkl \
+  --from validator --home $HOME --keyring-backend test --chain-id jackal-nico-1 \
+  --fees 5000ujkl --gas auto -y
+
+# Post + upload to local provider
+HEIGHT=$(canined status --home $HOME | jq -r .sync_info.latest_block_height)
+canined tx storage post ./README.md $((HEIGHT+100000)) \
+  --dest http://127.0.0.1:3333 --max_proofs 1 \
+  --from validator --home $HOME --keyring-backend test --chain-id jackal-nico-1 \
+  --fees 5000ujkl --gas auto -y
+```
+
