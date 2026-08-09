@@ -66,17 +66,26 @@ VALIDATOR_ADDR="$("$CANINED" keys show validator -a --home "$HOME_DIR" --keyring
 
 GENESIS="$HOME_DIR/config/genesis.json"
 TMP="$HOME_DIR/config/tmp_genesis.json"
+# SDK 0.54 uses gov.params (legacy deposit_params / voting_params are null).
 jq \
   --arg denom "$DENOM" \
   '.app_state.staking.params.bond_denom = $denom
-   | .app_state.crisis.constant_fee.denom = $denom
-   | .app_state.jklmint.params.mintDenom = $denom
-   | .app_state.gov.deposit_params.min_deposit[0].denom = $denom
-   | .app_state.gov.voting_params.voting_period = "120s"
-   | .app_state.gov.deposit_params.max_deposit_period = "120s"' \
+   | .app_state.jklmint.params.mint_denom = $denom
+   | .app_state.gov.params.min_deposit[0].denom = $denom
+   | .app_state.gov.params.expedited_min_deposit[0].denom = $denom
+   | .app_state.gov.params.voting_period = "120s"
+   | .app_state.gov.params.max_deposit_period = "120s"
+   | .app_state.gov.params.expedited_voting_period = "60s"
+   | if .app_state.crisis then .app_state.crisis.constant_fee.denom = $denom else . end' \
   "$GENESIS" > "$TMP" && mv "$TMP" "$GENESIS"
 
 "$CANINED" genesis validate --home "$HOME_DIR"
+
+# Local smoke convenience: enable REST API (1317).
+APP_TOML="$HOME_DIR/config/app.toml"
+if [[ -f "$APP_TOML" ]]; then
+  sed -i '0,/^enable = false/{s/^enable = false/enable = true/}' "$APP_TOML" || true
+fi
 
 echo ""
 echo "Private testnet ready."
