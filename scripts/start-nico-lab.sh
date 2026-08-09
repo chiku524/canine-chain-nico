@@ -17,7 +17,11 @@ CHAIN_ID="${CHAIN_ID:-jackal-nico-1}"
 PROVIDER="${PROVIDER:-http://127.0.0.1:3333}"
 
 cd "$ROOT/tools/nico-lab"
+WSL_IP="$(hostname -I 2>/dev/null | awk '{print $1}')"
 echo "Nico Lab → http://127.0.0.1${LISTEN}"
+if [[ -n "$WSL_IP" ]]; then
+  echo "  WSL/Windows browser fallback → http://${WSL_IP}${LISTEN}"
+fi
 echo "  home=$HOME_DIR chain=$CHAIN_ID provider=$PROVIDER"
 exec go run . \
   -listen "$LISTEN" \
