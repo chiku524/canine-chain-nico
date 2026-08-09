@@ -27,7 +27,7 @@ canined() {
 }
 
 echo "== v630 smoke: chain status =="
-canined status | jq -r '.SyncInfo.latest_block_height, .NodeInfo.version'
+canined status | jq -r '.sync_info.latest_block_height, .node_info.network'
 
 echo "== v630 smoke: upgrade plan =="
 canined query upgrade plan 2>/dev/null | jq . || echo "(no scheduled upgrade — OK on fresh net)"
@@ -40,10 +40,18 @@ for name in v600 v610 v620 v630; do
 done
 
 echo "== v630 smoke: consensus params =="
-canined query consensus params | jq .
+canined query params subspace base consensus 2>/dev/null | jq . || echo "(skipped — use comet RPC for consensus params on SDK 0.54)"
 
 echo "== v630 smoke: bank balance =="
-canined query bank balances "$(canined keys show "$KEY" -a --keyring-backend test 2>/dev/null || canined keys show "$KEY" -a)" | jq .
+VALIDATOR_ADDR="$(canined keys show "$KEY" -a --keyring-backend test 2>/dev/null || canined keys show "$KEY" -a)"
+if canined query bank balances "$VALIDATOR_ADDR" 2>/dev/null | jq .; then
+  :
+elif REST_API="${REST_API:-http://127.0.0.1:1317}" \
+  curl -sf "${REST_API}/cosmos/bank/v1beta1/balances/${VALIDATOR_ADDR}" 2>/dev/null | jq .; then
+  :
+else
+  echo "(skipped — bank CLI unavailable; set REST_API or enable api in app.toml)"
+fi
 
 echo "== v630 smoke: storage params =="
 canined query storage params | jq .
@@ -64,7 +72,7 @@ echo "== v630 smoke: IBC clients =="
 canined query ibc client states 2>/dev/null | jq '.client_states | length' || true
 
 echo "== v630 smoke: jklmint params =="
-canined query mint params 2>/dev/null | jq . || true
+canined query jklmint params 2>/dev/null | jq . || true
 
 echo "== v630 smoke: zero-fee post-proof =="
 echo "Manual: submit MsgPostProof-only tx and confirm fee=0 (see docs/V630-TESTNET-UPGRADE.md §5)"

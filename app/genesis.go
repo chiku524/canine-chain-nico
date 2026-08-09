@@ -21,5 +21,5 @@ func NewDefaultGenesisState() GenesisState {
 
 // DefaultGenesis returns a default genesis from the registered AppModuleBasic's.
 func (app *JackalApp) DefaultGenesis() map[string]json.RawMessage {
-	return ModuleBasics.DefaultGenesis(app.appCodec)
+	return app.BasicModuleManager.DefaultGenesis(app.appCodec)
 }

@@ -262,9 +262,10 @@ type JackalApp struct {
 	FileTreeKeeper      filetreemodulekeeper.Keeper
 	NotificationsKeeper notificationsmodulekeeper.Keeper
 
-	mm           *module.Manager
-	sm           *module.SimulationManager
-	configurator module.Configurator
+	mm                 *module.Manager
+	BasicModuleManager module.BasicManager
+	sm                 *module.SimulationManager
+	configurator       module.Configurator
 }
 
 func NewJackalApp(
@@ -655,6 +656,16 @@ func NewJackalApp(
 		panic(err)
 	}
 
+	app.BasicModuleManager = module.NewBasicManagerFromManager(
+		app.mm,
+		map[string]module.AppModuleBasic{
+			genutiltypes.ModuleName: genutil.NewAppModuleBasic(genutiltypes.DefaultMessageValidator),
+			govtypes.ModuleName: gov.NewAppModuleBasic([]govclient.ProposalHandler{
+				paramsclient.ProposalHandler,
+			}),
+		},
+	)
+
 	app.registerTestnetUpgradeHandlers()
 	app.registerMainnetUpgradeHandlers()
 
@@ -788,7 +799,7 @@ func (app *JackalApp) RegisterAPIRoutes(apiSvr *api.Server, apiConfig config.API
 	authtx.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 	cmtservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 	nodeservice.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
-	ModuleBasics.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
+	app.BasicModuleManager.RegisterGRPCGatewayRoutes(clientCtx, apiSvr.GRPCGatewayRouter)
 
 	if apiConfig.Swagger {
 		apiSvr.Router.Handle("/swagger-ui/swagger.yaml", http.FileServer(http.FS(docs.Docs)))

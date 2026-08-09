@@ -24,10 +24,12 @@ source ~/.bashrc
 ### 3. Daily commands
 
 ```bash
-./scripts/verify-v600-candidate.sh
-make inventory-mainnet
-CGO_ENABLED=1 WASMVM_TAG=v1.5.9 make build-linux
-sha256sum build/canined-linux-amd64
+make install
+SKIP_SIM=1 ./scripts/verify-v630-candidate.sh
+RESET=1 START=1 ./scripts/init-nico-testnet.sh
+# (other terminal) smoke against local RPC:
+CHAIN_ID=jackal-nico-1 NODE=http://127.0.0.1:26657 KEY=validator \
+  ./scripts/smoke-v630-testnet.sh
 ```
 
 ---

@@ -44,21 +44,15 @@ One command (WSL, after `make install`):
 canined start --home ~/.canine-nico
 ```
 
-Or init and start together:
+Or wipe + init + start together:
 
 ```bash
-START=1 ./scripts/init-nico-testnet.sh
+RESET=1 START=1 ./scripts/init-nico-testnet.sh
 ```
 
 For a **full migration rehearsal**, schedule upgrades in order: `v600` → `v610` → `v620` → `v630` (handlers in `app/upgrades/`). For **0.54-only smoke**, start directly on the phase4 binary and test module behavior without historical state.
 
-`v600` proposal helper (if starting from 0.47 genesis path):
-
-```bash
-./scripts/submit-v600-upgrade-proposal.sh
-```
-
-Manual steps (equivalent):
+Manual steps (SDK 0.54 CLI — equivalent to the script):
 
 ```bash
 export CHAIN_ID=jackal-nico-1
@@ -66,16 +60,18 @@ export MONIKER=nico-validator
 export HOME_DIR=$HOME/.canine-nico
 
 canined init $MONIKER --chain-id $CHAIN_ID --home $HOME_DIR
+canined config set client chain-id $CHAIN_ID --home $HOME_DIR
+canined config set client keyring-backend test --home $HOME_DIR
 canined keys add validator --keyring-backend test --home $HOME_DIR
 
-canined add-genesis-account validator 100000000000000ujkl \
+canined genesis add-genesis-account validator 100000000000000ujkl \
   --keyring-backend test --home $HOME_DIR
 
-canined gentx validator 1000000ujkl \
+canined genesis gentx validator 1000000ujkl \
   --chain-id $CHAIN_ID --keyring-backend test --home $HOME_DIR
 
-canined collect-gentxs --home $HOME_DIR
-canined validate-genesis --home $HOME_DIR
+canined genesis collect-gentxs --home $HOME_DIR
+canined genesis validate --home $HOME_DIR
 
 canined start --home $HOME_DIR
 ```
@@ -99,11 +95,11 @@ Document your peer IDs and genesis hash in `docs/inventory/nico-testnet-genesis.
 ## Smoke tests on private net
 
 ```bash
-CHAIN_ID=jackal-nico-1 NODE=http://localhost:26657 KEY=validator \
-  ./scripts/smoke-v600-testnet.sh
+CHAIN_ID=jackal-nico-1 NODE=http://127.0.0.1:26657 KEY=validator \
+  ./scripts/smoke-v630-testnet.sh
 ```
 
-Manual matrix: `docs/V600-TESTNET-UPGRADE.md` §5.
+Manual matrix: `docs/V630-TESTNET-UPGRADE.md` §5.
 
 ---
 
