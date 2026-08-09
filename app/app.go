@@ -14,6 +14,8 @@ import (
 
 	autocliv1 "cosmossdk.io/api/cosmos/autocli/v1"
 	reflectionv1 "cosmossdk.io/api/cosmos/reflection/v1"
+	"cosmossdk.io/client/v2/autocli"
+	"cosmossdk.io/core/appmodule"
 	"cosmossdk.io/log/v2"
 	storetypes "github.com/cosmos/cosmos-sdk/store/v2/types"
 	"github.com/cosmos/cosmos-sdk/x/evidence"
@@ -783,6 +785,27 @@ func (app *JackalApp) AppCodec() codec.Codec {
 
 func (app *JackalApp) TxConfig() client.TxConfig {
 	return app.txConfig
+}
+
+// AutoCliOpts returns the autocli options for the app (SDK module query/tx CLIs).
+func (app *JackalApp) AutoCliOpts() autocli.AppOptions {
+	modules := make(map[string]appmodule.AppModule)
+	for _, m := range app.mm.Modules {
+		if moduleWithName, ok := m.(module.HasName); ok {
+			moduleName := moduleWithName.Name()
+			if appModule, ok := moduleWithName.(appmodule.AppModule); ok {
+				modules[moduleName] = appModule
+			}
+		}
+	}
+
+	return autocli.AppOptions{
+		Modules:               modules,
+		ModuleOptions:         runtimeservices.ExtractAutoCLIOptions(app.mm.Modules),
+		AddressCodec:          authcodec.NewBech32Codec(sdk.GetConfig().GetBech32AccountAddrPrefix()),
+		ValidatorAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ValidatorAddrPrefix()),
+		ConsensusAddressCodec: authcodec.NewBech32Codec(sdk.GetConfig().GetBech32ConsensusAddrPrefix()),
+	}
 }
 
 func (app *JackalApp) GetSubspace(moduleName string) paramstypes.Subspace {

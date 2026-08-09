@@ -121,6 +121,14 @@ func NewRootCmd() (*cobra.Command, params.EncodingConfig) {
 	initRootCmd(rootCmd, encodingConfig, tempApp.BasicModuleManager)
 	rootCmd.PersistentFlags().String(flags.FlagChainID, "", "The network chain ID")
 
+	// Wire AutoCLI for SDK modules (bank, staking, gov, upgrade, …).
+	autoCliOpts := tempApp.AutoCliOpts()
+	initClientCtx, _ = clientconfig.ReadFromClientConfig(initClientCtx)
+	autoCliOpts.ClientCtx = initClientCtx
+	if err := autoCliOpts.EnhanceRootCommand(rootCmd); err != nil {
+		panic(err)
+	}
+
 	return rootCmd, encodingConfig
 }
 
